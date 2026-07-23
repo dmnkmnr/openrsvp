@@ -1,0 +1,59 @@
+{
+	"nav": {
+		"dashboard": "Übersicht",
+		"createEvent": "Event erstellen",
+		"admin": "Administration",
+		"account": "Konto",
+		"logout": "Abmelden",
+		"switchToLight": "Zum hellen Modus wechseln",
+		"switchToDark": "Zum dunklen Modus wechseln",
+		"toggleMenu": "Menü umschalten",
+		"language": "Sprache"
+	},
+	"feedback": {
+		"openButton": "Feedback senden",
+		"title": "Feedback senden",
+		"typeLabel": "Art",
+		"type": {
+			"bug": "Fehlermeldung",
+			"feature": "Funktionswunsch",
+			"general": "Allgemein"
+		},
+		"messageLabel": "Nachricht",
+		"messagePlaceholder": "Beschreibe dein Feedback...",
+		"followUpLabel": "Du kannst bezüglich dieses Feedbacks kontaktiert werden",
+		"cancel": "Abbrechen",
+		"submit": "Absenden",
+		"submitting": "Wird gesendet...",
+		"successBase": "Feedback gesendet — vielen Dank!",
+		"successFollowUp": " Eine Bestätigung wurde an deine E-Mail-Adresse gesendet.",
+		"error": "Feedback konnte nicht gesendet werden. Bitte versuche es erneut."
+	},
+	"error": {
+		"notFoundTitle": "Diese Einladung ist auf der Post verloren gegangen",
+		"notFoundBody": "Die gesuchte Seite existiert nicht oder wurde verschoben. Wir bringen dich zurück auf Kurs.",
+		"genericTitle": "Etwas ist schiefgelaufen",
+		"genericBody": "Ein unerwarteter Fehler ist aufgetreten. Bitte versuche es erneut.",
+		"backToHome": "Zurück zur Startseite",
+		"myEvents": "Meine Events"
+	},
+	"auth": {
+		"login": {
+			"pageTitle": "Anmelden -- OpenRSVP",
+			"heading": "Bei deinem Konto anmelden",
+			"subheading": "Gib deine E-Mail-Adresse ein, um einen Magic Link zu erhalten",
+			"emailRequired": "E-Mail-Adresse ist erforderlich",
+			"emailInvalid": "Bitte gib eine gültige E-Mail-Adresse ein",
+			"sendFailed": "Magic Link konnte nicht gesendet werden. Bitte versuche es erneut.",
+			"checkEmailHeading": "Überprüfe deine E-Mails",
+			"checkEmailBody": "Wir haben einen Magic Link an {email} gesendet. Klicke auf den Link in der E-Mail, um dich anzumelden.",
+			"notReceived": "Keine E-Mail erhalten? Überprüfe deinen Spam-Ordner oder versuche es erneut.",
+			"tryDifferentEmail": "Andere E-Mail-Adresse verwenden",
+			"emailLabel": "E-Mail-Adresse",
+			"emailPlaceholder": "du@beispiel.de",
+			"sending": "Wird gesendet...",
+			"sendMagicLink": "Magic Link senden",
+			"backToHome": "Zurück zur Startseite"
+		}
+	}
+}

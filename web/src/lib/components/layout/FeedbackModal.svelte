@@ -2,6 +2,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import { api } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
+	import { _ } from '$lib/i18n';
 
 	let open = $state(false);
 	let feedbackType = $state('bug');
@@ -15,13 +16,13 @@
 		submitting = true;
 		try {
 			await api.post('/feedback', { type: feedbackType, message: message.trim(), allowFollowUp });
-			toast.success('Feedback submitted — thank you!' + (allowFollowUp ? ' A confirmation has been sent to your email.' : ''));
+			toast.success($_('feedback.successBase') + (allowFollowUp ? $_('feedback.successFollowUp') : ''));
 			message = '';
 			feedbackType = 'bug';
 			allowFollowUp = true;
 			open = false;
 		} catch {
-			toast.error('Failed to submit feedback. Please try again.');
+			toast.error($_('feedback.error'));
 		} finally {
 			submitting = false;
 		}
@@ -33,38 +34,38 @@
 	type="button"
 	onclick={() => (open = true)}
 	class="fixed bottom-6 right-6 z-40 flex h-12 w-12 items-center justify-center rounded-full bg-primary text-white shadow-lg hover:bg-primary-hover transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
-	aria-label="Send feedback"
+	aria-label={$_('feedback.openButton')}
 >
 	<svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 		<path stroke-linecap="round" stroke-linejoin="round" d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z" />
 	</svg>
 </button>
 
-<Modal bind:open title="Send Feedback">
+<Modal bind:open title={$_('feedback.title')}>
 	<form onsubmit={(e) => { e.preventDefault(); handleSubmit(); }}>
 		<div class="space-y-4">
 			<div>
-				<label for="feedback-type" class="block text-sm font-medium text-neutral-700 mb-1">Type</label>
+				<label for="feedback-type" class="block text-sm font-medium text-neutral-700 mb-1">{$_('feedback.typeLabel')}</label>
 				<select
 					id="feedback-type"
 					bind:value={feedbackType}
 					class="block w-full rounded-md border border-neutral-300 bg-surface px-3 py-2 text-sm shadow-sm focus:border-primary focus:ring-1 focus:ring-primary"
 				>
-					<option value="bug">Bug Report</option>
-					<option value="feature">Feature Request</option>
-					<option value="general">General</option>
+					<option value="bug">{$_('feedback.type.bug')}</option>
+					<option value="feature">{$_('feedback.type.feature')}</option>
+					<option value="general">{$_('feedback.type.general')}</option>
 				</select>
 			</div>
 
 			<div>
-				<label for="feedback-message" class="block text-sm font-medium text-neutral-700 mb-1">Message</label>
+				<label for="feedback-message" class="block text-sm font-medium text-neutral-700 mb-1">{$_('feedback.messageLabel')}</label>
 				<textarea
 					id="feedback-message"
 					bind:value={message}
 					rows="5"
 					maxlength="2000"
 					required
-					placeholder="Describe your feedback..."
+					placeholder={$_('feedback.messagePlaceholder')}
 					class="block w-full rounded-md border border-neutral-300 px-3 py-2 text-sm shadow-sm placeholder:text-neutral-400 focus:border-primary focus:ring-1 focus:ring-primary"
 				></textarea>
 				<p class="mt-1 text-xs text-neutral-500">{message.length}/2000</p>
@@ -76,7 +77,7 @@
 					bind:checked={allowFollowUp}
 					class="mt-0.5 rounded border-neutral-300 text-primary focus:ring-primary/40"
 				/>
-				<span class="text-sm text-neutral-600">You can follow up with me about this feedback</span>
+				<span class="text-sm text-neutral-600">{$_('feedback.followUpLabel')}</span>
 			</label>
 		</div>
 
@@ -86,14 +87,14 @@
 				onclick={() => (open = false)}
 				class="rounded-md border border-neutral-300 px-4 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 transition-colors duration-short ease-out"
 			>
-				Cancel
+				{$_('feedback.cancel')}
 			</button>
 			<button
 				type="submit"
 				disabled={submitting || !message.trim()}
 				class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors duration-short ease-out"
 			>
-				{submitting ? 'Submitting...' : 'Submit'}
+				{submitting ? $_('feedback.submitting') : $_('feedback.submit')}
 			</button>
 		</div>
 	</form>

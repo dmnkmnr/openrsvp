@@ -2,6 +2,7 @@
 	import { api } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 	import { isValidEmail } from '$lib/utils/validation';
+	import { _ } from '$lib/i18n';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 
@@ -15,12 +16,12 @@
 		emailError = '';
 
 		if (!email.trim()) {
-			emailError = 'Email is required';
+			emailError = $_('auth.login.emailRequired');
 			return;
 		}
 
 		if (!isValidEmail(email)) {
-			emailError = 'Please enter a valid email address';
+			emailError = $_('auth.login.emailInvalid');
 			return;
 		}
 
@@ -30,7 +31,7 @@
 			sent = true;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to send magic link. Please try again.');
+			toast.error(apiErr.message || $_('auth.login.sendFailed'));
 		} finally {
 			loading = false;
 		}
@@ -38,15 +39,15 @@
 </script>
 
 <svelte:head>
-	<title>Sign In -- OpenRSVP</title>
+	<title>{$_('auth.login.pageTitle')}</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center px-4">
 	<div class="w-full max-w-md">
 		<div class="text-center mb-8">
 			<a href="/" class="text-2xl font-bold text-primary">OpenRSVP</a>
-			<h1 class="font-display mt-4 text-2xl font-semibold text-neutral-900">Sign in to your account</h1>
-			<p class="mt-2 text-neutral-600">Enter your email to receive a magic link</p>
+			<h1 class="font-display mt-4 text-2xl font-semibold text-neutral-900">{$_('auth.login.heading')}</h1>
+			<p class="mt-2 text-neutral-600">{$_('auth.login.subheading')}</p>
 		</div>
 
 		<div class="bg-surface rounded-lg shadow-sm border border-neutral-200 p-8">
@@ -70,13 +71,12 @@
 							/>
 						</svg>
 					</div>
-					<h2 class="text-lg font-semibold text-neutral-900 mb-2">Check your email</h2>
+					<h2 class="text-lg font-semibold text-neutral-900 mb-2">{$_('auth.login.checkEmailHeading')}</h2>
 					<p class="text-sm text-neutral-600 mb-4">
-						We sent a magic link to <strong>{email}</strong>. Click the link in the email to sign
-						in.
+						{$_('auth.login.checkEmailBody', { values: { email } })}
 					</p>
 					<p class="text-xs text-neutral-500 mb-6">
-						Did not receive the email? Check your spam folder or try again.
+						{$_('auth.login.notReceived')}
 					</p>
 					<Button
 						variant="outline"
@@ -85,30 +85,30 @@
 							email = '';
 						}}
 					>
-						Try a different email
+						{$_('auth.login.tryDifferentEmail')}
 					</Button>
 				</div>
 			{:else}
 				<!-- Login form -->
 				<form onsubmit={handleSubmit} class="space-y-6">
 					<Input
-						label="Email address"
+						label={$_('auth.login.emailLabel')}
 						name="email"
 						type="email"
 						bind:value={email}
-						placeholder="you@example.com"
+						placeholder={$_('auth.login.emailPlaceholder')}
 						error={emailError}
 						required
 					/>
 
 					<Button type="submit" {loading} class="w-full">
-						{loading ? 'Sending...' : 'Send Magic Link'}
+						{loading ? $_('auth.login.sending') : $_('auth.login.sendMagicLink')}
 					</Button>
 				</form>
 
 				<div class="mt-6 text-center">
 					<a href="/" class="text-sm text-primary hover:text-primary-hover">
-						Back to home
+						{$_('auth.login.backToHome')}
 					</a>
 				</div>
 			{/if}

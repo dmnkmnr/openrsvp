@@ -1,0 +1,59 @@
+{
+	"nav": {
+		"dashboard": "Dashboard",
+		"createEvent": "Create Event",
+		"admin": "Admin",
+		"account": "Account",
+		"logout": "Logout",
+		"switchToLight": "Switch to light mode",
+		"switchToDark": "Switch to dark mode",
+		"toggleMenu": "Toggle menu",
+		"language": "Language"
+	},
+	"feedback": {
+		"openButton": "Send feedback",
+		"title": "Send Feedback",
+		"typeLabel": "Type",
+		"type": {
+			"bug": "Bug Report",
+			"feature": "Feature Request",
+			"general": "General"
+		},
+		"messageLabel": "Message",
+		"messagePlaceholder": "Describe your feedback...",
+		"followUpLabel": "You can follow up with me about this feedback",
+		"cancel": "Cancel",
+		"submit": "Submit",
+		"submitting": "Submitting...",
+		"successBase": "Feedback submitted — thank you!",
+		"successFollowUp": " A confirmation has been sent to your email.",
+		"error": "Failed to submit feedback. Please try again."
+	},
+	"error": {
+		"notFoundTitle": "This invite got lost in the mail",
+		"notFoundBody": "The page you're looking for doesn't exist or may have been moved. Let's get you back on track.",
+		"genericTitle": "Something went wrong",
+		"genericBody": "An unexpected error occurred. Please try again.",
+		"backToHome": "Back to Home",
+		"myEvents": "My Events"
+	},
+	"auth": {
+		"login": {
+			"pageTitle": "Sign In -- OpenRSVP",
+			"heading": "Sign in to your account",
+			"subheading": "Enter your email to receive a magic link",
+			"emailRequired": "Email is required",
+			"emailInvalid": "Please enter a valid email address",
+			"sendFailed": "Failed to send magic link. Please try again.",
+			"checkEmailHeading": "Check your email",
+			"checkEmailBody": "We sent a magic link to {email}. Click the link in the email to sign in.",
+			"notReceived": "Did not receive the email? Check your spam folder or try again.",
+			"tryDifferentEmail": "Try a different email",
+			"emailLabel": "Email address",
+			"emailPlaceholder": "you@example.com",
+			"sending": "Sending...",
+			"sendMagicLink": "Send Magic Link",
+			"backToHome": "Back to home"
+		}
+	}
+}

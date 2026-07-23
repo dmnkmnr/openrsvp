@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { page } from '$app/stores';
+	import { _ } from '$lib/i18n';
 </script>
 
 <svelte:head>
@@ -55,9 +56,9 @@
 				</div>
 
 				<h1 class="font-display text-6xl font-extrabold tracking-tight text-neutral-900 mb-2">404</h1>
-				<h2 class="text-xl font-semibold text-neutral-700 mb-3">This invite got lost in the mail</h2>
+				<h2 class="text-xl font-semibold text-neutral-700 mb-3">{$_('error.notFoundTitle')}</h2>
 				<p class="text-neutral-500 mb-10 leading-relaxed max-w-sm mx-auto">
-					The page you're looking for doesn't exist or may have been moved. Let's get you back on track.
+					{$_('error.notFoundBody')}
 				</p>
 			{:else}
 				<!-- Generic error -->
@@ -68,9 +69,9 @@
 				</div>
 
 				<h1 class="font-display text-6xl font-extrabold tracking-tight text-neutral-900 mb-2">{$page.status}</h1>
-				<h2 class="text-xl font-semibold text-neutral-700 mb-3">Something went wrong</h2>
+				<h2 class="text-xl font-semibold text-neutral-700 mb-3">{$_('error.genericTitle')}</h2>
 				<p class="text-neutral-500 mb-10 leading-relaxed max-w-sm mx-auto">
-					{$page.error?.message || "An unexpected error occurred. Please try again."}
+					{$page.error?.message || $_('error.genericBody')}
 				</p>
 			{/if}
 
@@ -82,13 +83,13 @@
 					<svg class="w-4 h-4 transition-transform group-hover:-translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
 					</svg>
-					Back to Home
+					{$_('error.backToHome')}
 				</a>
 				<a
 					href="/events"
 					class="inline-flex items-center gap-2 rounded-lg bg-surface px-6 py-3 text-sm font-semibold text-neutral-700 border border-neutral-200 hover:border-neutral-300 hover:bg-neutral-50 transition-all"
 				>
-					My Events
+					{$_('error.myEvents')}
 				</a>
 			</div>
 		</div>
