@@ -788,7 +788,7 @@ func createPublishedEventWithDeadline(t *testing.T, eventSvc *event.Service, org
 	ctx := context.Background()
 	ev, err := eventSvc.Create(ctx, orgID, event.CreateEventRequest{
 		Title:        "Test Event",
-		EventDate:    "2026-06-15T14:00:00Z",
+		EventDate:    time.Now().Add(30 * 24 * time.Hour).UTC().Format(time.RFC3339),
 		RSVPDeadline: &deadline,
 	})
 	require.NoError(t, err)
@@ -822,7 +822,7 @@ func TestSubmitRSVPFutureDeadline(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create event with a future deadline.
-	ev := createPublishedEventWithDeadline(t, eventSvc, org.ID, "2026-06-14T23:59:00Z")
+	ev := createPublishedEventWithDeadline(t, eventSvc, org.ID, time.Now().Add(48*time.Hour).UTC().Format(time.RFC3339))
 
 	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
 		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
@@ -839,7 +839,7 @@ func TestUpdateByTokenPastDeadline(t *testing.T) {
 	require.NoError(t, err)
 
 	// Create event with a future deadline first so we can submit an RSVP.
-	ev := createPublishedEventWithDeadline(t, eventSvc, org.ID, "2026-06-14T23:59:00Z")
+	ev := createPublishedEventWithDeadline(t, eventSvc, org.ID, time.Now().Add(48*time.Hour).UTC().Format(time.RFC3339))
 
 	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
 		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
