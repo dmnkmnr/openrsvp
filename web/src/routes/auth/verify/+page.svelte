@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { goto, replaceState } from '$app/navigation';
+	import { goto } from '$app/navigation';
 	import { page } from '$app/stores';
 	import { api } from '$lib/api/client';
 	import { currentUser } from '$lib/stores/auth';
@@ -21,9 +21,17 @@
 			return;
 		}
 
-		// Strip the raw token from the URL/history before doing anything else,
-		// so it does not linger in browser history.
-		replaceState('/auth/verify', {});
+		// Strip the raw token from the URL/history so it does not linger in
+		// browser history. Use the native history API directly: users arrive
+		// here from a fresh page load (the email link), where SvelteKit's
+		// router may not be initialized yet. In that state $app/navigation's
+		// replaceState throws, which previously aborted verification before
+		// the request was ever sent and left the spinner hanging forever.
+		try {
+			window.history.replaceState(window.history.state, '', '/auth/verify');
+		} catch {
+			// Non-fatal: verification must proceed even if URL cleanup fails.
+		}
 
 		try {
 			const result = await api.post<{ token: string; organizer: Organizer }>('/auth/verify', { token });
