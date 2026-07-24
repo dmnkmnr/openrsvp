@@ -7,7 +7,7 @@
 <select
 	bind:value={$locale}
 	aria-label={$_('nav.language')}
-	class="rounded-md border-none bg-transparent p-2 text-sm text-neutral-400 hover:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary transition-colors duration-short ease-out"
+	class="appearance-none rounded-md border-none bg-neutral-50 p-2 text-sm text-neutral-400 hover:text-neutral-700 focus:outline-none focus:ring-2 focus:ring-primary transition-colors duration-short ease-out"
 >
 	{#each SUPPORTED_LOCALES as l (l)}
 		<option value={l}>{labels[l]}</option>
