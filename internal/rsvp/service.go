@@ -318,11 +318,17 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	// than defaulting blindly to "email": a phone-only submission (valid
 	// under "phone" or "email_or_phone" contact requirements, or from a
 	// client that predates this field) must not be forced into a method it
-	// can't reach.
+	// can't reach. Never infer "sms" when SMS is instance-wide disabled --
+	// that's not a usable channel regardless of what data was given, so
+	// inference falls back to "email" and lets the existing requirement
+	// checks below report the real problem (e.g. "email is required").
+	// An explicit contactMethod of "sms" while disabled is still rejected
+	// below, distinguishing "you asked for something unavailable" from
+	// "the system inferred something invalid on its own".
 	if req.ContactMethod == "" {
 		if req.Email != nil && *req.Email != "" {
 			req.ContactMethod = "email"
-		} else if req.Phone != nil && *req.Phone != "" {
+		} else if s.smsEnabled && req.Phone != nil && *req.Phone != "" {
 			req.ContactMethod = "sms"
 		} else {
 			req.ContactMethod = "email"
