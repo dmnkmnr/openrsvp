@@ -1,10 +1,11 @@
 <script lang="ts">
 	import { isAuthenticated } from '$lib/stores/auth';
+	import { _ } from '$lib/i18n';
 </script>
 
 <svelte:head>
-	<title>OpenRSVP — Beautiful Invitations, Zero Ads</title>
-	<meta name="description" content="Create stunning event invitations and manage RSVPs. Self-hosted, privacy-first, and completely free. No ads, no tracking." />
+	<title>{$_('landing.metaTitle')}</title>
+	<meta name="description" content={$_('landing.metaDescription')} />
 </svelte:head>
 
 <div class="min-h-screen bg-surface">
@@ -25,20 +26,20 @@
 						href="/events"
 						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors shadow-sm"
 					>
-						Dashboard
+						{$_('nav.dashboard')}
 					</a>
 				{:else}
 					<a
 						href="/auth/login"
 						class="text-sm font-medium text-neutral-600 hover:text-neutral-900 transition-colors px-3 py-2"
 					>
-						Sign In
+						{$_('common.signIn')}
 					</a>
 					<a
 						href="/auth/login"
 						class="rounded-md bg-primary px-5 py-2 text-sm font-semibold text-white hover:bg-primary-hover transition-colors shadow-sm"
 					>
-						Get Started
+						{$_('common.getStarted')}
 					</a>
 				{/if}
 			</div>
@@ -60,18 +61,16 @@
 					<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
 					</svg>
-					Open source &amp; self-hosted
+					{$_('landing.badge')}
 				</div>
 
 				<h1 class="font-display text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-neutral-900 mb-6 leading-[1.1]">
-					Beautiful Invitations,<br />
-					<span class="bg-gradient-to-r from-primary via-pink-500 to-amber-500 bg-clip-text text-transparent">Zero Ads</span>
+					{$_('landing.heroTitleLine1')}<br />
+					<span class="bg-gradient-to-r from-primary via-pink-500 to-amber-500 bg-clip-text text-transparent">{$_('landing.heroTitleHighlight')}</span>
 				</h1>
 
 				<p class="text-lg sm:text-xl text-neutral-600 max-w-2xl mx-auto mb-10 leading-relaxed">
-					Create stunning event invitations and manage RSVPs with a privacy-first platform.
-					Self-hosted, no tracking, and your data auto-deletes after the event.
-					Perfect for birthdays, gatherings, and celebrations.
+					{$_('landing.heroSubtitle')}
 				</p>
 
 				<div class="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -79,7 +78,7 @@
 						href="/auth/login"
 						class="group inline-flex items-center gap-2 rounded-lg bg-primary px-8 py-3.5 text-lg font-semibold text-white hover:bg-primary-hover transition-all shadow-lg shadow-primary/25 hover:shadow-primary/40"
 					>
-						Create Your First Event
+						{$_('landing.createFirstEvent')}
 						<svg class="w-5 h-5 transition-transform group-hover:translate-x-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
 							<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
 						</svg>
@@ -93,7 +92,7 @@
 						<svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
 							<path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd" />
 						</svg>
-						View on GitHub
+						{$_('landing.viewOnGithub')}
 					</a>
 				</div>
 			</div>
@@ -104,10 +103,10 @@
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="text-center mb-16">
 					<h2 class="font-display text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-						Everything you need for your event
+						{$_('landing.featuresTitle')}
 					</h2>
 					<p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-						A complete toolkit for creating invitations, managing RSVPs, and keeping your guests informed.
+						{$_('landing.featuresSubtitle')}
 					</p>
 				</div>
 
@@ -119,9 +118,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Beautiful Templates</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.templatesTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Choose from stunning, themed designs. Customize colors, fonts, and every detail to match your event perfectly.
+							{$_('landing.features.templatesBody')}
 						</p>
 					</div>
 
@@ -132,9 +131,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Privacy First</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.privacyTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Self-hosted and ad-free. No tracking, no selling data. Guest data auto-deletes after your event ends.
+							{$_('landing.features.privacyBody')}
 						</p>
 					</div>
 
@@ -145,9 +144,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Easy RSVPs</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.rsvpsTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Guests RSVP in seconds with no account needed. One-click responses make it effortless for everyone.
+							{$_('landing.features.rsvpsBody')}
 						</p>
 					</div>
 
@@ -158,9 +157,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Smart Notifications</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.notificationsTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Automated email and SMS reminders keep guests informed. Configure timing and messages to your liking.
+							{$_('landing.features.notificationsBody')}
 						</p>
 					</div>
 
@@ -171,9 +170,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Real-time Stats</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.statsTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Track RSVPs, dietary requirements, plus-ones, and more. Get a clear overview of your event at a glance.
+							{$_('landing.features.statsBody')}
 						</p>
 					</div>
 
@@ -184,9 +183,9 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M10 20l4-16m4 4l4 4-4 4M6 16l-4-4 4-4" />
 							</svg>
 						</div>
-						<h3 class="text-lg font-semibold text-neutral-900 mb-2">Open Source</h3>
+						<h3 class="text-lg font-semibold text-neutral-900 mb-2">{$_('landing.features.openSourceTitle')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							MIT licensed and fully customizable. Deploy on your own server and own your data. Community-driven development.
+							{$_('landing.features.openSourceBody')}
 						</p>
 					</div>
 				</div>
@@ -198,10 +197,10 @@
 			<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
 				<div class="text-center mb-16">
 					<h2 class="font-display text-3xl sm:text-4xl font-bold text-neutral-900 mb-4">
-						Up and running in minutes
+						{$_('landing.howTitle')}
 					</h2>
 					<p class="text-lg text-neutral-600 max-w-2xl mx-auto">
-						Three simple steps to create and share beautiful invitations with your guests.
+						{$_('landing.howSubtitle')}
 					</p>
 				</div>
 
@@ -211,9 +210,9 @@
 						<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-primary text-white text-2xl font-bold mb-6 shadow-lg shadow-primary/30">
 							1
 						</div>
-						<h3 class="text-xl font-semibold text-neutral-900 mb-3">Create Your Event</h3>
+						<h3 class="text-xl font-semibold text-neutral-900 mb-3">{$_('landing.step1Title')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Set up your event with a title, date, location, and details. It only takes a moment.
+							{$_('landing.step1Body')}
 						</p>
 						<!-- Connector arrow (hidden on mobile) -->
 						<div class="hidden md:block absolute top-8 left-[calc(100%-1rem)] w-8 text-neutral-300" aria-hidden="true">
@@ -228,9 +227,9 @@
 						<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-pink-500 text-white text-2xl font-bold mb-6 shadow-lg shadow-pink-500/30">
 							2
 						</div>
-						<h3 class="text-xl font-semibold text-neutral-900 mb-3">Design Your Invite</h3>
+						<h3 class="text-xl font-semibold text-neutral-900 mb-3">{$_('landing.step2Title')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Pick a template, customize colors and fonts, and write your personal message to guests.
+							{$_('landing.step2Body')}
 						</p>
 						<!-- Connector arrow (hidden on mobile) -->
 						<div class="hidden md:block absolute top-8 left-[calc(100%-1rem)] w-8 text-neutral-300" aria-hidden="true">
@@ -245,9 +244,9 @@
 						<div class="inline-flex items-center justify-center w-16 h-16 rounded-xl bg-amber-500 text-white text-2xl font-bold mb-6 shadow-lg shadow-amber-500/30">
 							3
 						</div>
-						<h3 class="text-xl font-semibold text-neutral-900 mb-3">Share &amp; Track</h3>
+						<h3 class="text-xl font-semibold text-neutral-900 mb-3">{$_('landing.step3Title')}</h3>
 						<p class="text-neutral-600 leading-relaxed">
-							Share your invite link and watch RSVPs roll in. Track responses and send reminders with ease.
+							{$_('landing.step3Body')}
 						</p>
 					</div>
 				</div>
@@ -262,16 +261,16 @@
 			</div>
 			<div class="relative max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
 				<h2 class="font-display text-3xl sm:text-4xl font-bold text-white mb-6">
-					Ready to create your first invitation?
+					{$_('landing.ctaTitle')}
 				</h2>
 				<p class="text-lg text-rose-100 mb-10 max-w-2xl mx-auto">
-					Join organizers who value privacy and beautiful design. Get started for free in under a minute.
+					{$_('landing.ctaSubtitle')}
 				</p>
 				<a
 					href="/auth/login"
 					class="inline-flex items-center gap-2 rounded-lg bg-surface px-8 py-3.5 text-lg font-semibold text-primary hover:bg-primary-lighter transition-colors shadow-lg"
 				>
-					Get Started Free
+					{$_('landing.getStartedFree')}
 					<svg class="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5">
 						<path stroke-linecap="round" stroke-linejoin="round" d="M13 7l5 5m0 0l-5 5m5-5H6" />
 					</svg>
@@ -292,7 +291,7 @@
 					</div>
 					<div>
 						<div class="text-white font-semibold">OpenRSVP</div>
-						<div class="text-sm">Open source and self-hosted</div>
+						<div class="text-sm">{$_('landing.footerTagline')}</div>
 					</div>
 				</div>
 				<div class="flex items-center gap-6">
