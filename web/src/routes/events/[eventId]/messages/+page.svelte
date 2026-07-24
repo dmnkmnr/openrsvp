@@ -12,6 +12,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { onMount, tick } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	const eventId = $derived($page.params.eventId);
 
@@ -34,34 +35,34 @@
 
 	let composeForm: HTMLFormElement | undefined = $state();
 
-	const recipientOptions = [
-		{ value: 'all', label: 'All Attendees' },
-		{ value: 'attending', label: 'Attending' },
-		{ value: 'maybe', label: 'Maybe' },
-		{ value: 'declined', label: 'Declined' },
-		{ value: 'pending', label: 'Pending RSVP' }
-	];
+	const recipientOptions = $derived([
+		{ value: 'all', label: $_('events.messages.recipient.all') },
+		{ value: 'attending', label: $_('events.messages.recipient.attending') },
+		{ value: 'maybe', label: $_('events.messages.recipient.maybe') },
+		{ value: 'declined', label: $_('events.messages.recipient.declined') },
+		{ value: 'pending', label: $_('events.messages.recipient.pending') }
+	]);
 
-	const recipientLabels: Record<string, string> = {
-		all: 'All Attendees',
-		attending: 'Attending',
-		maybe: 'Maybe',
-		declined: 'Declined',
-		pending: 'Pending RSVP'
-	};
+	const recipientLabels: Record<string, string> = $derived({
+		all: $_('events.messages.recipient.all'),
+		attending: $_('events.messages.recipient.attending'),
+		maybe: $_('events.messages.recipient.maybe'),
+		declined: $_('events.messages.recipient.declined'),
+		pending: $_('events.messages.recipient.pending')
+	});
 
 	function attendeeName(id: string): string {
-		return attendeeMap[id] || 'Unknown';
+		return attendeeMap[id] || $_('events.messages.unknown');
 	}
 
 	function messageLabel(msg: Message): string {
 		if (msg.senderType === 'attendee') {
-			return 'From: ' + attendeeName(msg.senderId);
+			return $_('events.messages.from', { values: { name: attendeeName(msg.senderId) } });
 		}
 		if (msg.recipientType === 'attendee') {
-			return 'To: ' + attendeeName(msg.recipientId);
+			return $_('events.messages.to', { values: { name: attendeeName(msg.recipientId) } });
 		}
-		return 'To: ' + (recipientLabels[msg.recipientId] || msg.recipientId);
+		return $_('events.messages.to', { values: { name: recipientLabels[msg.recipientId] || msg.recipientId } });
 	}
 
 	function isIncoming(msg: Message): boolean {
@@ -106,7 +107,7 @@
 			attendeeMap = map;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to load messages');
+			toast.error(apiErr.message || $_('events.messages.loadError'));
 		} finally {
 			loading = false;
 		}
@@ -114,8 +115,8 @@
 
 	async function handleSend() {
 		composeErrors = {};
-		if (!subject.trim()) composeErrors.subject = 'Subject is required';
-		if (!body.trim()) composeErrors.body = 'Message body is required';
+		if (!subject.trim()) composeErrors.subject = $_('events.messages.subjectRequired');
+		if (!body.trim()) composeErrors.body = $_('events.messages.bodyRequired');
 		if (Object.keys(composeErrors).length > 0) return;
 
 		sending = true;
@@ -140,10 +141,10 @@
 			body = '';
 			replyToAttendeeId = '';
 			replyToAttendeeName = '';
-			toast.success('Message sent!');
+			toast.success($_('events.messages.sendSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to send message');
+			toast.error(apiErr.message || $_('events.messages.sendError'));
 		} finally {
 			sending = false;
 		}
@@ -151,14 +152,14 @@
 </script>
 
 <svelte:head>
-	<title>Messages -- OpenRSVP</title>
+	<title>{$_('events.messages.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="max-w-3xl mx-auto">
 		<div class="mb-6">
-			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; Back to event</a>
-			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">Messages</h1>
+			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.messages.backToEvent')}</a>
+			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">{$_('events.messages.heading')}</h1>
 			{#if event}
 				<p class="text-sm text-neutral-500">{event.title}</p>
 			{/if}
@@ -172,7 +173,7 @@
 			<!-- Compose form -->
 			<Card class="mb-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Compose Message</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.messages.composeTitle')}</h2>
 				{/snippet}
 
 				<form
@@ -186,12 +187,12 @@
 					{#if replyToAttendeeId}
 						<div class="flex items-center gap-2">
 							<span class="inline-flex items-center gap-1 rounded-full bg-primary-lighter px-3 py-1 text-sm font-medium text-primary">
-								Replying to {replyToAttendeeName}
+								{$_('events.messages.replyingTo', { values: { name: replyToAttendeeName } })}
 								<button
 									type="button"
 									onclick={cancelReply}
 									class="ml-1 inline-flex h-4 w-4 items-center justify-center rounded-full text-primary hover:bg-primary-light hover:text-primary"
-									aria-label="Cancel reply"
+									aria-label={$_('events.messages.cancelReply')}
 								>
 									&times;
 								</button>
@@ -199,7 +200,7 @@
 						</div>
 					{:else}
 						<Select
-							label="Send To"
+							label={$_('events.messages.sendToLabel')}
 							name="recipientType"
 							bind:value={recipientType}
 							options={recipientOptions}
@@ -207,26 +208,26 @@
 					{/if}
 
 					<Input
-						label="Subject"
+						label={$_('events.messages.subjectLabel')}
 						name="subject"
 						bind:value={subject}
-						placeholder="Message subject"
+						placeholder={$_('events.messages.subjectPlaceholder')}
 						error={composeErrors.subject || ''}
 						required
 					/>
 
 					<Textarea
-						label="Message"
+						label={$_('events.messages.messageLabel')}
 						name="body"
 						bind:value={body}
-						placeholder="Write your message..."
+						placeholder={$_('events.messages.messagePlaceholder')}
 						rows={4}
 						error={composeErrors.body || ''}
 						required
 					/>
 
 					<div class="flex justify-end">
-						<Button type="submit" loading={sending}>Send Message</Button>
+						<Button type="submit" loading={sending}>{$_('events.messages.sendMessage')}</Button>
 					</div>
 				</form>
 			</Card>
@@ -234,11 +235,11 @@
 			<!-- Message list -->
 			<Card>
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">All Messages</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.messages.allMessagesTitle')}</h2>
 				{/snippet}
 
 				{#if messages.length === 0}
-					<p class="text-sm text-neutral-500 text-center py-8">No messages yet.</p>
+					<p class="text-sm text-neutral-500 text-center py-8">{$_('events.messages.noMessages')}</p>
 				{:else}
 					<div class="divide-y divide-neutral-200 -mx-6 -mb-4">
 						{#each messages as message (message.id)}
@@ -257,7 +258,7 @@
 											onclick={() => handleReply(message)}
 											class="ml-3 shrink-0 text-xs font-medium text-primary hover:text-primary-hover"
 										>
-											Reply
+											{$_('events.messages.reply')}
 										</button>
 									{/if}
 								</div>

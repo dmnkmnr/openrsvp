@@ -10,6 +10,7 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { onMount } from 'svelte';
 	import QRCode from 'qrcode';
+	import { _ } from '$lib/i18n';
 
 	const eventId = $derived($page.params.eventId);
 
@@ -45,7 +46,7 @@
 			}
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to load event');
+			toast.error(apiErr.message || $_('events.share.loadError'));
 		} finally {
 			loading = false;
 		}
@@ -55,23 +56,23 @@
 		try {
 			await navigator.clipboard.writeText(shareUrl);
 			copied = true;
-			toast.success('Link copied to clipboard!');
+			toast.success($_('events.share.linkCopied'));
 			setTimeout(() => (copied = false), 2000);
 		} catch {
-			toast.error('Failed to copy link');
+			toast.error($_('events.share.copyError'));
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Share Event -- OpenRSVP</title>
+	<title>{$_('events.share.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="max-w-3xl mx-auto">
 		<div class="mb-6">
-			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; Back to event</a>
-			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">Share Event</h1>
+			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.share.backToEvent')}</a>
+			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">{$_('events.share.heading')}</h1>
 			{#if event}
 				<p class="text-sm text-neutral-500">{event.title}</p>
 			{/if}
@@ -85,11 +86,11 @@
 			<!-- Share link -->
 			<Card class="mb-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Share Link</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.share.shareLinkTitle')}</h2>
 				{/snippet}
 
 				<p class="text-sm text-neutral-600 mb-4">
-					Share this link with your guests so they can view the invitation and RSVP.
+					{$_('events.share.shareLinkBody')}
 				</p>
 
 				<div class="flex items-center gap-2">
@@ -100,7 +101,7 @@
 						class="flex-1 block rounded-lg border border-neutral-300 bg-neutral-50 px-3 py-2 text-sm text-neutral-700 font-mono"
 					/>
 					<Button onclick={copyLink} variant={copied ? 'secondary' : 'primary'} size="md">
-						{copied ? 'Copied!' : 'Copy Link'}
+						{copied ? $_('events.share.copied') : $_('events.share.copyLink')}
 					</Button>
 				</div>
 			</Card>
@@ -108,19 +109,19 @@
 			<!-- QR Code -->
 			<Card class="mb-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">QR Code</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.share.qrCodeTitle')}</h2>
 				{/snippet}
 
 				<div class="flex flex-col items-center py-6">
 					{#if qrDataUrl}
-						<img src={qrDataUrl} alt="QR Code for event invitation" class="w-48 h-48 rounded-lg" />
+						<img src={qrDataUrl} alt={$_('events.share.qrCodeAlt')} class="w-48 h-48 rounded-lg" />
 					{:else}
 						<div class="w-48 h-48 bg-neutral-100 border-2 border-dashed border-neutral-300 rounded-lg flex items-center justify-center">
 							<div class="animate-spin rounded-full h-6 w-6 border-b-2 border-neutral-400"></div>
 						</div>
 					{/if}
 					<p class="mt-4 text-sm text-neutral-500 text-center max-w-sm">
-						Point a phone camera at the QR code to open the invitation link directly.
+						{$_('events.share.qrCodeBody')}
 					</p>
 					<p class="mt-1 text-xs text-neutral-400 font-mono break-all text-center">{shareUrl}</p>
 				</div>
@@ -129,30 +130,30 @@
 			<!-- Attendee summary -->
 			<Card>
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Response Summary</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.share.responseSummaryTitle')}</h2>
 				{/snippet}
 
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-success">{stats.attending}</p>
-						<p class="text-xs text-neutral-500">Attending</p>
+						<p class="text-xs text-neutral-500">{$_('events.share.attending')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-warning">{stats.maybe}</p>
-						<p class="text-xs text-neutral-500">Maybe</p>
+						<p class="text-xs text-neutral-500">{$_('events.share.maybe')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-error">{stats.declined}</p>
-						<p class="text-xs text-neutral-500">Declined</p>
+						<p class="text-xs text-neutral-500">{$_('events.share.declined')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-info">{stats.pending}</p>
-						<p class="text-xs text-neutral-500">Pending</p>
+						<p class="text-xs text-neutral-500">{$_('events.share.pending')}</p>
 					</div>
 				</div>
 				<div class="mt-4 pt-4 border-t border-neutral-200 text-center">
 					<p class="text-sm text-neutral-600">
-						<span class="font-semibold">{stats.total}</span> total invitees
+						<span class="font-semibold">{stats.total}</span> {$_('events.share.totalInvitees')}
 					</p>
 				</div>
 			</Card>
