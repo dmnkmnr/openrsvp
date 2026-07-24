@@ -139,6 +139,24 @@
 		"deleteSuccess": "Your account and all associated data have been deleted.",
 		"deleteError": "Failed to delete your account"
 	},
+	"guestFeedback": {
+		"reportProblem": "Report a problem",
+		"modalTitle": "Send Feedback",
+		"thankYou": "Thank you!",
+		"sentBody": "Your feedback has been sent.",
+		"close": "Close",
+		"intro": "Noticed something off? Let us know and we'll take a look.",
+		"messageLabel": "Message",
+		"messagePlaceholder": "Describe the problem or share your feedback...",
+		"emailLabel": "Email",
+		"optional": "(optional)",
+		"emailPlaceholder": "you@example.com",
+		"cancel": "Cancel",
+		"sending": "Sending...",
+		"sendFeedback": "Send Feedback",
+		"messageRequired": "Please enter a message.",
+		"submitError": "Failed to send feedback. Please try again."
+	},
 	"guestManage": {
 		"pageTitle": "Manage Your RSVP",
 		"loading": "Loading your RSVP...",

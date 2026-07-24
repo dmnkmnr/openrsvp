@@ -139,6 +139,24 @@
 		"deleteSuccess": "Dein Konto und alle zugehörigen Daten wurden gelöscht.",
 		"deleteError": "Dein Konto konnte nicht gelöscht werden"
 	},
+	"guestFeedback": {
+		"reportProblem": "Problem melden",
+		"modalTitle": "Feedback senden",
+		"thankYou": "Danke!",
+		"sentBody": "Dein Feedback wurde gesendet.",
+		"close": "Schließen",
+		"intro": "Etwas stimmt nicht? Lass es uns wissen, wir schauen uns das an.",
+		"messageLabel": "Nachricht",
+		"messagePlaceholder": "Beschreibe das Problem oder teile dein Feedback...",
+		"emailLabel": "E-Mail",
+		"optional": "(optional)",
+		"emailPlaceholder": "du@beispiel.de",
+		"cancel": "Abbrechen",
+		"sending": "Wird gesendet...",
+		"sendFeedback": "Feedback senden",
+		"messageRequired": "Bitte gib eine Nachricht ein.",
+		"submitError": "Feedback konnte nicht gesendet werden. Bitte versuche es erneut."
+	},
 	"guestManage": {
 		"pageTitle": "Deine RSVP verwalten",
 		"loading": "Deine RSVP wird geladen...",
