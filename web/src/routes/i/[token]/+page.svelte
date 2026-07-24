@@ -9,6 +9,7 @@
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
+	import { _ } from '$lib/i18n';
 
 	interface PublicInviteData {
 		event: PublicEvent;
@@ -79,7 +80,7 @@
 			myCommentIds.delete(commentId);
 		} catch (err) {
 			const apiErr = err as ApiError;
-			commentError = apiErr.message || 'Failed to delete comment.';
+			commentError = apiErr.message || $_('guestInvite.deleteCommentError');
 		} finally {
 			deletingCommentId = '';
 		}
@@ -121,7 +122,7 @@
 			newComment = '';
 		} catch (err) {
 			const apiErr = err as ApiError;
-			commentError = apiErr.message || 'Failed to post comment';
+			commentError = apiErr.message || $_('guestInvite.postCommentError');
 		} finally {
 			submittingComment = false;
 		}
@@ -141,9 +142,9 @@
 		} catch (err) {
 			const apiErr = err as ApiError;
 			if (apiErr.status === 404) {
-				error = 'This invitation could not be found. It may have expired or been removed.';
+				error = $_('guestInvite.notFoundBody');
 			} else {
-				error = apiErr.message || 'Failed to load invitation. Please try again later.';
+				error = apiErr.message || $_('guestInvite.loadError');
 			}
 		} finally {
 			loading = false;
@@ -166,10 +167,10 @@
 		const hoursLeft = Math.max(0, (deadline.getTime() - now.getTime()) / (1000 * 60 * 60));
 
 		if (hoursLeft <= 0) return '';
-		if (hoursLeft < 1) return 'Less than 1 hour left to RSVP';
-		if (hoursLeft < 24) return `${Math.ceil(hoursLeft)} hours left to RSVP`;
-		if (hoursLeft < 48) return 'About 1 day left to RSVP';
-		return `RSVP by ${formatDateTime(eventData.rsvpDeadline, eventData.timezone)}`;
+		if (hoursLeft < 1) return $_('guestInvite.deadlineLessThanHour');
+		if (hoursLeft < 24) return $_('guestInvite.deadlineHoursLeft', { values: { hours: Math.ceil(hoursLeft) } });
+		if (hoursLeft < 48) return $_('guestInvite.deadlineAboutOneDay');
+		return $_('guestInvite.deadlineBy', { values: { date: formatDateTime(eventData.rsvpDeadline, eventData.timezone) } });
 	});
 
 	// Capacity display logic
@@ -192,7 +193,7 @@
 		if (honeypot) return;
 
 		if (!name.trim()) {
-			submitError = 'Please fill in your name.';
+			submitError = $_('guestInvite.nameRequired');
 			return;
 		}
 
@@ -201,24 +202,24 @@
 
 		// When SMS is disabled, email is always required.
 		if (!$smsEnabled && !hasEmail) {
-			submitError = 'Email is required.';
+			submitError = $_('guestInvite.emailRequired');
 			return;
 		}
 
 		if (contactReq === 'email' && !hasEmail) {
-			submitError = 'Email is required.';
+			submitError = $_('guestInvite.emailRequired');
 			return;
 		}
 		if (contactReq === 'phone' && !hasPhone) {
-			submitError = 'Phone number is required.';
+			submitError = $_('guestInvite.phoneRequiredMsg');
 			return;
 		}
 		if (contactReq === 'email_and_phone' && (!hasEmail || !hasPhone)) {
-			submitError = 'Both email and phone are required.';
+			submitError = $_('guestInvite.bothRequired');
 			return;
 		}
 		if (contactReq === 'email_or_phone' && !hasEmail && !hasPhone) {
-			submitError = 'Please provide an email or phone number.';
+			submitError = $_('guestInvite.emailOrPhoneRequired');
 			return;
 		}
 
@@ -251,7 +252,7 @@
 			}
 		} catch (err) {
 			const apiErr = err as ApiError;
-			submitError = apiErr.message || 'Failed to submit RSVP. Please try again.';
+			submitError = apiErr.message || $_('guestInvite.submitError');
 		} finally {
 			submitting = false;
 		}
@@ -267,7 +268,7 @@
 	async function handleLookup(e: SubmitEvent) {
 		e.preventDefault();
 		if (!lookupEmail.trim()) {
-			lookupError = 'Please enter your email address.';
+			lookupError = $_('guestInvite.lookupEmailRequired');
 			return;
 		}
 		lookupLoading = true;
@@ -279,7 +280,7 @@
 			lookupSuccess = true;
 		} catch (err) {
 			const apiErr = err as ApiError;
-			lookupError = apiErr.message || 'Something went wrong. Please try again.';
+			lookupError = apiErr.message || $_('guestInvite.lookupError');
 		} finally {
 			lookupLoading = false;
 		}
@@ -287,16 +288,16 @@
 
 	const statusLabel = $derived.by(() => {
 		switch (rsvpStatus) {
-			case 'attending': return "I'll be there!";
-			case 'maybe': return 'Maybe';
-			case 'declined': return "Can't make it";
+			case 'attending': return $_('guestInvite.statusAttending');
+			case 'maybe': return $_('guestInvite.statusMaybe');
+			case 'declined': return $_('guestInvite.statusDeclined');
 			default: return '';
 		}
 	});
 </script>
 
 <svelte:head>
-	<title>{eventData ? `${eventData.title} — You're Invited` : "You're Invited"} — OpenRSVP</title>
+	<title>{eventData ? `${eventData.title} — ${$_('guestInvite.pageTitle')}` : $_('guestInvite.pageTitle')} — OpenRSVP</title>
 </svelte:head>
 
 <div class="invite-page min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12"
@@ -306,7 +307,7 @@
 		<div class="flex items-center justify-center min-h-[60vh]">
 			<div class="flex flex-col items-center gap-4">
 				<div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-				<p class="text-neutral-500 text-sm">Loading your invitation...</p>
+				<p class="text-neutral-500 text-sm">{$_('guestInvite.loading')}</p>
 			</div>
 		</div>
 	{:else if error}
@@ -317,7 +318,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
 					</svg>
 				</div>
-				<h2 class="font-display text-xl font-semibold text-neutral-900 mb-2">Invitation Not Found</h2>
+				<h2 class="font-display text-xl font-semibold text-neutral-900 mb-2">{$_('guestInvite.notFoundTitle')}</h2>
 				<p class="text-neutral-600">{error}</p>
 			</div>
 		</div>
@@ -344,15 +345,15 @@
 		{#if showWaitlist}
 			<div class="w-full max-w-lg mb-6">
 				<div class="rounded-md bg-info-light border border-info/20 p-4 text-center">
-					<p class="text-sm font-medium text-info">This event is full. You can join the waitlist and we'll notify you if a spot opens up.</p>
+					<p class="text-sm font-medium text-info">{$_('guestInvite.waitlistFullBody')}</p>
 				</div>
 			</div>
 		{:else if eventData.atCapacity}
 			<div class="w-full max-w-lg mb-6">
 				<div class="rounded-md bg-error-light border border-error/20 p-4 text-center">
-					<p class="text-sm font-medium text-error">This event is at capacity</p>
+					<p class="text-sm font-medium text-error">{$_('guestInvite.atCapacityTitle')}</p>
 					<p class="text-xs text-error/80 mt-1">
-						You can still RSVP as "maybe" or "declined".
+						{$_('guestInvite.atCapacityBody')}
 					</p>
 				</div>
 			</div>
@@ -360,7 +361,7 @@
 			<div class="w-full max-w-lg mb-6">
 				<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-4">
 					<div class="flex items-center justify-between text-xs text-neutral-500 mb-1">
-						<span>{eventData.spotsLeft} {eventData.spotsLeft === 1 ? 'spot' : 'spots'} remaining</span>
+						<span>{$_(eventData.spotsLeft === 1 ? 'guestInvite.spotsRemaining' : 'guestInvite.spotsRemainingPlural', { values: { count: eventData.spotsLeft } })}</span>
 						<span>{eventData.maxCapacity - eventData.spotsLeft} / {eventData.maxCapacity}</span>
 					</div>
 					<div class="h-1.5 w-full rounded-full bg-neutral-200 overflow-hidden">
@@ -371,7 +372,7 @@
 							aria-valuenow={capacityPercent}
 							aria-valuemin={0}
 							aria-valuemax={100}
-							aria-label="Event capacity"
+							aria-label={$_('guestInvite.capacityAriaLabel')}
 						></div>
 					</div>
 				</div>
@@ -398,7 +399,7 @@
 								<svg class="w-5 h-5 text-success flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
 								</svg>
-								<span class="font-medium">{attendance.headcount} {attendance.headcount === 1 ? 'person' : 'people'} attending</span>
+								<span class="font-medium">{$_(attendance.headcount === 1 ? 'guestInvite.personAttending' : 'guestInvite.peopleAttending', { values: { count: attendance.headcount } })}</span>
 							</div>
 						{/if}
 						{#if attendance.names && attendance.names.length > 0}
@@ -414,7 +415,7 @@
 										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
 										onclick={() => (showAllNames = true)}
 									>
-										+{attendance.names.length - 50} more
+										{$_('guestInvite.showMore', { values: { count: attendance.names.length - 50 } })}
 									</button>
 								{/if}
 								{#if showAllNames && attendance.names.length > 50}
@@ -423,7 +424,7 @@
 										class="inline-flex items-center rounded-full bg-neutral-100 px-3 py-1 text-xs font-medium text-neutral-600 hover:bg-neutral-200 transition-colors"
 										onclick={() => (showAllNames = false)}
 									>
-										Show less
+										{$_('guestInvite.showLess')}
 									</button>
 								{/if}
 							</div>
@@ -434,7 +435,7 @@
 		{:else if attendance && attendance.headcount === 0 && !(submitted && rsvpStatus === 'declined')}
 			<div class="w-full max-w-lg mb-8">
 				<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-5">
-					<p class="text-sm text-neutral-500 text-center">Be the first to RSVP!</p>
+					<p class="text-sm text-neutral-500 text-center">{$_('guestInvite.beFirstToRsvp')}</p>
 				</div>
 			</div>
 		{/if}
@@ -443,9 +444,9 @@
 		{#if eventData.rsvpsClosed}
 			<div class="w-full max-w-lg">
 				<div class="rounded-md bg-warning-light border border-warning/20 p-4 text-center">
-					<p class="text-sm font-medium text-warning">RSVPs are closed</p>
+					<p class="text-sm font-medium text-warning">{$_('guestInvite.rsvpsClosedTitle')}</p>
 					<p class="text-xs text-warning/80 mt-1">
-						The RSVP deadline for this event has passed.
+						{$_('guestInvite.rsvpsClosedBody')}
 					</p>
 				</div>
 			</div>
@@ -457,12 +458,12 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 						</svg>
 					</div>
-					<h2 class="font-display text-2xl font-bold text-neutral-900 mb-2">RSVP Received!</h2>
+					<h2 class="font-display text-2xl font-bold text-neutral-900 mb-2">{$_('guestInvite.rsvpReceivedTitle')}</h2>
 					<p class="text-neutral-600 mb-4">
-						Thank you, <strong>{name}</strong>! Your response has been recorded.
+						{$_('guestInvite.rsvpReceivedBody', { values: { name } })}
 					</p>
 					<div class="inline-flex items-center gap-2 bg-neutral-50 rounded-md px-4 py-2 text-sm text-neutral-600 mb-4">
-						<span>Status:</span>
+						<span>{$_('guestInvite.statusLabel')}</span>
 						<span class="font-semibold" class:text-success={rsvpStatus === 'attending'} class:text-warning={rsvpStatus === 'maybe'} class:text-error={rsvpStatus === 'declined'}>
 							{statusLabel}
 						</span>
@@ -475,7 +476,7 @@
 					{#if rsvpToken}
 						<div class="mt-4 pt-4 border-t border-neutral-100">
 							<p class="text-sm text-neutral-500 mb-3">
-								Need to change your response? Use this link:
+								{$_('guestInvite.changeResponsePrompt')}
 							</p>
 							<a
 								href="/r/{rsvpToken}"
@@ -484,7 +485,7 @@
 								<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 								</svg>
-								Modify Your RSVP
+								{$_('guestInvite.modifyRsvp')}
 							</a>
 						</div>
 					{/if}
@@ -493,7 +494,7 @@
 		{:else}
 			<div class="w-full max-w-lg">
 				<div class="bg-surface rounded-xl shadow-lg border border-neutral-200 p-6 sm:p-8">
-					<h2 class="font-display text-xl font-bold text-neutral-900 mb-6 text-center">Your Response</h2>
+					<h2 class="font-display text-xl font-bold text-neutral-900 mb-6 text-center">{$_('guestInvite.yourResponseHeading')}</h2>
 
 					<form onsubmit={handleSubmit} class="space-y-5">
 						<!-- Honeypot -->
@@ -510,14 +511,14 @@
 						<!-- Name -->
 						<div>
 							<label for="rsvp-name" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								Your Name <span class="text-error">*</span>
+								{$_('guestInvite.nameLabel')} <span class="text-error">*</span>
 							</label>
 							<input
 								id="rsvp-name"
 								type="text"
 								required
 								bind:value={name}
-								placeholder="Enter your full name"
+								placeholder={$_('guestInvite.namePlaceholder')}
 								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 							/>
 						</div>
@@ -525,11 +526,11 @@
 						<!-- Email -->
 						<div>
 							<label for="rsvp-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								Email Address
+								{$_('guestInvite.emailLabel')}
 								{#if emailRequired}
 									<span class="text-error">*</span>
 								{:else}
-									<span class="text-neutral-400 font-normal">(optional)</span>
+									<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
 								{/if}
 							</label>
 							<input
@@ -537,7 +538,7 @@
 								type="email"
 								required={emailRequired}
 								bind:value={email}
-								placeholder="you@example.com"
+								placeholder={$_('guestInvite.emailPlaceholder')}
 								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 							/>
 						</div>
@@ -545,11 +546,11 @@
 						<!-- Phone -->
 						<div>
 							<label for="rsvp-phone" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								Phone Number
+								{$_('guestInvite.phoneLabel')}
 								{#if phoneRequired}
 									<span class="text-error">*</span>
 								{:else}
-									<span class="text-neutral-400 font-normal">(optional)</span>
+									<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
 								{/if}
 							</label>
 							<input
@@ -557,7 +558,7 @@
 								type="tel"
 								required={phoneRequired}
 								bind:value={phone}
-								placeholder="+1 (555) 123-4567"
+								placeholder={$_('guestInvite.phonePlaceholder')}
 								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 							/>
 						</div>
@@ -565,7 +566,7 @@
 						<!-- RSVP Status -->
 						<fieldset>
 							<legend class="block text-sm font-medium text-neutral-700 mb-3">
-								Will you attend?
+								{$_('guestInvite.willYouAttend')}
 							</legend>
 							<div class="grid grid-cols-3 gap-3">
 								<label
@@ -577,9 +578,9 @@
 									<svg class="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
-									<span class="text-xs sm:text-sm font-medium">I'll be there!</span>
+									<span class="text-xs sm:text-sm font-medium">{$_('guestInvite.statusAttending')}</span>
 									{#if attendingDisabled}
-										<span class="text-[10px] text-error mt-0.5">Full</span>
+										<span class="text-[10px] text-error mt-0.5">{$_('guestInvite.full')}</span>
 									{/if}
 								</label>
 								<label class="rsvp-option" class:rsvp-option-selected={rsvpStatus === 'maybe'} class:rsvp-option-maybe={rsvpStatus === 'maybe'}>
@@ -587,14 +588,14 @@
 									<svg class="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M8.228 9c.549-1.165 2.03-2 3.772-2 2.21 0 4 1.343 4 3 0 1.4-1.278 2.575-3.006 2.907-.542.104-.994.54-.994 1.093m0 3h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
-									<span class="text-xs sm:text-sm font-medium">Maybe</span>
+									<span class="text-xs sm:text-sm font-medium">{$_('guestInvite.statusMaybe')}</span>
 								</label>
 								<label class="rsvp-option" class:rsvp-option-selected={rsvpStatus === 'declined'} class:rsvp-option-declined={rsvpStatus === 'declined'}>
 									<input type="radio" name="rsvpStatus" value="declined" bind:group={rsvpStatus} class="sr-only" />
 									<svg class="w-5 h-5 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 										<path stroke-linecap="round" stroke-linejoin="round" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
 									</svg>
-									<span class="text-xs sm:text-sm font-medium">Can't make it</span>
+									<span class="text-xs sm:text-sm font-medium">{$_('guestInvite.statusDeclined')}</span>
 								</label>
 							</div>
 						</fieldset>
@@ -603,12 +604,12 @@
 							<!-- Dietary Notes -->
 							<div>
 								<label for="rsvp-dietary" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									Dietary Notes <span class="text-neutral-400 font-normal">(optional)</span>
+									{$_('guestInvite.dietaryNotesLabel')} <span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
 								</label>
 								<textarea
 									id="rsvp-dietary"
 									bind:value={dietaryNotes}
-									placeholder="Any allergies or dietary requirements?"
+									placeholder={$_('guestInvite.dietaryNotesPlaceholder')}
 									rows="2"
 									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
 								></textarea>
@@ -617,7 +618,7 @@
 							<!-- Plus Ones -->
 							<div>
 								<label for="rsvp-plusones" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									Additional Guests
+									{$_('guestInvite.additionalGuestsLabel')}
 								</label>
 								<div class="flex items-center gap-3">
 									<input
@@ -628,7 +629,7 @@
 										bind:value={plusOnes}
 										class="w-20 rounded-md border border-neutral-300 px-3 py-2.5 text-neutral-900 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 									/>
-									<span class="text-sm text-neutral-500">additional guest{plusOnes !== 1 ? 's' : ''}</span>
+									<span class="text-sm text-neutral-500">{$_(plusOnes === 1 ? 'guestInvite.additionalGuest' : 'guestInvite.additionalGuests')}</span>
 								</div>
 							</div>
 						{/if}
@@ -657,10 +658,10 @@
 										<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 										<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 									</svg>
-									Sending...
+									{$_('guestInvite.sending')}
 								</span>
 							{:else}
-								{showWaitlist ? 'Join Waitlist' : 'Send RSVP'}
+								{showWaitlist ? $_('guestInvite.joinWaitlist') : $_('guestInvite.sendRsvp')}
 							{/if}
 						</button>
 					</form>
@@ -674,7 +675,7 @@
 				{#if !showLookup}
 					<p class="text-center">
 						<button type="button" onclick={() => (showLookup = true)} class="text-sm text-primary hover:text-primary-hover underline underline-offset-2 transition-colors">
-							Already RSVP'd? Look up your response
+							{$_('guestInvite.lookupPrompt')}
 						</button>
 					</p>
 				{:else if lookupSuccess}
@@ -684,25 +685,25 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 							</svg>
 						</div>
-						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-2">Check Your Email</h3>
+						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-2">{$_('guestInvite.checkEmailTitle')}</h3>
 						<p class="text-sm text-neutral-600">
-							If you have an RSVP, you'll receive an email shortly with a link to manage it.
+							{$_('guestInvite.checkEmailBody')}
 						</p>
 					</div>
 				{:else}
 					<div class="bg-surface rounded-xl shadow-lg border border-neutral-200 p-6">
-						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-4">Find Your RSVP</h3>
+						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-4">{$_('guestInvite.findRsvpTitle')}</h3>
 						<form onsubmit={handleLookup} class="space-y-4">
 							<div>
 								<label for="lookup-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									Email Address
+									{$_('guestInvite.emailLabel')}
 								</label>
 								<input
 									id="lookup-email"
 									type="email"
 									required
 									bind:value={lookupEmail}
-									placeholder="you@example.com"
+									placeholder={$_('guestInvite.emailPlaceholder')}
 									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 								/>
 							</div>
@@ -713,7 +714,7 @@
 							{/if}
 							<div class="flex items-center justify-between">
 								<button type="button" onclick={() => (showLookup = false)} class="text-sm text-neutral-500 hover:text-neutral-700 transition-colors">
-									Cancel
+									{$_('guestInvite.cancel')}
 								</button>
 								<button
 									type="submit"
@@ -721,9 +722,9 @@
 									class="rounded-md bg-primary px-5 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover focus:outline-none focus:ring-2 focus:ring-primary/40 focus:ring-offset-2 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
 								>
 									{#if lookupLoading}
-										Sending...
+										{$_('guestInvite.sending')}
 									{:else}
-										Send me a link
+										{$_('guestInvite.sendMeLink')}
 									{/if}
 								</button>
 							</div>
@@ -737,13 +738,13 @@
 		{#if eventData?.commentsEnabled}
 			<div class="w-full max-w-lg mt-8">
 				<div class="bg-surface/80 backdrop-blur-sm rounded-xl shadow border border-neutral-200/60 p-5">
-					<h3 class="font-display text-lg font-semibold text-neutral-900 mb-4">Guestbook</h3>
+					<h3 class="font-display text-lg font-semibold text-neutral-900 mb-4">{$_('guestInvite.guestbookTitle')}</h3>
 
 					{#if submitted && rsvpToken}
 						<form onsubmit={(e) => { e.preventDefault(); submitComment(); }} class="mb-6">
 							<textarea
 								bind:value={newComment}
-								placeholder="Leave a message..."
+								placeholder={$_('guestInvite.commentPlaceholder')}
 								rows="3"
 								maxlength="2000"
 								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-sm text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors resize-none"
@@ -757,14 +758,14 @@
 									disabled={submittingComment || !newComment.trim()}
 									class="rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary-hover disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
 								>
-									{submittingComment ? 'Posting...' : 'Post Comment'}
+									{submittingComment ? $_('guestInvite.posting') : $_('guestInvite.postComment')}
 								</button>
 							</div>
 						</form>
 					{/if}
 
 					{#if comments.length === 0 && !commentsLoading}
-						<p class="text-sm text-neutral-500 text-center py-4">No comments yet. Be the first!</p>
+						<p class="text-sm text-neutral-500 text-center py-4">{$_('guestInvite.noComments')}</p>
 					{:else}
 						<div class="space-y-4">
 							{#each comments as comment (comment.id)}
@@ -780,7 +781,7 @@
 													disabled={deletingCommentId === comment.id}
 													class="text-xs text-neutral-400 hover:text-error transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
 												>
-													{deletingCommentId === comment.id ? 'Deleting...' : 'Delete'}
+													{deletingCommentId === comment.id ? $_('guestInvite.deleting') : $_('guestInvite.delete')}
 												</button>
 											{/if}
 										</div>
@@ -797,7 +798,7 @@
 									disabled={commentsLoading}
 									class="text-sm text-primary hover:text-primary-hover font-medium disabled:opacity-50"
 								>
-									{commentsLoading ? 'Loading...' : 'Load more comments'}
+									{commentsLoading ? $_('guestInvite.loading2') : $_('guestInvite.loadMoreComments')}
 								</button>
 							</div>
 						{/if}
@@ -810,7 +811,7 @@
 		<div class="mt-8 flex flex-col items-center gap-2 text-center">
 			<GuestFeedback source={$page.url.pathname} />
 			<a href="/" class="text-xs text-neutral-400 hover:text-neutral-500 transition-colors">
-				Powered by OpenRSVP
+				{$_('guestInvite.poweredBy')}
 			</a>
 		</div>
 	{/if}
