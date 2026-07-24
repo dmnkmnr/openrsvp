@@ -65,7 +65,7 @@ func (s *Server) routes() *chi.Mux {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"data": map[string]any{
-					"smsEnabled": s.cfg.SMSEnabled(),
+					"smsEnabled": s.smsEnabled,
 				},
 			})
 		})

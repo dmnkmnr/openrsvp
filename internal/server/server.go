@@ -58,6 +58,7 @@ type Server struct {
 	scheduler             *scheduler.Scheduler
 	securityMw            *security.Middleware
 	uploadsDir            string
+	smsEnabled            bool
 }
 
 // commentEventStoreAdapter adapts event.Service to comment.EventStore.
@@ -115,6 +116,16 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		}
 		return org.ID, true
 	}
+
+	// Build the notification provider registry early: SMS availability must
+	// reflect whether an SMS provider actually registered (valid credentials),
+	// not just that NOTIFICATION_SMS_PROVIDER names one. Checking only the env
+	// var's presence would let a misconfigured provider (e.g. a missing Twilio
+	// credential) pass as "enabled", so organizers could pick "phone only"
+	// contact requirements and show guests a phone field that no notification
+	// can ever actually reach.
+	notifRegistry := buildNotificationRegistry(cfg, logger)
+	smsEnabled := notifRegistry.Has(notification.ChannelSMS)
 
 	// Wire up event layer.
 	eventStore := event.NewStore(db)
@@ -174,12 +185,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	inviteHandler := invite.NewHandler(inviteService, authMiddleware, invite.OrganizerFromCtx(organizerFromCtx), uploadsDir, invite.EventOwnershipChecker(checkEventOwner), logger)
 
 	// Configure SMS availability on event service.
-	eventService.SetSMSEnabled(cfg.SMSEnabled())
+	eventService.SetSMSEnabled(smsEnabled)
 
 	// Wire up RSVP layer.
 	rsvpStore := rsvp.NewStore(db)
 	rsvpService := rsvp.NewService(rsvpStore, eventService, inviteService, logger)
-	rsvpService.SetSMSEnabled(cfg.SMSEnabled())
+	rsvpService.SetSMSEnabled(smsEnabled)
 	rsvpService.SetBaseURL(cfg.BaseURL)
 	rsvpHandler := rsvp.NewHandler(rsvpService, authMiddleware, rsvp.OrganizerFromCtx(organizerFromCtx), rsvp.EventOwnershipChecker(checkEventOwner), logger)
 
@@ -246,8 +257,9 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	suppressionService := suppression.NewService(suppressionStore)
 	suppressionHandler := suppression.NewHandler(suppressionService, logger)
 
-	// Wire up notification layer.
-	notifRegistry := buildNotificationRegistry(cfg, logger)
+	// Wire up notification layer. notifRegistry was built earlier (see above)
+	// so SMS availability could be computed before eventService/rsvpService
+	// construction.
 	notifService := notification.NewServiceWithOptions(notifRegistry, db, logger, notification.Options{
 		BaseURL:             cfg.BaseURL,
 		OpenTrackingEnabled: cfg.EmailOpenTrackingEnabled,
@@ -1015,6 +1027,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		scheduler:             sched,
 		securityMw:            secMw,
 		uploadsDir:            uploadsDir,
+		smsEnabled:            smsEnabled,
 	}
 
 	router := s.routes()
