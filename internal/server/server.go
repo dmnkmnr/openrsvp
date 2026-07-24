@@ -764,7 +764,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	})
 
 	// Send cancellation notifications to attending/maybe attendees when an event is cancelled.
-	if notifRegistry.Has(notification.ChannelEmail) {
+	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		eventService.SetOnCancel(func(ctx context.Context, e *event.Event) {
 			go webhookDispatcher.Dispatch(context.Background(), e.ID, "event.cancelled", map[string]any{
 				"eventId": e.ID,
@@ -789,35 +789,48 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				if a.RSVPStatus != "attending" && a.RSVPStatus != "maybe" {
 					continue
 				}
-				if a.Email == nil || *a.Email == "" {
+
+				// Try email first, falling back to SMS -- same precedence as
+				// scheduled reminders (scheduler.reminder.go).
+				if a.Email != nil && *a.Email != "" {
+					htmlBody, plainBody, err := templates.RenderEventReminder(
+						e.Title, eventDate, location, cancelMessage,
+						cfg.BaseURL+"/i/"+e.ShareToken,
+					)
+					if err != nil {
+						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("cancel notify: failed to render template")
+						continue
+					}
+
+					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelEmail, &notification.Message{
+						To:      *a.Email,
+						Subject: "Event Cancelled -- " + e.Title,
+						Body:    htmlBody,
+						Plain:   plainBody,
+					}); err != nil {
+						logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("cancel notify: failed to send email")
+						continue
+					}
+					sent++
 					continue
 				}
 
-				htmlBody, plainBody, err := templates.RenderEventReminder(
-					e.Title, eventDate, location, cancelMessage,
-					cfg.BaseURL+"/i/"+e.ShareToken,
-				)
-				if err != nil {
-					logger.Error().Err(err).Str("attendee_id", a.ID).Msg("cancel notify: failed to render template")
-					continue
+				if a.Phone != nil && *a.Phone != "" {
+					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelSMS, &notification.Message{
+						To:   *a.Phone,
+						Body: e.Title + ": " + cancelMessage,
+					}); err != nil {
+						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("cancel notify: failed to send SMS")
+						continue
+					}
+					sent++
 				}
-
-				if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelEmail, &notification.Message{
-					To:      *a.Email,
-					Subject: "Event Cancelled -- " + e.Title,
-					Body:    htmlBody,
-					Plain:   plainBody,
-				}); err != nil {
-					logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("cancel notify: failed to send email")
-					continue
-				}
-				sent++
 			}
 
 			logger.Info().
 				Str("event_id", e.ID).
 				Int("sent", sent).
-				Msg("cancel notify: cancellation emails dispatched")
+				Msg("cancel notify: cancellation notifications dispatched")
 		})
 	}
 
