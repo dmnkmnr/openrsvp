@@ -465,6 +465,10 @@
 		},
 		"seriesList": {
 			"pageTitle": "Wiederkehrende Serien -- OpenRSVP",
+			"seriesStatus": {
+				"active": "Aktiv",
+				"stopped": "Gestoppt"
+			},
 			"backToEvents": "Zurück zu Events",
 			"heading": "Wiederkehrende Serien",
 			"createSeries": "Serie erstellen",
@@ -749,6 +753,18 @@
 			"statusDeclined": "Absage",
 			"statusPending": "Ausstehend",
 			"statusWaitlisted": "Warteliste",
+			"eventStatus": {
+				"draft": "Entwurf",
+				"published": "Veröffentlicht",
+				"cancelled": "Abgesagt",
+				"archived": "Archiviert"
+			},
+			"reminderStatus": {
+				"scheduled": "Geplant",
+				"sent": "Gesendet",
+				"cancelled": "Abgesagt",
+				"failed": "Fehlgeschlagen"
+			},
 			"noContactInfo": "Keine Kontaktinfo",
 			"promote": "Befördern",
 			"remove": "Entfernen",

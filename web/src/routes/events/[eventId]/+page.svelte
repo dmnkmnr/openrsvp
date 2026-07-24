@@ -111,6 +111,19 @@
 		return map[status] || 'neutral';
 	}
 
+	function eventStatusLabel(status: string): string {
+		return $_('events.detail.eventStatus.' + status);
+	}
+
+	function reminderStatusLabel(status: string): string {
+		return $_('events.detail.reminderStatus.' + status);
+	}
+
+	function attendeeStatusLabel(status: string): string {
+		const key = 'status' + status.charAt(0).toUpperCase() + status.slice(1);
+		return $_('events.detail.' + key);
+	}
+
 	async function publishEvent() {
 		if (!event) return;
 		try {
@@ -475,7 +488,7 @@
 					{/if}
 				</div>
 				<div class="flex flex-col items-end gap-2">
-					<Badge variant={statusVariant(event.status)}>{event.status}</Badge>
+					<Badge variant={statusVariant(event.status)}>{eventStatusLabel(event.status)}</Badge>
 					{#if event.status === 'draft'}
 						<Button size="sm" onclick={publishEvent}>{$_('events.detail.publish')}</Button>
 					{:else if event.status === 'published'}
@@ -703,7 +716,7 @@
 									{/if}
 								</div>
 								<div class="flex items-center gap-2">
-									<Badge variant={statusVariant(reminder.status)}>{reminder.status}</Badge>
+									<Badge variant={statusVariant(reminder.status)}>{reminderStatusLabel(reminder.status)}</Badge>
 									{#if reminder.status === 'scheduled'}
 										<Button size="sm" variant="outline" onclick={() => startEditReminder(reminder)}>{$_('events.detail.edit')}</Button>
 										<Button size="sm" variant="outline" onclick={() => { cancelReminderTarget = reminder; showCancelReminderModal = true; }}>{$_('events.detail.reminderCancel')}</Button>
@@ -839,7 +852,7 @@
 										<span class="text-xs text-neutral-500">+{attendee.plusOnes}</span>
 									{/if}
 									<Badge variant={statusVariant(attendee.rsvpStatus)}>
-										{attendee.rsvpStatus}
+										{attendeeStatusLabel(attendee.rsvpStatus)}
 									</Badge>
 									{#if attendee.rsvpStatus === "waitlisted"}
 										<Button size="sm" loading={promotingAttendeeId === attendee.id} onclick={() => promoteAttendee(attendee.id)}>{$_('events.detail.promote')}</Button>

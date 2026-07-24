@@ -465,6 +465,10 @@
 		},
 		"seriesList": {
 			"pageTitle": "Recurring Series -- OpenRSVP",
+			"seriesStatus": {
+				"active": "Active",
+				"stopped": "Stopped"
+			},
 			"backToEvents": "Back to events",
 			"heading": "Recurring Series",
 			"createSeries": "Create Series",
@@ -749,6 +753,18 @@
 			"statusDeclined": "Declined",
 			"statusPending": "Pending",
 			"statusWaitlisted": "Waitlisted",
+			"eventStatus": {
+				"draft": "Draft",
+				"published": "Published",
+				"cancelled": "Cancelled",
+				"archived": "Archived"
+			},
+			"reminderStatus": {
+				"scheduled": "Scheduled",
+				"sent": "Sent",
+				"cancelled": "Cancelled",
+				"failed": "Failed"
+			},
 			"noContactInfo": "No contact info",
 			"promote": "Promote",
 			"remove": "Remove",

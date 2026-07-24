@@ -1,4 +1,6 @@
 <script lang="ts">
+	import { intlLocale } from '$lib/utils/dates';
+
 	interface Props {
 		templateId: string;
 		heading: string;
@@ -180,7 +182,7 @@
 				minute: '2-digit'
 			};
 			if (timezone) opts.timeZone = timezone;
-			return date.toLocaleDateString('en-US', opts);
+			return date.toLocaleDateString(intlLocale(), opts);
 		} catch {
 			return dateStr;
 		}

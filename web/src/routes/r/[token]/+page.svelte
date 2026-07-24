@@ -7,6 +7,7 @@
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 	import { _ } from '$lib/i18n';
+	import { intlLocale } from '$lib/utils/dates';
 
 	interface RsvpData {
 		attendee: Attendee;
@@ -205,7 +206,7 @@
 				minute: '2-digit'
 			};
 			if (timezone) opts.timeZone = timezone;
-			return date.toLocaleDateString('en-US', opts);
+			return date.toLocaleDateString(intlLocale(), opts);
 		} catch {
 			return dateStr;
 		}
@@ -215,7 +216,7 @@
 		if (!dateStr) return '';
 		try {
 			const date = new Date(dateStr);
-			return date.toLocaleDateString('en-US', {
+			return date.toLocaleDateString(intlLocale(), {
 				month: 'short',
 				day: 'numeric',
 				hour: 'numeric',

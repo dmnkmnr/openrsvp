@@ -114,7 +114,7 @@
 								{/if}
 							</div>
 							<Badge variant={series.seriesStatus === 'active' ? 'success' : 'neutral'}>
-								{series.seriesStatus}
+								{$_('events.seriesList.seriesStatus.' + series.seriesStatus)}
 							</Badge>
 						</div>
 						<div class="mt-4 flex items-center justify-between text-xs text-neutral-500">

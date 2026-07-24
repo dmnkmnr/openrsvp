@@ -1,3 +1,11 @@
+import { get } from 'svelte/store';
+import { locale } from '$lib/i18n';
+
+/** Maps the app's active i18n locale to an Intl locale tag for date/time formatting. */
+export function intlLocale(): string {
+	return get(locale) === 'de' ? 'de-DE' : 'en-US';
+}
+
 export function formatDate(date: string, timezone?: string): string {
 	const opts: Intl.DateTimeFormatOptions = {
 		weekday: 'long',
@@ -6,17 +14,18 @@ export function formatDate(date: string, timezone?: string): string {
 		day: 'numeric'
 	};
 	if (timezone) opts.timeZone = timezone;
-	return new Date(date).toLocaleDateString('en-US', opts);
+	return new Date(date).toLocaleDateString(intlLocale(), opts);
 }
 
 export function formatTime(date: string, timezone?: string): string {
+	const loc = intlLocale();
 	const opts: Intl.DateTimeFormatOptions = {
 		hour: 'numeric',
 		minute: '2-digit',
-		hour12: true
+		hour12: loc === 'en-US'
 	};
 	if (timezone) opts.timeZone = timezone;
-	return new Date(date).toLocaleTimeString('en-US', opts);
+	return new Date(date).toLocaleTimeString(loc, opts);
 }
 
 export function formatDateTime(date: string, timezone?: string): string {

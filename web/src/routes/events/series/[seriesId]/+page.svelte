@@ -358,7 +358,7 @@
 						{/if}
 					</div>
 					<Badge variant={statusVariant(series.seriesStatus)}>
-						{series.seriesStatus}
+						{$_('events.seriesList.seriesStatus.' + series.seriesStatus)}
 					</Badge>
 				</div>
 				<div class="mt-4 pt-4 border-t border-neutral-200">

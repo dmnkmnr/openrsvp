@@ -35,6 +35,10 @@
 		};
 		return map[status];
 	}
+
+	function eventStatusLabel(status: Event['status']): string {
+		return $_('events.detail.eventStatus.' + status);
+	}
 </script>
 
 <svelte:head>
@@ -125,7 +129,7 @@
 									<span class="inline-flex items-center rounded-full bg-info-light px-2 py-0.5 text-xs font-medium text-info">{$_('events.list.cohostBadge')}</span>
 								{/if}
 								<Badge variant={statusVariant(event.status)}>
-									{event.status}
+									{eventStatusLabel(event.status)}
 								</Badge>
 							</div>
 						</div>
