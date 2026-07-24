@@ -93,8 +93,17 @@ func (h *Handler) handleTrackOpen(w http.ResponseWriter, r *http.Request) {
 	logID := chi.URLParam(r, "logId")
 
 	// Record open asynchronously with a detached context so the write
-	// survives after the HTTP response is sent.
+	// survives after the HTTP response is sent. This goroutine is fed by
+	// every email client that loads the tracking pixel -- an untrusted,
+	// high-frequency, external trigger -- so it must recover from panics
+	// itself; otherwise a single malformed logID could crash the entire
+	// process and take down every other in-flight request with it.
 	go func() {
+		defer func() {
+			if r := recover(); r != nil {
+				h.logger.Error().Interface("panic", r).Str("log_id", logID).Msg("recovered from panic in open-tracking goroutine")
+			}
+		}()
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		defer cancel()
 		h.tracking.RecordOpen(ctx, logID)

@@ -144,12 +144,23 @@ func NewHandler(
 		opt(h)
 	}
 
-	// Start background cleanup for the notification throttle.
+	// Start background cleanup for the notification throttle. This loop runs
+	// for the lifetime of the process, so each tick recovers from panics on
+	// its own -- otherwise a single panic in cleanup() would either crash the
+	// entire process or silently kill this goroutine, stopping cleanup for
+	// the rest of the process lifetime without anyone noticing.
 	go func() {
 		ticker := time.NewTicker(10 * time.Minute)
 		defer ticker.Stop()
 		for range ticker.C {
-			h.notifyThrottle.cleanup()
+			func() {
+				defer func() {
+					if r := recover(); r != nil {
+						h.logger.Error().Interface("panic", r).Msg("recovered from panic in notification throttle cleanup goroutine")
+					}
+				}()
+				h.notifyThrottle.cleanup()
+			}()
 		}
 	}()
 
@@ -649,9 +660,18 @@ func (h *Handler) handleAddCoHost(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Throttle notifications to 1 per hour per eventID:email pair.
+	// Throttle notifications to 1 per hour per eventID:email pair. Runs
+	// detached in its own goroutine, so it must recover from panics itself --
+	// an unrecovered panic here would otherwise crash the entire process.
 	if h.notifyCoHost != nil && h.notifyThrottle.allow(eventID, req.Email) {
-		go h.notifyCoHost(context.Background(), req.Email, eventID, organizerID)
+		go func() {
+			defer func() {
+				if r := recover(); r != nil {
+					h.logger.Error().Interface("panic", r).Str("event_id", eventID).Msg("recovered from panic in co-host notification goroutine")
+				}
+			}()
+			h.notifyCoHost(context.Background(), req.Email, eventID, organizerID)
+		}()
 	}
 
 	ch.OrganizerEmail = req.Email

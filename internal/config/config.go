@@ -13,8 +13,9 @@ import (
 // Config holds all application configuration loaded from environment variables.
 type Config struct {
 	// Server
-	Port string
-	Env  string
+	Port      string
+	Env       string
+	LogFormat string // "console" (human-readable) or "json"
 
 	// Database
 	DBDriver string
@@ -89,6 +90,10 @@ func Load() (*Config, error) {
 
 	port := getEnv("PORT", "8080")
 	env := getEnv("ENV", "development")
+	logFormat := getEnv("LOG_FORMAT", "console")
+	if logFormat != "console" && logFormat != "json" {
+		return nil, fmt.Errorf("invalid LOG_FORMAT %q: must be console or json", logFormat)
+	}
 
 	dbDriver := getEnv("DB_DRIVER", "sqlite")
 	dbDSN := getEnv("DB_DSN", "/data/openrsvp.db")
@@ -151,8 +156,9 @@ func Load() (*Config, error) {
 	}
 
 	cfg := &Config{
-		Port: port,
-		Env:  env,
+		Port:      port,
+		Env:       env,
+		LogFormat: logFormat,
 
 		DBDriver: dbDriver,
 		DBDSN:    dbDSN,

@@ -67,8 +67,20 @@ func newDispatcherWithClient(store *Store, logger zerolog.Logger, client *http.C
 
 // Dispatch fires webhooks for the given event and event type. It queries
 // enabled webhooks that subscribe to the event type, creates delivery records,
-// and sends each one asynchronously.
+// and sends each one asynchronously. Callers invoke this via `go`, so it
+// recovers from panics itself -- an unrecovered panic here would otherwise
+// crash the entire process, taking down every other in-flight request.
 func (d *Dispatcher) Dispatch(ctx context.Context, eventID, eventType string, data any) {
+	defer func() {
+		if r := recover(); r != nil {
+			d.logger.Error().
+				Interface("panic", r).
+				Str("event_id", eventID).
+				Str("event_type", eventType).
+				Msg("recovered from panic in webhook dispatch goroutine")
+		}
+	}()
+
 	webhooks, err := d.store.FindEnabledByEventAndType(ctx, eventID, eventType)
 	if err != nil {
 		d.logger.Error().Err(err).
@@ -121,8 +133,21 @@ func (d *Dispatcher) Dispatch(ctx context.Context, eventID, eventType string, da
 }
 
 // deliver sends the webhook payload to the endpoint with HMAC-SHA256 signing.
-// It retries up to maxRetries times with exponential backoff.
+// It retries up to maxRetries times with exponential backoff. Runs in its own
+// detached goroutine (see Dispatch), so it recovers from panics itself --
+// an unrecovered panic here would otherwise crash the entire process,
+// taking down every other in-flight request with it.
 func (d *Dispatcher) deliver(ctx context.Context, wh *Webhook, delivery *Delivery, payloadBytes []byte) {
+	defer func() {
+		if r := recover(); r != nil {
+			d.logger.Error().
+				Interface("panic", r).
+				Str("webhook_id", wh.ID).
+				Str("delivery_id", delivery.ID).
+				Msg("recovered from panic in webhook delivery goroutine")
+		}
+	}()
+
 	var lastErr error
 
 	for attempt := 1; attempt <= maxRetries; attempt++ {

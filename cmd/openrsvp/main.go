@@ -27,7 +27,7 @@ func main() {
 		logger.Fatal().Err(err).Msg("failed to load config")
 	}
 
-	if cfg.Env == "production" {
+	if cfg.LogFormat == "json" {
 		logger = zerolog.New(os.Stderr).With().Timestamp().Logger()
 	}
 

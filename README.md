@@ -364,9 +364,11 @@ docker compose up -d
 
 | Variable | Why it's required |
 |----------|-------------------|
-| `ENV=production` | Switches to JSON structured logging |
+| `ENV=production` | Disables debug behavior (see below) |
 | `BASE_URL` | Used in magic links and invite emails — must be the public HTTPS URL |
 | `SMTP_*` | Email delivery is required for magic link login |
+
+**Logging:** logs are human-readable (`ConsoleWriter`) by default, including in production, so `docker logs` stays readable without a log aggregator. Set `LOG_FORMAT=json` to switch to structured JSON logging if you're feeding logs into a pipeline that expects it.
 
 > **Data persistence:** all state lives under `/data` (SQLite DB + uploads). Mount a volume there — losing it means losing all events and RSVPs.
 
