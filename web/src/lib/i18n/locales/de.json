@@ -139,6 +139,11 @@
 		"deleteSuccess": "Dein Konto und alle zugehörigen Daten wurden gelöscht.",
 		"deleteError": "Dein Konto konnte nicht gelöscht werden"
 	},
+	"ui": {
+		"closeModal": "Modal schließen",
+		"close": "Schließen",
+		"dismiss": "Verwerfen"
+	},
 	"addToCalendar": {
 		"addToCalendar": "Zum Kalender hinzufügen",
 		"calendarOptions": "Kalenderoptionen",

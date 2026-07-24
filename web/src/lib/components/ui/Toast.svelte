@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { toast } from '$lib/stores/toast';
+	import { _ } from '$lib/i18n';
 
 	const typeClasses: Record<string, string> = {
 		success: 'bg-success',
@@ -38,7 +39,7 @@
 						type="button"
 						onclick={() => toast.remove(t.id)}
 						class="text-white/80 hover:text-white shrink-0"
-						aria-label="Dismiss"
+						aria-label={$_('ui.dismiss')}
 					>
 						<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path

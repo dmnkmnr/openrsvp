@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { Snippet } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	interface Props {
 		open?: boolean;
@@ -37,7 +38,7 @@
 			type="button"
 			class="absolute inset-0 bg-black/50 transition-opacity"
 			onclick={() => (open = false)}
-			aria-label="Close modal"
+			aria-label={$_('ui.closeModal')}
 		></button>
 
 		<!-- Panel -->
@@ -49,7 +50,7 @@
 						type="button"
 						onclick={() => (open = false)}
 						class="text-neutral-400 hover:text-neutral-600 transition-colors duration-short ease-out"
-						aria-label="Close"
+						aria-label={$_('ui.close')}
 					>
 						<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 							<path
