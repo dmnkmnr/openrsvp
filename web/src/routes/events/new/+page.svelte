@@ -15,6 +15,7 @@
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
+	import { _ } from '$lib/i18n';
 
 	// Auto-fill timezone from profile or browser detection.
 	const defaultTz = $currentUser?.timezone
@@ -42,12 +43,12 @@
 	let retentionDays = $state('30');
 	let showRetention = $state(false);
 
-	const contactRequirementOptions = [
-		{ value: 'email_or_phone', label: 'Email or Phone (at least one)' },
-		{ value: 'email', label: 'Email only' },
-		{ value: 'phone', label: 'Phone only' },
-		{ value: 'email_and_phone', label: 'Email and Phone (both required)' }
-	];
+	const contactRequirementOptions = $derived([
+		{ value: 'email_or_phone', label: $_('events.new.contactOptions.emailOrPhone') },
+		{ value: 'email', label: $_('events.new.contactOptions.emailOnly') },
+		{ value: 'phone', label: $_('events.new.contactOptions.phoneOnly') },
+		{ value: 'email_and_phone', label: $_('events.new.contactOptions.emailAndPhone') }
+	]);
 
 	const filteredContactOptions = $derived(
 		$smsEnabled
@@ -68,9 +69,9 @@
 
 	function validateStep1(): boolean {
 		errors = {};
-		if (!title.trim()) errors.title = 'Title is required';
-		if (!eventDate) errors.eventDate = 'Event date is required';
-		if (!timezone) errors.timezone = 'Timezone is required';
+		if (!title.trim()) errors.title = $_('events.new.titleRequired');
+		if (!eventDate) errors.eventDate = $_('events.new.eventDateRequired');
+		if (!timezone) errors.timezone = $_('events.new.timezoneRequired');
 		return Object.keys(errors).length === 0;
 	}
 
@@ -79,13 +80,13 @@
 		if (showRetention) {
 			const days = parseInt(retentionDays);
 			if (isNaN(days) || days < 1 || days > 365) {
-				errors.retentionDays = 'Retention days must be between 1 and 365';
+				errors.retentionDays = $_('events.new.retentionInvalid');
 			}
 		}
 		if (maxCapacity) {
 			const parsed = Number(maxCapacity);
 			if (!Number.isInteger(parsed) || parsed < 1) {
-				errors.maxCapacity = 'Max attendees must be a whole number of at least 1';
+				errors.maxCapacity = $_('events.new.maxCapacityInvalid');
 			}
 		}
 		return Object.keys(errors).length === 0;
@@ -125,11 +126,11 @@
 			}
 
 			const result = await api.post<{ data: Event }>('/events', body);
-			toast.success('Event created successfully!');
+			toast.success($_('events.new.createSuccess'));
 			goto(`/events/${result.data.id}/invite`);
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to create event');
+			toast.error(apiErr.message || $_('events.new.createError'));
 		} finally {
 			submitting = false;
 		}
@@ -137,14 +138,14 @@
 </script>
 
 <svelte:head>
-	<title>Create Event -- OpenRSVP</title>
+	<title>{$_('events.new.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="max-w-3xl mx-auto">
 		<div class="mb-8">
-			<a href="/events" class="text-sm text-primary hover:text-primary-hover">&larr; Back to events</a>
-			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">Create New Event</h1>
+			<a href="/events" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.new.backToEvents')}</a>
+			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">{$_('events.new.heading')}</h1>
 		</div>
 
 		<!-- Step indicator -->
@@ -166,29 +167,29 @@
 				{/each}
 			</div>
 			<div class="flex justify-between mt-2 text-xs text-neutral-500">
-				<span>Details</span>
-				<span>Description</span>
-				<span>Review</span>
+				<span>{$_('events.new.stepDetails')}</span>
+				<span>{$_('events.new.stepDescription')}</span>
+				<span>{$_('events.new.stepReview')}</span>
 			</div>
 		</div>
 
 		<Card>
 			{#if step === 1}
 				<div class="space-y-6">
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Event Details</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.new.step1Heading')}</h2>
 
 					<Input
-						label="Event Title"
+						label={$_('events.new.titleLabel')}
 						name="title"
 						bind:value={title}
-						placeholder="Birthday Party, Team Lunch, etc."
+						placeholder={$_('events.new.titlePlaceholder')}
 						error={errors.title || ''}
 						required
 					/>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<DateTimePicker
-							label="Event Date"
+							label={$_('events.new.eventDateLabel')}
 							name="eventDate"
 							bind:value={eventDate}
 							min={minDate}
@@ -196,7 +197,7 @@
 							required
 						/>
 						<DateTimePicker
-							label="End Date (optional)"
+							label={$_('events.new.endDateLabel')}
 							name="endDate"
 							bind:value={endDate}
 							min={eventDate || minDate}
@@ -204,14 +205,14 @@
 					</div>
 
 					<Input
-						label="Location"
+						label={$_('events.new.locationLabel')}
 						name="location"
 						bind:value={location}
-						placeholder="123 Main St, New York, NY"
+						placeholder={$_('events.new.locationPlaceholder')}
 					/>
 
 					<Select
-						label="Timezone"
+						label={$_('events.new.timezoneLabel')}
 						name="timezone"
 						bind:value={timezone}
 						options={tzOptions}
@@ -222,26 +223,26 @@
 
 			{:else if step === 2}
 				<div class="space-y-6">
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Description & Settings</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.new.step2Heading')}</h2>
 
 					<Textarea
-						label="Description"
+						label={$_('events.new.descriptionLabel')}
 						name="description"
 						bind:value={description}
-						placeholder="Tell your guests what the event is about..."
+						placeholder={$_('events.new.descriptionPlaceholder')}
 						rows={6}
 					/>
 
 					<Select
-						label="RSVP Contact Requirement"
+						label={$_('events.new.contactRequirementLabel')}
 						name="contactRequirement"
 						bind:value={contactRequirement}
 						options={filteredContactOptions}
 					/>
 
 					<fieldset class="pt-2">
-						<legend class="text-sm font-medium text-neutral-700 mb-3">Guest Visibility</legend>
-						<p class="text-xs text-neutral-400 mb-3">Control what attendance info is shown on the public invite page.</p>
+						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.new.guestVisibilityLegend')}</legend>
+						<p class="text-xs text-neutral-400 mb-3">{$_('events.new.guestVisibilityHelper')}</p>
 						<div class="space-y-2">
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -249,7 +250,7 @@
 									bind:checked={showHeadcount}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show attendance count</span>
+								<span class="text-sm text-neutral-700">{$_('events.new.showHeadcountLabel')}</span>
 							</label>
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -257,27 +258,27 @@
 									bind:checked={showGuestList}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show guest names</span>
+								<span class="text-sm text-neutral-700">{$_('events.new.showGuestListLabel')}</span>
 							</label>
 						</div>
 					</fieldset>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<DateTimePicker
-							label="RSVP Deadline (optional)"
+							label={$_('events.new.rsvpDeadlineLabel')}
 							name="rsvpDeadline"
 							bind:value={rsvpDeadline}
 							min={minDate}
 							max={eventDate || undefined}
-							helper="Guests won't be able to RSVP or change their response after this date."
+							helper={$_('events.new.rsvpDeadlineHelper')}
 						/>
 						<Input
-							label="Max Attendees (optional)"
+							label={$_('events.new.maxCapacityLabel')}
 							name="maxCapacity"
 							type="number"
 							bind:value={maxCapacity}
-							placeholder="Leave empty for unlimited"
-							helper="Total headcount including plus-ones. Leave empty for no limit."
+							placeholder={$_('events.new.maxCapacityPlaceholder')}
+							helper={$_('events.new.maxCapacityHelper')}
 							error={errors.maxCapacity || ''}
 						/>
 					</div>
@@ -290,8 +291,8 @@
 								class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 							/>
 							<div>
-								<span class="text-sm text-neutral-700">Enable waitlist</span>
-								<p class="text-xs text-neutral-400">When at capacity, guests can join a waitlist instead of being turned away.</p>
+								<span class="text-sm text-neutral-700">{$_('events.new.waitlistLabel')}</span>
+								<p class="text-xs text-neutral-400">{$_('events.new.waitlistHelper')}</p>
 							</div>
 						</label>
 					{/if}
@@ -299,22 +300,22 @@
 					<div class="pt-2">
 						{#if showRetention}
 							<Input
-								label="Data Retention (days)"
+								label={$_('events.new.retentionLabel')}
 								name="retentionDays"
 								type="number"
 								bind:value={retentionDays}
-								helper="Guest data is automatically deleted this many days after the event (1-365)."
+								helper={$_('events.new.retentionHelper')}
 								error={errors.retentionDays || ''}
 							/>
 						{:else}
 							<p class="text-xs text-neutral-400">
-								Guest data will be automatically deleted 30 days after the event.
+								{$_('events.new.retentionDefaultNote')}
 								<button
 									type="button"
 									class="text-primary hover:text-primary-hover underline underline-offset-2"
 									onclick={() => (showRetention = true)}
 								>
-									Specify custom data retention
+									{$_('events.new.retentionCustomize')}
 								</button>
 							</p>
 						{/if}
@@ -323,73 +324,73 @@
 
 			{:else if step === 3}
 				<div class="space-y-6">
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Review Your Event</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.new.step3Heading')}</h2>
 
 					<dl class="divide-y divide-neutral-200">
 						<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-							<dt class="text-sm font-medium text-neutral-500">Title</dt>
+							<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewTitle')}</dt>
 							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{title}</dd>
 						</div>
 						<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-							<dt class="text-sm font-medium text-neutral-500">Event Date</dt>
-							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{eventDate || 'Not set'}</dd>
+							<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewEventDate')}</dt>
+							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{eventDate || $_('events.new.reviewNotSet')}</dd>
 						</div>
 						{#if endDate}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">End Date</dt>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewEndDate')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{endDate}</dd>
 							</div>
 						{/if}
 						<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-							<dt class="text-sm font-medium text-neutral-500">Location</dt>
-							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{location || 'Not specified'}</dd>
+							<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewLocation')}</dt>
+							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{location || $_('events.new.reviewNotSpecified')}</dd>
 						</div>
 						<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-							<dt class="text-sm font-medium text-neutral-500">Timezone</dt>
+							<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewTimezone')}</dt>
 							<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{getTimezoneLabel(timezone)}</dd>
 						</div>
 						{#if description}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">Description</dt>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewDescription')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0 whitespace-pre-wrap">{description}</dd>
 							</div>
 						{/if}
 						{#if contactRequirement !== 'email_or_phone'}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">Contact Requirement</dt>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewContactRequirement')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{contactRequirementOptions.find(o => o.value === contactRequirement)?.label}</dd>
 							</div>
 						{/if}
 						{#if showHeadcount || showGuestList}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">Guest Visibility</dt>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewGuestVisibility')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">
 									{#if showHeadcount && showGuestList}
-										Attendance count and guest names visible
+										{$_('events.new.visibilityBoth')}
 									{:else if showHeadcount}
-										Attendance count visible
+										{$_('events.new.visibilityHeadcount')}
 									{:else}
-										Guest names visible
+										{$_('events.new.visibilityGuestList')}
 									{/if}
 								</dd>
 							</div>
 						{/if}
 						{#if rsvpDeadline}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">RSVP Deadline</dt>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewRsvpDeadline')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{rsvpDeadline}</dd>
 							</div>
 						{/if}
 						{#if maxCapacity}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">Max Attendees</dt>
-								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{maxCapacity}{#if waitlistEnabled} (waitlist enabled){/if}</dd>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewMaxAttendees')}</dt>
+								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{maxCapacity}{#if waitlistEnabled} {$_('events.new.waitlistEnabledNote')}{/if}</dd>
 							</div>
 						{/if}
 						{#if retentionDays !== '30'}
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
-								<dt class="text-sm font-medium text-neutral-500">Retention</dt>
-								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{retentionDays} days</dd>
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewRetention')}</dt>
+								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{retentionDays} {$_('events.new.daysSuffix')}</dd>
 							</div>
 						{/if}
 					</dl>
@@ -400,14 +401,14 @@
 			<div class="mt-8 flex items-center justify-between border-t border-neutral-200 pt-6">
 				<div>
 					{#if step > 1}
-						<Button variant="outline" onclick={prevStep}>Back</Button>
+						<Button variant="outline" onclick={prevStep}>{$_('events.new.back')}</Button>
 					{/if}
 				</div>
 				<div>
 					{#if step < 3}
-						<Button onclick={nextStep}>Next</Button>
+						<Button onclick={nextStep}>{$_('events.new.next')}</Button>
 					{:else}
-						<Button onclick={handleSubmit} loading={submitting}>Create Event</Button>
+						<Button onclick={handleSubmit} loading={submitting}>{$_('events.new.createEvent')}</Button>
 					{/if}
 				</div>
 			</div>
