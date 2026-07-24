@@ -44,7 +44,7 @@
 		bind:value
 		{required}
 		{disabled}
-		class="block w-full rounded-md border px-3 py-2 text-sm shadow-sm transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-offset-0 {error
+		class="block w-full rounded-md border bg-surface px-3 py-2 text-sm shadow-sm transition-colors duration-short ease-out focus:outline-none focus:ring-2 focus:ring-offset-0 {error
 			? 'border-error-light text-error focus:border-error focus:ring-error'
 			: 'border-neutral-300 text-neutral-900 focus:border-primary focus:ring-primary'} disabled:bg-neutral-50 disabled:text-neutral-500"
 	>
