@@ -18,6 +18,7 @@ type EventSeries struct {
 	MaxOccurrences          *int       `json:"maxOccurrences,omitempty"`
 	SeriesStatus            string     `json:"seriesStatus"`
 	RetentionDays           int        `json:"retentionDays"`
+	Language                string     `json:"language"`
 	ContactRequirement      string     `json:"contactRequirement"`
 	ShowHeadcount           bool       `json:"showHeadcount"`
 	ShowGuestList           bool       `json:"showGuestList"`
@@ -40,6 +41,7 @@ type CreateSeriesRequest struct {
 	RecurrenceEnd           *string `json:"recurrenceEnd,omitempty"`
 	MaxOccurrences          *int    `json:"maxOccurrences,omitempty"`
 	RetentionDays           *int    `json:"retentionDays,omitempty"`
+	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`
@@ -58,6 +60,7 @@ type UpdateSeriesRequest struct {
 	RecurrenceEnd           *string `json:"recurrenceEnd,omitempty"`
 	MaxOccurrences          *int    `json:"maxOccurrences,omitempty"`
 	RetentionDays           *int    `json:"retentionDays,omitempty"`
+	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`

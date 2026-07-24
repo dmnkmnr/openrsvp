@@ -5,6 +5,7 @@ import (
 	"crypto/rand"
 	"fmt"
 	"sort"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -152,6 +153,14 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		return nil, fmt.Errorf("phone-only contact requirement is not available when SMS is disabled")
 	}
 
+	language := "en"
+	if req.Language != nil && *req.Language != "" {
+		if !isValidLanguage(*req.Language) {
+			return nil, fmt.Errorf("invalid language: must be one of %s", strings.Join(SupportedLanguages, ", "))
+		}
+		language = *req.Language
+	}
+
 	shareToken, err := generateBase62Token(8)
 	if err != nil {
 		return nil, fmt.Errorf("generate share token: %w", err)
@@ -206,6 +215,7 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		Location:           req.Location,
 		Timezone:           req.Timezone,
 		RetentionDays:      retentionDays,
+		Language:           language,
 		ContactRequirement: contactRequirement,
 		ShowHeadcount:      showHeadcount,
 		ShowGuestList:      showGuestList,
@@ -368,6 +378,12 @@ func (s *Service) Update(ctx context.Context, eventID, organizerID string, req U
 	}
 	if req.RetentionDays != nil {
 		e.RetentionDays = *req.RetentionDays
+	}
+	if req.Language != nil {
+		if !isValidLanguage(*req.Language) {
+			return nil, fmt.Errorf("invalid language: must be one of %s", strings.Join(SupportedLanguages, ", "))
+		}
+		e.Language = *req.Language
 	}
 	if req.ContactRequirement != nil {
 		if !isValidContactRequirement(*req.ContactRequirement) {
@@ -557,6 +573,7 @@ func (s *Service) Duplicate(ctx context.Context, eventID, organizerID string) (*
 		Location:           e.Location,
 		Timezone:           e.Timezone,
 		RetentionDays:      e.RetentionDays,
+		Language:           e.Language,
 		ContactRequirement: contactReq,
 		ShowHeadcount:      e.ShowHeadcount,
 		ShowGuestList:      e.ShowGuestList,
@@ -618,6 +635,21 @@ func parseFlexibleTime(s string) (time.Time, error) {
 		}
 	}
 	return time.Time{}, fmt.Errorf("unrecognized datetime format: %s", s)
+}
+
+// SupportedLanguages lists the languages available for an event's guest
+// language setting. Adding a new language requires a matching entry here plus
+// default notification templates for it (see internal/notification/templates).
+var SupportedLanguages = []string{"en", "de"}
+
+// isValidLanguage checks whether the given value is a supported language code.
+func isValidLanguage(s string) bool {
+	for _, lang := range SupportedLanguages {
+		if s == lang {
+			return true
+		}
+	}
+	return false
 }
 
 // isValidContactRequirement checks whether the given value is one of the

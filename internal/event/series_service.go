@@ -3,6 +3,7 @@ package event
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/google/uuid"
@@ -70,6 +71,14 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 		contactRequirement = *req.ContactRequirement
 	}
 
+	language := "en"
+	if req.Language != nil && *req.Language != "" {
+		if !isValidLanguage(*req.Language) {
+			return nil, fmt.Errorf("invalid language: must be one of %s", strings.Join(SupportedLanguages, ", "))
+		}
+		language = *req.Language
+	}
+
 	showHeadcount := false
 	if req.ShowHeadcount != nil {
 		showHeadcount = *req.ShowHeadcount
@@ -106,6 +115,7 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 		MaxOccurrences:          req.MaxOccurrences,
 		SeriesStatus:            "active",
 		RetentionDays:           retentionDays,
+		Language:                language,
 		ContactRequirement:      contactRequirement,
 		ShowHeadcount:           showHeadcount,
 		ShowGuestList:           showGuestList,
@@ -302,6 +312,12 @@ func (s *SeriesService) UpdateSeries(ctx context.Context, seriesID, organizerID 
 	if req.RetentionDays != nil {
 		series.RetentionDays = *req.RetentionDays
 	}
+	if req.Language != nil {
+		if !isValidLanguage(*req.Language) {
+			return nil, fmt.Errorf("invalid language: must be one of %s", strings.Join(SupportedLanguages, ", "))
+		}
+		series.Language = *req.Language
+	}
 	if req.ContactRequirement != nil {
 		if !isValidContactRequirement(*req.ContactRequirement) {
 			return nil, fmt.Errorf("invalid contactRequirement: must be email, phone, email_or_phone, or email_and_phone")
@@ -357,6 +373,7 @@ func (s *SeriesService) updateFutureOccurrences(ctx context.Context, series *Eve
 		ev.Location = series.Location
 		ev.Timezone = series.Timezone
 		ev.RetentionDays = series.RetentionDays
+		ev.Language = series.Language
 		ev.ContactRequirement = series.ContactRequirement
 		ev.ShowHeadcount = series.ShowHeadcount
 		ev.ShowGuestList = series.ShowGuestList
@@ -510,6 +527,7 @@ func (s *SeriesService) buildOccurrenceFromSeries(series *EventSeries, eventDate
 		RetentionDays:      series.RetentionDays,
 		Status:             "published",
 		ShareToken:         shareToken,
+		Language:           series.Language,
 		ContactRequirement: series.ContactRequirement,
 		ShowHeadcount:      series.ShowHeadcount,
 		ShowGuestList:      series.ShowGuestList,

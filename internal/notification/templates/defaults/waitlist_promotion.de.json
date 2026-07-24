@@ -1,0 +1,4 @@
+{
+  "subject": "Ein Platz ist frei geworden! — {eventTitle}",
+  "body": "Hallo {guestName},\n\ngute Nachrichten! Für {eventTitle} ist ein Platz frei geworden und du nimmst jetzt teil.\n\nDatum: {eventDate}\nOrt: {location}"
+}

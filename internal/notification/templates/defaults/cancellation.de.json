@@ -1,0 +1,4 @@
+{
+  "subject": "Veranstaltung abgesagt — {eventTitle}",
+  "body": "Hallo {guestName},\n\nleider müssen wir dir mitteilen, dass {eventTitle} abgesagt wurde.\n\nUrsprünglich geplant: {eventDate}\nOrt: {location}\n\nBei Fragen wende dich gerne an die veranstaltende Person."
+}

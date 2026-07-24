@@ -15,6 +15,7 @@ type Event struct {
 	RetentionDays int        `json:"retentionDays"`
 	Status        string     `json:"status"`
 	ShareToken         string     `json:"shareToken"`
+	Language           string     `json:"language"`
 	ContactRequirement string     `json:"contactRequirement"`
 	ShowHeadcount      bool       `json:"showHeadcount"`
 	ShowGuestList      bool       `json:"showGuestList"`
@@ -38,6 +39,7 @@ type CreateEventRequest struct {
 	Location           string  `json:"location"`
 	Timezone           string  `json:"timezone"`
 	RetentionDays      *int    `json:"retentionDays,omitempty"`
+	Language           *string `json:"language,omitempty"`
 	ContactRequirement *string `json:"contactRequirement,omitempty"`
 	ShowHeadcount      *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList      *bool   `json:"showGuestList,omitempty"`
@@ -58,6 +60,7 @@ type PublicEvent struct {
 	EndDate            string `json:"endDate,omitempty"`
 	Location           string `json:"location"`
 	Timezone           string `json:"timezone"`
+	Language           string `json:"language"`
 	ContactRequirement string `json:"contactRequirement"`
 	RSVPDeadline       string `json:"rsvpDeadline,omitempty"`
 	RSVPsClosed        bool   `json:"rsvpsClosed"`
@@ -76,6 +79,7 @@ func (e *Event) ToPublic() *PublicEvent {
 		EventDate:          e.EventDate.Format("2006-01-02T15:04:05Z07:00"),
 		Location:           e.Location,
 		Timezone:           e.Timezone,
+		Language:           e.Language,
 		ContactRequirement: e.ContactRequirement,
 		WaitlistEnabled:    e.WaitlistEnabled,
 		CommentsEnabled:    e.CommentsEnabled,
@@ -101,6 +105,7 @@ type UpdateEventRequest struct {
 	Location           *string `json:"location,omitempty"`
 	Timezone           *string `json:"timezone,omitempty"`
 	RetentionDays      *int    `json:"retentionDays,omitempty"`
+	Language           *string `json:"language,omitempty"`
 	ContactRequirement *string `json:"contactRequirement,omitempty"`
 	ShowHeadcount      *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList      *bool   `json:"showGuestList,omitempty"`

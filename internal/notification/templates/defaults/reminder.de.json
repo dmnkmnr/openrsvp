@@ -1,0 +1,4 @@
+{
+  "subject": "Erinnerung: {eventTitle}",
+  "body": "Hallo {guestName},\n\ndies ist eine freundliche Erinnerung an eine bevorstehende Veranstaltung.\n\nVeranstaltung: {eventTitle}\nDatum: {eventDate}\nOrt: {location}"
+}

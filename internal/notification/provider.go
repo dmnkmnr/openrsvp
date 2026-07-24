@@ -24,6 +24,9 @@ type Message struct {
 	Body        string       // HTML for email, plain text for SMS
 	Plain       string       // plain text fallback for email
 	Attachments []Attachment // file attachments (email only)
+	// Lang is the recipient's language (e.g. "en", "de"), used to localize
+	// service-added chrome such as the unsubscribe footer. Empty means "en".
+	Lang string
 }
 
 // SendResult is returned by a provider after a successful send.

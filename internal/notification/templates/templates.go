@@ -8,30 +8,26 @@ import (
 	"strings"
 )
 
-//go:embed magic_link.html rsvp_confirmation.html event_reminder.html retention_warning.html organizer_rsvp_notification.html feedback_confirmation.html rsvp_lookup.html waitlist_promotion.html cohost_invitation.html
+//go:embed magic_link.html event_reminder.html retention_warning.html organizer_rsvp_notification.html feedback_confirmation.html rsvp_lookup.html cohost_invitation.html
 var templateFS embed.FS
 
 var (
-	magicLinkTmpl               *template.Template
-	rsvpConfirmationTmpl        *template.Template
-	eventReminderTmpl           *template.Template
-	retentionWarningTmpl        *template.Template
-	organizerRSVPNotifyTmpl     *template.Template
-	feedbackConfirmationTmpl    *template.Template
-	rsvpLookupTmpl              *template.Template
-	waitlistPromotionTmpl       *template.Template
-	cohostInvitationTmpl        *template.Template
+	magicLinkTmpl            *template.Template
+	eventReminderTmpl        *template.Template
+	retentionWarningTmpl     *template.Template
+	organizerRSVPNotifyTmpl  *template.Template
+	feedbackConfirmationTmpl *template.Template
+	rsvpLookupTmpl           *template.Template
+	cohostInvitationTmpl     *template.Template
 )
 
 func init() {
 	magicLinkTmpl = template.Must(template.ParseFS(templateFS, "magic_link.html"))
-	rsvpConfirmationTmpl = template.Must(template.ParseFS(templateFS, "rsvp_confirmation.html"))
 	eventReminderTmpl = template.Must(template.ParseFS(templateFS, "event_reminder.html"))
 	retentionWarningTmpl = template.Must(template.ParseFS(templateFS, "retention_warning.html"))
 	organizerRSVPNotifyTmpl = template.Must(template.ParseFS(templateFS, "organizer_rsvp_notification.html"))
 	feedbackConfirmationTmpl = template.Must(template.ParseFS(templateFS, "feedback_confirmation.html"))
 	rsvpLookupTmpl = template.Must(template.ParseFS(templateFS, "rsvp_lookup.html"))
-	waitlistPromotionTmpl = template.Must(template.ParseFS(templateFS, "waitlist_promotion.html"))
 	cohostInvitationTmpl = template.Must(template.ParseFS(templateFS, "cohost_invitation.html"))
 }
 
@@ -40,16 +36,6 @@ type magicLinkData struct {
 	URL           string
 	ExpiryMinutes int
 	Colors        EmailColors
-}
-
-// rsvpConfirmationData holds the template data for an RSVP confirmation email.
-type rsvpConfirmationData struct {
-	EventTitle string
-	EventDate  string
-	Location   string
-	RSVPStatus string
-	ModifyURL  string
-	Colors     EmailColors
 }
 
 // eventReminderData holds the template data for an event reminder email.
@@ -123,35 +109,6 @@ func RenderMagicLink(baseURL, token string, expiryMinutes int) (html, plain stri
 	)
 
 	return buf.String(), plainText, nil
-}
-
-// RenderRSVPConfirmation renders the RSVP confirmation email template and
-// returns the HTML body and a plain text fallback.
-func RenderRSVPConfirmation(eventTitle, eventDate, location, rsvpStatus, modifyURL string) (html, plain string, err error) {
-	label := displayStatus(rsvpStatus)
-	data := rsvpConfirmationData{
-		EventTitle: eventTitle,
-		EventDate:  eventDate,
-		Location:   location,
-		RSVPStatus: label,
-		ModifyURL:  modifyURL,
-		Colors:     DefaultEmailColors(),
-	}
-
-	var buf bytes.Buffer
-	if err := rsvpConfirmationTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render rsvp confirmation template: %w", err)
-	}
-
-	var sb strings.Builder
-	sb.WriteString("RSVP Confirmed\n\n")
-	sb.WriteString(fmt.Sprintf("Event: %s\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Date: %s\n", eventDate))
-	sb.WriteString(fmt.Sprintf("Location: %s\n", location))
-	sb.WriteString(fmt.Sprintf("Your RSVP: %s\n\n", rsvpStatus))
-	sb.WriteString(fmt.Sprintf("To modify your RSVP, visit:\n%s\n", modifyURL))
-
-	return buf.String(), sb.String(), nil
 }
 
 // RenderEventReminder renders the event reminder email template and returns
@@ -348,38 +305,3 @@ func RenderCoHostInvitation(eventTitle, eventDate, location, addedByName, dashbo
 	return buf.String(), sb.String(), nil
 }
 
-// waitlistPromotionData holds the template data for a waitlist promotion email.
-type waitlistPromotionData struct {
-	EventTitle string
-	EventDate  string
-	Location   string
-	ModifyURL  string
-	Colors     EmailColors
-}
-
-// RenderWaitlistPromotion renders the waitlist promotion email template and
-// returns the HTML body and a plain text fallback.
-func RenderWaitlistPromotion(eventTitle, eventDate, location, modifyURL string) (html, plain string, err error) {
-	data := waitlistPromotionData{
-		EventTitle: eventTitle,
-		EventDate:  eventDate,
-		Location:   location,
-		ModifyURL:  modifyURL,
-		Colors:     DefaultEmailColors(),
-	}
-
-	var buf bytes.Buffer
-	if err := waitlistPromotionTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render waitlist promotion template: %w", err)
-	}
-
-	var sb strings.Builder
-	sb.WriteString("A Spot Opened Up!\n\n")
-	sb.WriteString(fmt.Sprintf("Great news! A spot opened up for %s. You are now attending.\n\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Event: %s\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Date: %s\n", eventDate))
-	sb.WriteString(fmt.Sprintf("Location: %s\n\n", location))
-	sb.WriteString(fmt.Sprintf("View your RSVP:\n%s\n", modifyURL))
-
-	return buf.String(), sb.String(), nil
-}

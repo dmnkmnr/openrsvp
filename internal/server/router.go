@@ -14,6 +14,7 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/rs/zerolog"
 
+	"github.com/yannkr/openrsvp/internal/event"
 	"github.com/yannkr/openrsvp/internal/security"
 )
 
@@ -65,7 +66,8 @@ func (s *Server) routes() *chi.Mux {
 			w.Header().Set("Content-Type", "application/json")
 			_ = json.NewEncoder(w).Encode(map[string]any{
 				"data": map[string]any{
-					"smsEnabled": s.smsEnabled,
+					"smsEnabled":         s.smsEnabled,
+					"supportedLanguages": event.SupportedLanguages,
 				},
 			})
 		})
@@ -117,6 +119,7 @@ func (s *Server) routes() *chi.Mux {
 			http.ServeFile(w, r, filepath.Join(s.uploadsDir, name))
 		})
 		api.Mount("/messages", s.messageHandler.Routes())
+		api.Mount("/message-templates", s.messageTemplateHandler.Routes())
 		api.Mount("/reminders", s.reminderHandler.Routes())
 		api.Mount("/feedback", s.feedbackHandler.Routes())
 		api.Mount("/comments", s.commentHandler.Routes())

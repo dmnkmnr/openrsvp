@@ -13,14 +13,21 @@ import (
 	"github.com/yannkr/openrsvp/internal/notification/templates"
 )
 
+// TemplateResolver resolves the effective subject/body for a guest
+// notification message type on an event, in the given language (organizer
+// override if set, otherwise the language default). Satisfied by
+// *messagetemplate.Service.Resolve.
+type TemplateResolver func(ctx context.Context, eventID, messageType, lang string) (subject, body string, err error)
+
 // ReminderJob polls for due reminders and sends notifications to the
 // appropriate attendees.
 type ReminderJob struct {
-	store        *ReminderStore
-	db           database.DB
-	notifService *notification.Service
-	baseURL      string
-	logger       zerolog.Logger
+	store            *ReminderStore
+	db               database.DB
+	notifService     *notification.Service
+	baseURL          string
+	logger           zerolog.Logger
+	resolveTemplate  TemplateResolver
 }
 
 // NewReminderJob creates a new ReminderJob.
@@ -32,6 +39,13 @@ func NewReminderJob(store *ReminderStore, db database.DB, notifService *notifica
 		baseURL:      baseURL,
 		logger:       logger,
 	}
+}
+
+// SetTemplateResolver registers the function used to resolve the reminder
+// message's subject/body template (organizer override or language default).
+// When unset, sendToAttendee falls back to a hardcoded English default.
+func (j *ReminderJob) SetTemplateResolver(fn TemplateResolver) {
+	j.resolveTemplate = fn
 }
 
 // Name returns the job identifier.
@@ -134,6 +148,7 @@ func (j *ReminderJob) processReminder(ctx context.Context, reminder *Reminder) e
 // attendeeTarget holds the minimal info needed to send a notification.
 type attendeeTarget struct {
 	id            string
+	name          string
 	email         *string
 	phone         *string
 	rsvpToken     string
@@ -147,10 +162,10 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	var args []any
 
 	if targetGroup == "all" {
-		query = `SELECT id, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ?`
+		query = `SELECT id, name, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ?`
 		args = []any{eventID}
 	} else {
-		query = `SELECT id, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ? AND rsvp_status = ?`
+		query = `SELECT id, name, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ? AND rsvp_status = ?`
 		args = []any{eventID, targetGroup}
 	}
 
@@ -164,7 +179,7 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	for rows.Next() {
 		var a attendeeTarget
 		var email, phone *string
-		if err := rows.Scan(&a.id, &email, &phone, &a.rsvpToken, &a.contactMethod); err != nil {
+		if err := rows.Scan(&a.id, &a.name, &email, &phone, &a.rsvpToken, &a.contactMethod); err != nil {
 			return nil, fmt.Errorf("scan attendee: %w", err)
 		}
 		a.email = email
@@ -188,6 +203,7 @@ type eventInfo struct {
 	location    string
 	timezone    string
 	shareToken  string
+	language    string
 }
 
 // lookupEvent fetches event details needed for rendering the reminder template.
@@ -197,9 +213,9 @@ func (j *ReminderJob) lookupEvent(ctx context.Context, eventID string) (*eventIn
 	var eventDate string
 	var endDate *string
 	err := j.db.QueryRowContext(ctx,
-		`SELECT id, title, description, event_date, end_date, location, timezone, share_token FROM events WHERE id = ?`,
+		`SELECT id, title, description, event_date, end_date, location, timezone, share_token, language FROM events WHERE id = ?`,
 		eventID,
-	).Scan(&info.id, &info.title, &description, &eventDate, &endDate, &info.location, &timezone, &info.shareToken)
+	).Scan(&info.id, &info.title, &description, &eventDate, &endDate, &info.location, &timezone, &info.shareToken, &info.language)
 	if err != nil {
 		return nil, fmt.Errorf("lookup event %s: %w", eventID, err)
 	}
@@ -231,9 +247,47 @@ func (j *ReminderJob) lookupEvent(ctx context.Context, eventID string) (*eventIn
 // one is unreachable (e.g. an organizer removed the attendee's email after
 // they'd chosen "email" as their preference).
 func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, attendee attendeeTarget, ev *eventInfo) error {
-	message := reminder.Message
-	if message == "" {
-		message = "You have an upcoming event. Don't forget!"
+	lang := ev.language
+	if lang == "" {
+		lang = "en"
+	}
+
+	// The organizer's per-reminder custom message (if set when scheduling this
+	// specific reminder) takes precedence over the event's saved/default
+	// reminder template; the subject still comes from the language default
+	// since it was never organizer-editable per-reminder.
+	var subjectTpl, bodyTpl string
+	if reminder.Message != "" {
+		subjectTpl = templates.DefaultFor(reminderMessageType, lang).Subject
+		bodyTpl = reminder.Message
+	} else if j.resolveTemplate != nil {
+		resolved, resolveErr := j.resolveTemplateOrDefault(ctx, reminder.EventID, lang)
+		subjectTpl, bodyTpl = resolved.Subject, resolved.Body
+		if resolveErr != nil {
+			j.logger.Error().Err(resolveErr).Str("reminder_id", reminder.ID).Msg("failed to resolve reminder template, using language default")
+		}
+	} else {
+		def := templates.DefaultFor(reminderMessageType, lang)
+		subjectTpl, bodyTpl = def.Subject, def.Body
+	}
+
+	eventDate := ev.eventDate.Format("January 2, 2006 at 3:04 PM")
+	location := ev.location
+	if location == "" {
+		location = "TBD"
+	}
+	inviteURL := j.baseURL + "/i/" + ev.shareToken
+	rsvpLink := inviteURL
+	if attendee.rsvpToken != "" {
+		rsvpLink = j.baseURL + "/r/" + attendee.rsvpToken
+	}
+
+	vars := map[string]string{
+		"guestName":  attendee.name,
+		"eventTitle": ev.title,
+		"eventDate":  eventDate,
+		"location":   location,
+		"rsvpLink":   rsvpLink,
 	}
 
 	hasEmail := attendee.email != nil && *attendee.email != ""
@@ -241,25 +295,20 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 	preferSMS := attendee.contactMethod == "sms" && hasPhone
 
 	if !preferSMS && hasEmail {
-		eventDate := ev.eventDate.Format("January 2, 2006 at 3:04 PM")
-		location := ev.location
-		if location == "" {
-			location = "TBD"
-		}
-		inviteURL := j.baseURL + "/i/" + ev.shareToken
-
-		htmlBody, plainBody, err := templates.RenderEventReminder(ev.title, eventDate, location, message, inviteURL)
+		subject, htmlBody, plainBody, err := templates.RenderNotification(lang, subjectTpl, bodyTpl, vars, rsvpLink, templates.CTALabel(reminderMessageType, lang))
 		if err != nil {
 			j.logger.Error().Err(err).Str("reminder_id", reminder.ID).Msg("failed to render reminder template, falling back to plain text")
-			htmlBody = message
-			plainBody = message
+			plain := templates.Interpolate(bodyTpl, vars)
+			subject = templates.Interpolate(subjectTpl, vars)
+			htmlBody, plainBody = plain, plain
 		}
 
 		msg := &notification.Message{
 			To:      *attendee.email,
-			Subject: "Event Reminder — " + ev.title,
+			Subject: subject,
 			Body:    htmlBody,
 			Plain:   plainBody,
+			Lang:    lang,
 		}
 
 		// Attach ICS calendar file for attending and maybe attendees,
@@ -267,10 +316,7 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		if reminder.TargetGroup == "attending" || reminder.TargetGroup == "maybe" || reminder.TargetGroup == "all" {
 			// Use the RSVP management URL when available so the guest can manage
 			// their response; fall back to the public invite URL.
-			calURL := inviteURL
-			if attendee.rsvpToken != "" {
-				calURL = j.baseURL + "/r/" + attendee.rsvpToken
-			}
+			calURL := rsvpLink
 			icsData := calendar.GenerateICS(calendar.EventData{
 				ID:          ev.id,
 				Title:       ev.title,
@@ -295,9 +341,11 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 
 	// SMS: either explicitly preferred, or the only channel with data.
 	if hasPhone {
+		plain := templates.Interpolate(bodyTpl, vars)
 		msg := &notification.Message{
 			To:   *attendee.phone,
-			Body: message,
+			Body: templates.SMSFrom(plain, 300),
+			Lang: lang,
 		}
 		return j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelSMS, msg)
 	}
@@ -307,4 +355,26 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		Msg("attendee has no email or phone for notification")
 
 	return nil
+}
+
+// reminderMessageType is the message type key used to resolve reminder
+// templates. It must match messagetemplate.TypeReminder's value.
+const reminderMessageType = "reminder"
+
+// resolvedTemplate mirrors templates.TemplateDefault for use with the
+// resolveTemplate callback's plain (subject, body, error) return shape.
+type resolvedTemplate struct {
+	Subject string
+	Body    string
+}
+
+// resolveTemplateOrDefault calls the registered TemplateResolver, falling
+// back to the language default on error.
+func (j *ReminderJob) resolveTemplateOrDefault(ctx context.Context, eventID, lang string) (resolvedTemplate, error) {
+	subject, body, err := j.resolveTemplate(ctx, eventID, reminderMessageType, lang)
+	if err != nil {
+		def := templates.DefaultFor(reminderMessageType, lang)
+		return resolvedTemplate{Subject: def.Subject, Body: def.Body}, err
+	}
+	return resolvedTemplate{Subject: subject, Body: body}, nil
 }

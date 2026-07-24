@@ -1,0 +1,4 @@
+{
+  "subject": "RSVP bestätigt — {eventTitle}",
+  "body": "Hallo {guestName},\n\ndeine Zusage/Absage für {eventTitle} wurde gespeichert.\n\nDatum: {eventDate}\nOrt: {location}\nDeine Antwort: {rsvpStatus}\n\nDu kannst deine Antwort jederzeit über den Link unten ändern."
+}

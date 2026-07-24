@@ -1,0 +1,4 @@
+{
+  "subject": "A Spot Opened Up! — {eventTitle}",
+  "body": "Hi {guestName},\n\nGreat news! A spot opened up for {eventTitle} and you are now attending.\n\nDate: {eventDate}\nLocation: {location}"
+}

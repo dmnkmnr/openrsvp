@@ -21,7 +21,7 @@ func NewStore(db database.DB) *Store {
 }
 
 // eventColumns is the standard column list for event queries.
-const eventColumns = `id, organizer_id, title, description, event_date, end_date, location, timezone, retention_days, status, share_token, contact_requirement, show_headcount, show_guest_list, rsvp_deadline, max_capacity, waitlist_enabled, comments_enabled, series_id, series_index, series_override, created_at, updated_at`
+const eventColumns = `id, organizer_id, title, description, event_date, end_date, location, timezone, retention_days, status, share_token, language, contact_requirement, show_headcount, show_guest_list, rsvp_deadline, max_capacity, waitlist_enabled, comments_enabled, series_id, series_index, series_override, created_at, updated_at`
 
 // Create inserts a new event into the database.
 func (s *Store) Create(ctx context.Context, e *Event) error {
@@ -41,10 +41,10 @@ func (s *Store) Create(ctx context.Context, e *Event) error {
 	}
 
 	_, err := s.db.ExecContext(ctx,
-		`INSERT INTO events (id, organizer_id, title, description, event_date, end_date, location, timezone, retention_days, status, share_token, contact_requirement, show_headcount, show_guest_list, rsvp_deadline, max_capacity, waitlist_enabled, comments_enabled, series_id, series_index, series_override, created_at, updated_at)
-		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+		`INSERT INTO events (id, organizer_id, title, description, event_date, end_date, location, timezone, retention_days, status, share_token, language, contact_requirement, show_headcount, show_guest_list, rsvp_deadline, max_capacity, waitlist_enabled, comments_enabled, series_id, series_index, series_override, created_at, updated_at)
+		 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
 		e.ID, e.OrganizerID, e.Title, e.Description, eventDate, endDate,
-		e.Location, e.Timezone, e.RetentionDays, e.Status, e.ShareToken, e.ContactRequirement,
+		e.Location, e.Timezone, e.RetentionDays, e.Status, e.ShareToken, e.Language, e.ContactRequirement,
 		boolToInt(e.ShowHeadcount), boolToInt(e.ShowGuestList), rsvpDeadline, e.MaxCapacity, boolToInt(e.WaitlistEnabled), boolToInt(e.CommentsEnabled),
 		e.SeriesID, e.SeriesIndex, boolToInt(e.SeriesOverride), now, now,
 	)
@@ -157,10 +157,10 @@ func (s *Store) Update(ctx context.Context, e *Event) error {
 	}
 
 	_, err := s.db.ExecContext(ctx,
-		`UPDATE events SET title = ?, description = ?, event_date = ?, end_date = ?, location = ?, timezone = ?, retention_days = ?, status = ?, contact_requirement = ?, show_headcount = ?, show_guest_list = ?, rsvp_deadline = ?, max_capacity = ?, waitlist_enabled = ?, comments_enabled = ?, series_id = ?, series_index = ?, series_override = ?, updated_at = ?
+		`UPDATE events SET title = ?, description = ?, event_date = ?, end_date = ?, location = ?, timezone = ?, retention_days = ?, status = ?, language = ?, contact_requirement = ?, show_headcount = ?, show_guest_list = ?, rsvp_deadline = ?, max_capacity = ?, waitlist_enabled = ?, comments_enabled = ?, series_id = ?, series_index = ?, series_override = ?, updated_at = ?
 		 WHERE id = ?`,
 		e.Title, e.Description, eventDate, endDate, e.Location, e.Timezone,
-		e.RetentionDays, e.Status, e.ContactRequirement, boolToInt(e.ShowHeadcount), boolToInt(e.ShowGuestList),
+		e.RetentionDays, e.Status, e.Language, e.ContactRequirement, boolToInt(e.ShowHeadcount), boolToInt(e.ShowGuestList),
 		rsvpDeadline, e.MaxCapacity, boolToInt(e.WaitlistEnabled), boolToInt(e.CommentsEnabled),
 		e.SeriesID, e.SeriesIndex, boolToInt(e.SeriesOverride), now, e.ID,
 	)
@@ -194,7 +194,7 @@ func scanEvent(row *sql.Row) (*Event, error) {
 	err := row.Scan(
 		&e.ID, &e.OrganizerID, &e.Title, &e.Description,
 		&eventDate, &endDate, &e.Location, &e.Timezone,
-		&e.RetentionDays, &e.Status, &e.ShareToken, &e.ContactRequirement,
+		&e.RetentionDays, &e.Status, &e.ShareToken, &e.Language, &e.ContactRequirement,
 		&showHeadcount, &showGuestList,
 		&rsvpDeadline, &maxCapacity, &waitlistEnabled, &commentsEnabled,
 		&seriesID, &seriesIndex, &seriesOverride,
@@ -237,7 +237,7 @@ func scanEventRow(rows *sql.Rows) (*Event, error) {
 	err := rows.Scan(
 		&e.ID, &e.OrganizerID, &e.Title, &e.Description,
 		&eventDate, &endDate, &e.Location, &e.Timezone,
-		&e.RetentionDays, &e.Status, &e.ShareToken, &e.ContactRequirement,
+		&e.RetentionDays, &e.Status, &e.ShareToken, &e.Language, &e.ContactRequirement,
 		&showHeadcount, &showGuestList,
 		&rsvpDeadline, &maxCapacity, &waitlistEnabled, &commentsEnabled,
 		&seriesID, &seriesIndex, &seriesOverride,

@@ -43,16 +43,6 @@ func TestRenderMagicLink(t *testing.T) {
 	assert.Contains(t, plain, "15 minutes")
 }
 
-func TestRenderRSVPConfirmation(t *testing.T) {
-	html, plain, err := RenderRSVPConfirmation("My Event", "Jan 1, 2026", "NYC", "attending", "http://localhost/r/tok")
-	require.NoError(t, err)
-
-	assert.Contains(t, html, "My Event")
-	assert.Contains(t, html, "Attending")
-	assert.Contains(t, plain, "My Event")
-	assert.Contains(t, plain, "http://localhost/r/tok")
-}
-
 func TestRenderEventReminder(t *testing.T) {
 	html, plain, err := RenderEventReminder("Pool Party", "June 5, 2026", "Backyard", "Remember!", "http://localhost/i/xyz")
 	require.NoError(t, err)
@@ -71,4 +61,76 @@ func TestRenderEventReminderNoMessage(t *testing.T) {
 	assert.Contains(t, html, "Quick Event")
 	assert.NotContains(t, html, "Message from the organizer")
 	assert.NotContains(t, plain, "Message from the organizer")
+}
+
+func TestInterpolate(t *testing.T) {
+	out := Interpolate("Hi {guestName}, welcome to {eventTitle}!", map[string]string{
+		"guestName":  "Alex",
+		"eventTitle": "Pool Party",
+	})
+	assert.Equal(t, "Hi Alex, welcome to Pool Party!", out)
+}
+
+func TestInterpolateUnknownPlaceholderLeftLiteral(t *testing.T) {
+	out := Interpolate("Hi {guestName}, code: {unknownVar}", map[string]string{"guestName": "Alex"})
+	assert.Equal(t, "Hi Alex, code: {unknownVar}", out)
+}
+
+func TestDefaultForKnownAndFallback(t *testing.T) {
+	en := DefaultFor("rsvp_confirmation", "en")
+	assert.NotEmpty(t, en.Subject)
+	assert.NotEmpty(t, en.Body)
+
+	de := DefaultFor("rsvp_confirmation", "de")
+	assert.NotEmpty(t, de.Subject)
+	assert.NotEqual(t, en.Subject, de.Subject)
+
+	// Unsupported language falls back to English.
+	fallback := DefaultFor("rsvp_confirmation", "fr")
+	assert.Equal(t, en.Subject, fallback.Subject)
+}
+
+func TestRenderNotification(t *testing.T) {
+	def := DefaultFor("rsvp_confirmation", "en")
+	vars := map[string]string{
+		"guestName":  "Alex",
+		"eventTitle": "Pool Party",
+		"eventDate":  "June 5, 2026",
+		"location":   "Backyard",
+		"rsvpStatus": "Attending",
+	}
+
+	subject, html, plain, err := RenderNotification("en", def.Subject, def.Body, vars, "http://localhost/r/tok", CTALabel("rsvp_confirmation", "en"))
+	require.NoError(t, err)
+
+	assert.Contains(t, subject, "Pool Party")
+	assert.Contains(t, html, "Alex")
+	assert.Contains(t, html, "Pool Party")
+	assert.Contains(t, html, "http://localhost/r/tok")
+	assert.Contains(t, plain, "Alex")
+	assert.Contains(t, plain, "http://localhost/r/tok")
+}
+
+func TestRenderNotificationEscapesHTML(t *testing.T) {
+	subject, html, plain, err := RenderNotification("en", "Subject", "Hi {guestName}", map[string]string{
+		"guestName": "<script>alert(1)</script>",
+	}, "", "")
+	require.NoError(t, err)
+	_ = subject
+
+	assert.NotContains(t, html, "<script>")
+	assert.Contains(t, html, "&lt;script&gt;")
+	assert.Contains(t, plain, "<script>alert(1)</script>")
+}
+
+func TestSMSFromTruncates(t *testing.T) {
+	long := "This is a very long reminder message that definitely exceeds the short SMS length limit we configured for this test case here"
+	out := SMSFrom(long, 40)
+	assert.LessOrEqual(t, len(out), 44) // 40 + ellipsis bytes
+	assert.True(t, len(out) < len(long))
+}
+
+func TestSMSFromNoTruncationNeeded(t *testing.T) {
+	short := "Short message"
+	assert.Equal(t, short, SMSFrom(short, 40))
 }

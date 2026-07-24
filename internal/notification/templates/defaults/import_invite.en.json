@@ -1,0 +1,4 @@
+{
+  "subject": "You're Invited! — {eventTitle}",
+  "body": "Hi {guestName},\n\nYou've been invited to {eventTitle}.\n\nDate: {eventDate}\nLocation: {location}\n\nPlease let us know if you can make it."
+}

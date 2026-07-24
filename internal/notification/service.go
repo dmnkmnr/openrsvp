@@ -206,12 +206,13 @@ func (s *Service) applyUnsubscribeFooter(ctx context.Context, msg *Message, even
 	}
 	base := strings.TrimRight(s.opts.BaseURL, "/")
 	link := fmt.Sprintf("%s/unsubscribe?token=%s", base, token)
+	footerText := unsubscribeFooterText(msg.Lang)
 
 	if msg.Body != "" {
 		footerHTML := fmt.Sprintf(
 			`<div style="margin-top:24px;font-size:12px;color:#A8A29E;text-align:center">`+
-				`<a href="%s" style="color:#A8A29E">Unsubscribe from these emails</a></div>`,
-			link,
+				`<a href="%s" style="color:#A8A29E">%s</a></div>`,
+			link, footerText,
 		)
 		if idx := strings.LastIndex(strings.ToLower(msg.Body), "</body>"); idx != -1 {
 			msg.Body = msg.Body[:idx] + footerHTML + msg.Body[idx:]
@@ -224,7 +225,18 @@ func (s *Service) applyUnsubscribeFooter(ctx context.Context, msg *Message, even
 	// providers fall back to Body (which already carries the footer), so we
 	// avoid clobbering the body content with a footer-only plain part.
 	if msg.Plain != "" {
-		msg.Plain += "\n\n---\nUnsubscribe from these emails: " + link + "\n"
+		msg.Plain += "\n\n---\n" + footerText + ": " + link + "\n"
+	}
+}
+
+// unsubscribeFooterText returns the localized unsubscribe link label for the
+// given recipient language, defaulting to English.
+func unsubscribeFooterText(lang string) string {
+	switch lang {
+	case "de":
+		return "Von diesen E-Mails abmelden"
+	default:
+		return "Unsubscribe from these emails"
 	}
 }
 

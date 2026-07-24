@@ -1,0 +1,4 @@
+{
+  "subject": "RSVP Confirmed — {eventTitle}",
+  "body": "Hi {guestName},\n\nYour RSVP for {eventTitle} has been recorded.\n\nDate: {eventDate}\nLocation: {location}\nYour RSVP: {rsvpStatus}\n\nYou can change your RSVP any time using the link below."
+}
