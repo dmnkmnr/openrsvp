@@ -311,11 +311,22 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	if req.PlusOnes < 0 {
 		return nil, fmt.Errorf("plusOnes must not be negative")
 	}
-	if req.ContactMethod == "" {
-		req.ContactMethod = "email"
-	}
-	if req.ContactMethod != "email" && req.ContactMethod != "sms" {
+	if req.ContactMethod != "" && req.ContactMethod != "email" && req.ContactMethod != "sms" {
 		return nil, fmt.Errorf("invalid contactMethod: must be email or sms")
+	}
+	// Infer an unset contact method from what was actually provided, rather
+	// than defaulting blindly to "email": a phone-only submission (valid
+	// under "phone" or "email_or_phone" contact requirements, or from a
+	// client that predates this field) must not be forced into a method it
+	// can't reach.
+	if req.ContactMethod == "" {
+		if req.Email != nil && *req.Email != "" {
+			req.ContactMethod = "email"
+		} else if req.Phone != nil && *req.Phone != "" {
+			req.ContactMethod = "sms"
+		} else {
+			req.ContactMethod = "email"
+		}
 	}
 	if !s.smsEnabled && req.ContactMethod == "sms" {
 		return nil, fmt.Errorf("sms contact method is not available when SMS is disabled")
@@ -342,15 +353,6 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	hasEmail := req.Email != nil && *req.Email != ""
 	hasPhone := req.Phone != nil && *req.Phone != ""
 
-	// The chosen contact method must actually be reachable: a guest can't
-	// prefer SMS without giving a phone number, or email without an address.
-	if req.ContactMethod == "sms" && !hasPhone {
-		return nil, fmt.Errorf("phone is required to be contacted by sms")
-	}
-	if req.ContactMethod == "email" && !hasEmail {
-		return nil, fmt.Errorf("email is required to be contacted by email")
-	}
-
 	switch ev.ContactRequirement {
 	case "email":
 		if !hasEmail {
@@ -376,6 +378,18 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	// When SMS is disabled, email is always required regardless of contact requirement.
 	if !s.smsEnabled && !hasEmail {
 		return nil, fmt.Errorf("email is required")
+	}
+
+	// The chosen contact method must actually be reachable. By this point the
+	// contact-requirement switch above already guarantees at least one of
+	// email/phone is present, so this only catches an explicit method chosen
+	// by the client that doesn't match what they actually gave (e.g. phone
+	// only, but contactMethod explicitly set to "email").
+	if req.ContactMethod == "sms" && !hasPhone {
+		return nil, fmt.Errorf("phone is required to be contacted by sms")
+	}
+	if req.ContactMethod == "email" && !hasEmail {
+		return nil, fmt.Errorf("email is required to be contacted by email")
 	}
 
 	// Acquire per-event mutex for capacity checks.
