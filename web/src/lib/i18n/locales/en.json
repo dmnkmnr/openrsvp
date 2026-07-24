@@ -21,6 +21,23 @@
 		"yes": "Yes",
 		"no": "No"
 	},
+	"events": {
+		"list": {
+			"pageTitle": "My Events -- OpenRSVP",
+			"heading": "My Events",
+			"series": "Series",
+			"createEvent": "Create Event",
+			"emptyTitle": "No events yet",
+			"emptyBody": "Get started by creating your first event.",
+			"createFirstEvent": "Create Your First Event",
+			"seriesBadge": "Series",
+			"cohostBadge": "Co-host",
+			"daysAway": "{count} days away",
+			"today": "Today",
+			"daysAgo": "{count} days ago",
+			"loadError": "Failed to load events"
+		}
+	},
 	"nav": {
 		"dashboard": "Dashboard",
 		"createEvent": "Create Event",
