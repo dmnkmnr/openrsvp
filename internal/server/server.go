@@ -292,8 +292,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		})
 	}
 
-	// Wire RSVP confirmation emails into the RSVP service.
-	if notifRegistry.Has(notification.ChannelEmail) {
+	// Wire RSVP confirmation notifications into the RSVP service.
+	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		rsvpService.SetNotifyRSVP(func(ctx context.Context, eventID string, attendee *rsvp.Attendee) {
 			ev, err := eventService.GetByID(ctx, eventID)
 			if err != nil {
@@ -315,7 +315,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				location = "TBD"
 			}
 
-			// Send confirmation email to the attendee.
+			// Send confirmation to the attendee: email first, falling back to
+			// SMS -- same precedence as scheduled reminders and cancellations.
 			if attendee.Email != nil && *attendee.Email != "" {
 				modifyURL := cfg.BaseURL + "/r/" + attendee.RSVPToken
 				htmlBody, plainBody, err := templates.RenderRSVPConfirmation(ev.Title, eventDate, location, attendee.RSVPStatus, modifyURL)
@@ -356,9 +357,21 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("rsvp notify: failed to send attendee email")
 					}
 				}
+			} else if attendee.Phone != nil && *attendee.Phone != "" {
+				smsBody := "RSVP confirmed (" + attendee.RSVPStatus + ") for " + ev.Title + " on " + eventDate + "."
+				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
+					To:   *attendee.Phone,
+					Body: smsBody,
+				}); err != nil {
+					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("rsvp notify: failed to send attendee SMS")
+				}
 			}
 
-			// Notify the organizer about the new RSVP.
+			// Notify the organizer about the new RSVP. Organizers always
+			// authenticate via email, so this stays email-only.
+			if !notifRegistry.Has(notification.ChannelEmail) {
+				return
+			}
 			organizer, err := authStore.FindOrganizerByID(ctx, ev.OrganizerID)
 			if err != nil {
 				logger.Error().Err(err).Str("organizer_id", ev.OrganizerID).Msg("rsvp notify: failed to get organizer")
@@ -398,16 +411,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		})
 	}
 
-	// Wire import invitation emails into the RSVP service.
-	if notifRegistry.Has(notification.ChannelEmail) {
+	// Wire import invitation notifications into the RSVP service.
+	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		rsvpService.SetOnImportInvite(func(ctx context.Context, eventID string, attendee *rsvp.Attendee) {
 			ev, err := eventService.GetByID(ctx, eventID)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("import invite: failed to get event")
-				return
-			}
-
-			if attendee.Email == nil || *attendee.Email == "" {
 				return
 			}
 
@@ -418,23 +427,39 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			inviteURL := cfg.BaseURL + "/i/" + ev.ShareToken
 
-			htmlBody, plainBody, err := templates.RenderEventReminder(
-				ev.Title, eventDate, location,
-				"You've been invited! Click the link below to RSVP.",
-				inviteURL,
-			)
-			if err != nil {
-				logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("import invite: failed to render template")
+			// Email first, falling back to SMS -- same precedence as
+			// scheduled reminders and cancellations. Imported guests are
+			// frequently phone-only (e.g. CSV lists without emails).
+			if attendee.Email != nil && *attendee.Email != "" {
+				htmlBody, plainBody, err := templates.RenderEventReminder(
+					ev.Title, eventDate, location,
+					"You've been invited! Click the link below to RSVP.",
+					inviteURL,
+				)
+				if err != nil {
+					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("import invite: failed to render template")
+					return
+				}
+
+				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
+					To:      *attendee.Email,
+					Subject: "You're Invited — " + ev.Title,
+					Body:    htmlBody,
+					Plain:   plainBody,
+				}); err != nil {
+					logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("import invite: failed to send email")
+				}
 				return
 			}
 
-			if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
-				To:      *attendee.Email,
-				Subject: "You're Invited — " + ev.Title,
-				Body:    htmlBody,
-				Plain:   plainBody,
-			}); err != nil {
-				logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("import invite: failed to send email")
+			if attendee.Phone != nil && *attendee.Phone != "" {
+				smsBody := "You've been invited to " + ev.Title + " on " + eventDate + ". RSVP: " + inviteURL
+				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
+					To:   *attendee.Phone,
+					Body: smsBody,
+				}); err != nil {
+					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("import invite: failed to send SMS")
+				}
 			}
 		})
 	}
@@ -479,15 +504,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	}
 
 	// Wire waitlist promotion notifications into the RSVP service.
-	if notifRegistry.Has(notification.ChannelEmail) {
+	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		rsvpService.SetNotifyWaitlistPromotion(func(ctx context.Context, eventID string, attendee *rsvp.Attendee) {
 			ev, err := eventService.GetByID(ctx, eventID)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("waitlist promote: failed to get event")
-				return
-			}
-
-			if attendee.Email == nil || *attendee.Email == "" {
 				return
 			}
 
@@ -498,19 +519,34 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			modifyURL := cfg.BaseURL + "/r/" + attendee.RSVPToken
 
-			htmlBody, plainBody, err := templates.RenderWaitlistPromotion(ev.Title, eventDate, location, modifyURL)
-			if err != nil {
-				logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("waitlist promote: failed to render template")
+			// Email first, falling back to SMS -- same precedence as
+			// scheduled reminders and cancellations.
+			if attendee.Email != nil && *attendee.Email != "" {
+				htmlBody, plainBody, err := templates.RenderWaitlistPromotion(ev.Title, eventDate, location, modifyURL)
+				if err != nil {
+					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("waitlist promote: failed to render template")
+					return
+				}
+
+				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
+					To:      *attendee.Email,
+					Subject: "A spot opened up! — " + ev.Title,
+					Body:    htmlBody,
+					Plain:   plainBody,
+				}); err != nil {
+					logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("waitlist promote: failed to send email")
+				}
 				return
 			}
 
-			if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
-				To:      *attendee.Email,
-				Subject: "A spot opened up! — " + ev.Title,
-				Body:    htmlBody,
-				Plain:   plainBody,
-			}); err != nil {
-				logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("waitlist promote: failed to send email")
+			if attendee.Phone != nil && *attendee.Phone != "" {
+				smsBody := "A spot opened up for " + ev.Title + "! Manage your RSVP: " + modifyURL
+				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
+					To:   *attendee.Phone,
+					Body: smsBody,
+				}); err != nil {
+					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("waitlist promote: failed to send SMS")
+				}
 			}
 		})
 	}
@@ -575,9 +611,9 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	}
 	messageHandler := message.NewHandler(messageService, authMiddleware, security.RateLimitMiddleware(secMw.RSVPRateLimiter), message.OrganizerFromCtx(organizerFromCtx), attendeeFromToken, message.EventOwnershipChecker(checkEventOwner), logger)
 
-	// Wire email dispatch into message service so organizer messages are
-	// delivered to attendees via email.
-	if notifRegistry.Has(notification.ChannelEmail) {
+	// Wire dispatch into message service so organizer broadcast messages are
+	// delivered to attendees via email or SMS.
+	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		messageService.SetNotifyAttendees(func(ctx context.Context, eventID, recipientGroup, subject, body string) {
 			ev, err := eventService.GetByID(ctx, eventID)
 			if err != nil {
@@ -604,35 +640,52 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				if recipientGroup != "all" && a.RSVPStatus != recipientGroup {
 					continue
 				}
-				if a.Email == nil || *a.Email == "" {
+
+				// Email first, falling back to SMS -- same precedence as
+				// scheduled reminders and cancellations.
+				if a.Email != nil && *a.Email != "" {
+					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Title, eventDate, location, body, inviteURL)
+					if err != nil {
+						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
+						continue
+					}
+
+					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
+						To:      *a.Email,
+						Subject: subject,
+						Body:    htmlBody,
+						Plain:   plainBody,
+					}); err != nil {
+						logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("message notify: failed to send email")
+						continue
+					}
+					sent++
 					continue
 				}
 
-				htmlBody, plainBody, err := templates.RenderEventReminder(ev.Title, eventDate, location, body, inviteURL)
-				if err != nil {
-					logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
-					continue
+				if a.Phone != nil && *a.Phone != "" {
+					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelSMS, &notification.Message{
+						To:   *a.Phone,
+						Body: subject + ": " + body,
+					}); err != nil {
+						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to send SMS")
+						continue
+					}
+					sent++
 				}
-
-				if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
-					To:      *a.Email,
-					Subject: subject,
-					Body:    htmlBody,
-					Plain:   plainBody,
-				}); err != nil {
-					logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("message notify: failed to send email")
-					continue
-				}
-				sent++
 			}
 
 			logger.Info().
 				Str("event_id", eventID).
 				Str("group", recipientGroup).
 				Int("sent", sent).
-				Msg("message notify: emails dispatched")
+				Msg("message notify: notifications dispatched")
 		})
+	}
 
+	// Attendee replies always go to the organizer's email -- organizers
+	// always authenticate via email, so this stays email-only.
+	if notifRegistry.Has(notification.ChannelEmail) {
 		messageService.SetNotifyOrganizer(func(ctx context.Context, eventID, attendeeID, subject, body string) {
 			ev, err := eventService.GetByID(ctx, eventID)
 			if err != nil {
