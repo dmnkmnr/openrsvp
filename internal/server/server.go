@@ -868,18 +868,14 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			"title":   e.Title,
 		})
 
-		type defaultReminder struct {
-			offset  time.Duration
-			message string
-		}
-		defaults := []defaultReminder{
-			{7 * 24 * time.Hour, "Reminder: " + e.Title + " is in 1 week!"},
-			{3 * 24 * time.Hour, "Reminder: " + e.Title + " is in 3 days!"},
-		}
+		// Message is left empty so sendToAttendee resolves the organizer's
+		// customized (or language-default) reminder template instead of a
+		// fixed English string -- see internal/scheduler/reminder.go.
+		offsets := []time.Duration{7 * 24 * time.Hour, 3 * 24 * time.Hour}
 
 		now := time.Now().UTC()
-		for _, d := range defaults {
-			remindAt := e.EventDate.Add(-d.offset)
+		for _, offset := range offsets {
+			remindAt := e.EventDate.Add(-offset)
 			if remindAt.Before(now) {
 				logger.Debug().
 					Str("event_id", e.ID).
@@ -893,7 +889,6 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				EventID:     e.ID,
 				RemindAt:    remindAt,
 				TargetGroup: "all",
-				Message:     d.message,
 				Status:      "scheduled",
 			}
 			if err := reminderStore.Create(ctx, r); err != nil {
