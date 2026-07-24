@@ -153,7 +153,7 @@
 
 	const contactReq = $derived(eventData?.contactRequirement ?? 'email_or_phone');
 	const emailRequired = $derived(
-		!$smsEnabled || contactReq === 'email' || contactReq === 'email_and_phone' || contactReq === 'email_or_phone'
+		!$smsEnabled || contactReq === 'email' || contactReq === 'email_and_phone'
 	);
 	const phoneRequired = $derived(
 		$smsEnabled && (contactReq === 'phone' || contactReq === 'email_and_phone')
