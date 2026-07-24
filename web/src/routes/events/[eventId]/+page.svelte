@@ -18,6 +18,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	let showCancelModal = $state(false);
 	let notifyOnCancel = $state(true);
@@ -47,13 +48,13 @@
 	const currentUserId = $derived($currentUser?.id);
 	const reminderMinDate = $derived(toISOLocal(new Date()));
 
-	const reminderTargetOptions = [
-		{ value: 'all', label: 'All Attendees' },
-		{ value: 'attending', label: 'Attending' },
-		{ value: 'maybe', label: 'Maybe' },
-		{ value: 'declined', label: 'Declined' },
-		{ value: 'pending', label: 'Pending RSVP' }
-	];
+	const reminderTargetOptions = $derived([
+		{ value: 'all', label: $_('events.messages.recipient.all') },
+		{ value: 'attending', label: $_('events.messages.recipient.attending') },
+		{ value: 'maybe', label: $_('events.messages.recipient.maybe') },
+		{ value: 'declined', label: $_('events.messages.recipient.declined') },
+		{ value: 'pending', label: $_('events.messages.recipient.pending') }
+	]);
 
 	let filteredAttendees = $derived.by(() => {
 		if (activeFilter === 'all') return attendees;
@@ -86,7 +87,7 @@
 				emailStats = emailStatsResult.data;
 			} catch (err: unknown) {
 				const apiErr = err as { message?: string };
-				toast.error(apiErr.message || 'Failed to load event');
+				toast.error(apiErr.message || $_('events.detail.loadError'));
 			} finally {
 				loading = false;
 			}
@@ -116,10 +117,10 @@
 			const result = await api.post<{ data: Event }>(`/events/${eventId}/publish`);
 			event = result.data;
 			$currentEvent = event;
-			toast.success('Event published!');
+			toast.success($_('events.detail.publishSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to publish event');
+			toast.error(apiErr.message || $_('events.detail.publishError'));
 		}
 	}
 
@@ -128,10 +129,10 @@
 		try {
 			await navigator.clipboard.writeText(`${$page.url.origin}/i/${event.shareToken}`);
 			copied = true;
-			toast.success('Link copied!');
+			toast.success($_('events.detail.linkCopied'));
 			setTimeout(() => (copied = false), 2000);
 		} catch {
-			toast.error('Failed to copy link');
+			toast.error($_('events.detail.copyError'));
 		}
 	}
 
@@ -144,10 +145,10 @@
 			event = result.data;
 			$currentEvent = event;
 			showCancelModal = false;
-			toast.success('Event cancelled');
+			toast.success($_('events.detail.cancelSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to cancel event');
+			toast.error(apiErr.message || $_('events.detail.cancelError'));
 		}
 	}
 
@@ -157,10 +158,10 @@
 			const result = await api.post<{ data: Event }>(`/events/${eventId}/reopen`);
 			event = result.data;
 			$currentEvent = event;
-			toast.success('Event re-opened as draft');
+			toast.success($_('events.detail.reopenSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to re-open event');
+			toast.error(apiErr.message || $_('events.detail.reopenError'));
 		}
 	}
 
@@ -168,11 +169,11 @@
 		if (!event) return;
 		try {
 			const result = await api.post<{ data: Event }>(`/events/${eventId}/duplicate`);
-			toast.success('Event duplicated');
+			toast.success($_('events.detail.duplicateSuccess'));
 			goto(`/events/${result.data.id}`);
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to duplicate event');
+			toast.error(apiErr.message || $_('events.detail.duplicateError'));
 		}
 	}
 
@@ -181,7 +182,7 @@
 
 		reminderErrors = {};
 		if (!reminderRemindAt) {
-			reminderErrors.remindAt = 'Reminder date is required';
+			reminderErrors.remindAt = $_('events.detail.remindAtRequired');
 		}
 
 		if (Object.keys(reminderErrors).length > 0) {
@@ -197,10 +198,10 @@
 			});
 			reminders = [...reminders, result.data].sort((a, b) => a.remindAt.localeCompare(b.remindAt));
 			reminderMessage = '';
-			toast.success('Reminder scheduled');
+			toast.success($_('events.detail.reminderScheduled'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to schedule reminder');
+			toast.error(apiErr.message || $_('events.detail.reminderScheduleError'));
 		} finally {
 			creatingReminder = false;
 		}
@@ -212,10 +213,10 @@
 			reminders = reminders.map((r) => (r.id === reminderId ? { ...r, status: 'cancelled' } : r));
 			cancelReminderTarget = null;
 			showCancelReminderModal = false;
-			toast.success('Reminder cancelled');
+			toast.success($_('events.detail.reminderCancelled'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to cancel reminder');
+			toast.error(apiErr.message || $_('events.detail.reminderCancelError'));
 		}
 	}
 
@@ -276,7 +277,7 @@
 			});
 			attendees = attendees.map((a) => (a.id === editingAttendeeId ? result.data : a));
 			editingAttendeeId = null;
-			toast.success('Attendee updated');
+			toast.success($_('events.detail.attendeeUpdated'));
 			// Re-fetch stats to reflect changes in status/plus-ones.
 			try {
 				const refreshed = await api.get<{ data: RSVPStats }>(`/rsvp/event/${eventId}/stats`);
@@ -284,7 +285,7 @@
 			} catch { /* non-critical */ }
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to update attendee');
+			toast.error(apiErr.message || $_('events.detail.attendeeUpdateError'));
 		} finally {
 			savingAttendee = false;
 		}
@@ -296,7 +297,7 @@
 			attendees = attendees.filter((a) => a.id !== attendeeId);
 			removeAttendeeTarget = null;
 			showRemoveAttendeeModal = false;
-			toast.success('Attendee removed');
+			toast.success($_('events.detail.attendeeRemoved'));
 			// Re-fetch stats to reflect removal (status counts, headcount, plus-ones).
 			try {
 				const refreshed = await api.get<{ data: RSVPStats }>(`/rsvp/event/${eventId}/stats`);
@@ -304,7 +305,7 @@
 			} catch { /* non-critical */ }
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to remove attendee');
+			toast.error(apiErr.message || $_('events.detail.attendeeRemoveError'));
 		}
 	}
 
@@ -315,7 +316,7 @@
 		try {
 			const result = await api.post<{ data: Attendee }>(`/rsvp/event/${eventId}/${attendeeId}/promote`);
 			attendees = attendees.map((a) => (a.id === attendeeId ? result.data : a));
-			toast.success('Attendee promoted from waitlist');
+			toast.success($_('events.detail.attendeePromoted'));
 			// Re-fetch stats
 			try {
 				const refreshed = await api.get<{ data: RSVPStats }>(`/rsvp/event/${eventId}/stats`);
@@ -323,7 +324,7 @@
 			} catch { /* non-critical */ }
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to promote attendee');
+			toast.error(apiErr.message || $_('events.detail.attendeePromoteError'));
 		} finally {
 			promotingAttendeeId = null;
 		}
@@ -339,10 +340,10 @@
 			});
 			cohosts = [...cohosts, result.data];
 			cohostEmail = '';
-			toast.success('Co-host added');
+			toast.success($_('events.detail.cohostAdded'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to add co-host');
+			toast.error(apiErr.message || $_('events.detail.cohostAddError'));
 		} finally {
 			addingCohost = false;
 		}
@@ -352,10 +353,10 @@
 		try {
 			await api.delete(`/events/${eventId}/cohosts/${cohostId}`);
 			cohosts = cohosts.filter(c => c.id !== cohostId);
-			toast.success('Co-host removed');
+			toast.success($_('events.detail.cohostRemoved'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to remove co-host');
+			toast.error(apiErr.message || $_('events.detail.cohostRemoveError'));
 		}
 	}
 
@@ -364,10 +365,10 @@
 		try {
 			await api.delete(`/comments/event/${eventId}/${commentId}`);
 			eventComments = eventComments.filter(c => c.id !== commentId);
-			toast.success('Comment deleted');
+			toast.success($_('events.detail.commentDeleted'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to delete comment');
+			toast.error(apiErr.message || $_('events.detail.commentDeleteError'));
 		}
 	}
 
@@ -402,10 +403,10 @@
 				.map((r) => (r.id === editingReminderId ? result.data : r))
 				.sort((a, b) => a.remindAt.localeCompare(b.remindAt));
 			editingReminderId = null;
-			toast.success('Reminder updated');
+			toast.success($_('events.detail.reminderUpdated'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to update reminder');
+			toast.error(apiErr.message || $_('events.detail.reminderUpdateError'));
 		} finally {
 			savingReminder = false;
 		}
@@ -413,7 +414,7 @@
 </script>
 
 <svelte:head>
-	<title>{event?.title || 'Event Details'} -- OpenRSVP</title>
+	<title>{event?.title || $_('events.detail.pageTitleFallback')} -- OpenRSVP</title>
 </svelte:head>
 
 <AppShell>
@@ -424,15 +425,15 @@
 	{:else if event}
 		<!-- Back link + actions -->
 		<div class="mb-6 flex items-center justify-between">
-			<a href="/events" class="text-sm text-primary hover:text-primary-hover">&larr; Back to events</a>
+			<a href="/events" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.detail.backToEvents')}</a>
 			<div class="flex items-center gap-2">
-				<Button variant="outline" size="sm" href="/events/{eventId}/edit">Edit</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/invite">Design Invite</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/share">Share</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/messages">Send Message</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/import">Import Guests</Button>
-				<Button variant="outline" size="sm" href="/events/{eventId}/webhooks">Webhooks</Button>
-				<Button variant="outline" size="sm" onclick={duplicateEvent}>Duplicate</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/edit">{$_('events.detail.edit')}</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/invite">{$_('events.detail.designInvite')}</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/share">{$_('events.detail.share')}</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/messages">{$_('events.detail.sendMessage')}</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/import">{$_('events.detail.importGuests')}</Button>
+				<Button variant="outline" size="sm" href="/events/{eventId}/webhooks">{$_('events.detail.webhooks')}</Button>
+				<Button variant="outline" size="sm" onclick={duplicateEvent}>{$_('events.detail.duplicate')}</Button>
 			</div>
 		</div>
 
@@ -443,9 +444,9 @@
 					<path stroke-linecap="round" stroke-linejoin="round" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
 				</svg>
 				<span>
-					Part of a <a href="/events/series/{event.seriesId}" class="font-medium underline underline-offset-2 hover:text-primary-hover">recurring series</a>
+					{$_('events.detail.seriesPartOf')} <a href="/events/series/{event.seriesId}" class="font-medium underline underline-offset-2 hover:text-primary-hover">{$_('events.detail.seriesRecurring')}</a>
 					{#if event.seriesOverride}
-						<span class="text-warning font-medium">(Modified)</span>
+						<span class="text-warning font-medium">{$_('events.detail.seriesModified')}</span>
 					{/if}
 				</span>
 			</div>
@@ -458,7 +459,7 @@
 					<h1 class="text-2xl font-bold font-display text-neutral-900">{event.title}</h1>
 					<p class="mt-2 text-sm text-neutral-600">{formatDateTime(event.eventDate, event.timezone)}</p>
 					{#if event.endDate}
-						<p class="text-sm text-neutral-500">Ends: {formatDateTime(event.endDate, event.timezone)}</p>
+						<p class="text-sm text-neutral-500">{$_('events.detail.endsLabel', { values: { date: formatDateTime(event.endDate, event.timezone) } })}</p>
 					{/if}
 					{#if event.location}
 						<p class="mt-1 text-sm text-neutral-500 flex items-center gap-1">
@@ -476,14 +477,14 @@
 				<div class="flex flex-col items-end gap-2">
 					<Badge variant={statusVariant(event.status)}>{event.status}</Badge>
 					{#if event.status === 'draft'}
-						<Button size="sm" onclick={publishEvent}>Publish</Button>
+						<Button size="sm" onclick={publishEvent}>{$_('events.detail.publish')}</Button>
 					{:else if event.status === 'published'}
 						{#if event.organizerId === currentUserId}
-							<Button variant="danger" size="sm" onclick={() => showCancelModal = true}>Cancel Event</Button>
+							<Button variant="danger" size="sm" onclick={() => showCancelModal = true}>{$_('events.detail.cancelEvent')}</Button>
 						{/if}
 					{:else if event.status === 'cancelled'}
 						{#if event.organizerId === currentUserId}
-							<Button size="sm" onclick={reopenEvent}>Re-open as Draft</Button>
+							<Button size="sm" onclick={reopenEvent}>{$_('events.detail.reopenAsDraft')}</Button>
 						{/if}
 					{/if}
 				</div>
@@ -496,15 +497,15 @@
 							<path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
 						</svg>
 						<p class="text-xs text-neutral-500">
-							Public visibility:
+							{$_('events.detail.visibilityLabel')}
 							{#if event.showHeadcount && event.showGuestList}
-								attendance count and guest names
+								{$_('events.detail.visibilityBoth')}
 							{:else if event.showHeadcount}
-								attendance count
+								{$_('events.detail.visibilityHeadcount')}
 							{:else}
-								guest names
+								{$_('events.detail.visibilityGuestList')}
 							{/if}
-							<a href="/events/{eventId}/edit" class="text-primary hover:text-primary underline underline-offset-2 ml-1">Edit</a>
+							<a href="/events/{eventId}/edit" class="text-primary hover:text-primary underline underline-offset-2 ml-1">{$_('events.detail.edit')}</a>
 						</p>
 					</div>
 				</div>
@@ -512,13 +513,13 @@
 			{#if event.shareToken}
 				<div class="mt-4 pt-4 border-t border-neutral-200 flex items-center gap-2">
 					<p class="text-xs text-neutral-500">
-						Share link: <code class="bg-neutral-100 px-1.5 py-0.5 rounded font-mono text-primary">{$page.url.origin}/i/{event.shareToken}</code>
+						{$_('events.detail.shareLinkLabel')} <code class="bg-neutral-100 px-1.5 py-0.5 rounded font-mono text-primary">{$page.url.origin}/i/{event.shareToken}</code>
 					</p>
 					<button
 						type="button"
 						onclick={copyShareLink}
 						class="inline-flex items-center justify-center rounded p-1 text-neutral-400 hover:text-primary hover:bg-neutral-100 transition-colors"
-						title="Copy share link"
+						title={$_('events.detail.copyShareLinkTitle')}
 					>
 						{#if copied}
 							<svg class="h-4 w-4 text-success" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -540,32 +541,32 @@
 				<div class="flex items-baseline gap-2">
 					<p class="text-2xl font-bold font-mono text-success">{stats.attendingHeadcount}</p>
 					{#if stats.attendingHeadcount !== stats.attending}
-						<p class="text-xs text-success/70">({stats.attending} + {stats.attendingHeadcount - stats.attending} guests)</p>
+						<p class="text-xs text-success/70">({stats.attending} + {stats.attendingHeadcount - stats.attending} {$_('events.detail.guestsSuffix')})</p>
 					{/if}
 				</div>
-				<p class="text-xs font-medium text-success mt-1">Attending</p>
+				<p class="text-xs font-medium text-success mt-1">{$_('events.detail.attending')}</p>
 			</div>
 			<div class="rounded-lg border border-neutral-200 p-4 bg-warning-light">
 				<div class="flex items-baseline gap-2">
 					<p class="text-2xl font-bold font-mono text-warning">{stats.maybeHeadcount}</p>
 					{#if stats.maybeHeadcount !== stats.maybe}
-						<p class="text-xs text-warning/70">({stats.maybe} + {stats.maybeHeadcount - stats.maybe} guests)</p>
+						<p class="text-xs text-warning/70">({stats.maybe} + {stats.maybeHeadcount - stats.maybe} {$_('events.detail.guestsSuffix')})</p>
 					{/if}
 				</div>
-				<p class="text-xs font-medium text-warning mt-1">Maybe</p>
+				<p class="text-xs font-medium text-warning mt-1">{$_('events.detail.maybe')}</p>
 			</div>
 			<div class="rounded-lg border border-neutral-200 p-4 bg-error-light">
 				<p class="text-2xl font-bold font-mono text-error">{stats.declined}</p>
-				<p class="text-xs font-medium text-error mt-1">Declined</p>
+				<p class="text-xs font-medium text-error mt-1">{$_('events.detail.declined')}</p>
 			</div>
 			<div class="rounded-lg border border-neutral-200 p-4 bg-neutral-50">
 				<div class="flex items-baseline gap-2">
 					<p class="text-2xl font-bold font-mono text-neutral-700">{stats.totalHeadcount}</p>
 					{#if stats.totalHeadcount !== stats.total}
-						<p class="text-xs text-neutral-500">({stats.total} + {stats.totalHeadcount - stats.total} guests)</p>
+						<p class="text-xs text-neutral-500">({stats.total} + {stats.totalHeadcount - stats.total} {$_('events.detail.guestsSuffix')})</p>
 					{/if}
 				</div>
-				<p class="text-xs font-medium text-neutral-600 mt-1">Total</p>
+				<p class="text-xs font-medium text-neutral-600 mt-1">{$_('events.detail.total')}</p>
 			</div>
 		</div>
 
@@ -575,7 +576,7 @@
 					<div class="flex items-baseline gap-2">
 						<p class="text-2xl font-bold font-mono text-info">{stats.waitlisted}</p>
 					</div>
-					<p class="text-xs font-medium text-info mt-1">Waitlisted</p>
+					<p class="text-xs font-medium text-info mt-1">{$_('events.detail.waitlisted')}</p>
 				</div>
 			</div>
 		{/if}
@@ -586,12 +587,12 @@
 				<svg class="h-4 w-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z" />
 				</svg>
-				Capacity: {stats.attendingHeadcount} / {event.maxCapacity}
+				{$_('events.detail.capacityLabel', { values: { current: stats.attendingHeadcount, max: event.maxCapacity } })}
 				{#if stats.attendingHeadcount >= event.maxCapacity}
-					<Badge variant="error">Full</Badge>
+					<Badge variant="error">{$_('events.detail.full')}</Badge>
 				{/if}
 				{#if event.waitlistEnabled}
-					<Badge variant="info">Waitlist On</Badge>
+					<Badge variant="info">{$_('events.detail.waitlistOn')}</Badge>
 				{/if}
 			</div>
 		{/if}
@@ -602,9 +603,9 @@
 				<svg class="h-4 w-4 text-neutral-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
 				</svg>
-				RSVP Deadline: {formatDateTime(event.rsvpDeadline, event.timezone)}
+				{$_('events.detail.rsvpDeadlineLabel', { values: { date: formatDateTime(event.rsvpDeadline, event.timezone) } })}
 				{#if new Date(event.rsvpDeadline) < new Date()}
-					<Badge variant="warning">Closed</Badge>
+					<Badge variant="warning">{$_('events.detail.closed')}</Badge>
 				{/if}
 			</div>
 		{/if}
@@ -612,7 +613,7 @@
 		<!-- Reminder management -->
 		<Card class="mb-6">
 			{#snippet header()}
-				<h2 class="text-lg font-semibold font-display text-neutral-900">Scheduled Reminders</h2>
+				<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.detail.remindersTitle')}</h2>
 			{/snippet}
 
 			<form
@@ -624,7 +625,7 @@
 			>
 				<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 					<DateTimePicker
-						label="Remind At"
+						label={$_('events.detail.remindAtLabel')}
 						name="remindAt"
 						bind:value={reminderRemindAt}
 						min={reminderMinDate}
@@ -632,7 +633,7 @@
 						required
 					/>
 					<Select
-						label="Audience"
+						label={$_('events.detail.audienceLabel')}
 						name="targetGroup"
 						bind:value={reminderTargetGroup}
 						options={reminderTargetOptions}
@@ -640,21 +641,21 @@
 				</div>
 
 				<Textarea
-					label="Custom Message (optional)"
+					label={$_('events.detail.customMessageLabel')}
 					name="message"
 					bind:value={reminderMessage}
-					placeholder="Don't forget to RSVP before Friday!"
+					placeholder={$_('events.detail.customMessagePlaceholder')}
 					rows={3}
 				/>
 
 				<div class="flex justify-end">
-					<Button type="submit" loading={creatingReminder}>Schedule Reminder</Button>
+					<Button type="submit" loading={creatingReminder}>{$_('events.detail.scheduleReminder')}</Button>
 				</div>
 			</form>
 
 			{#if reminders.length === 0}
 				<p class="text-sm text-neutral-500 text-center py-8 border-t border-neutral-200 mt-6">
-					No reminders scheduled.
+					{$_('events.detail.noReminders')}
 				</p>
 			{:else}
 				<div class="divide-y divide-neutral-200 -mx-6 -mb-4 border-t border-neutral-200 mt-6">
@@ -663,29 +664,29 @@
 							<div class="px-6 py-4 space-y-4 bg-neutral-50">
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<DateTimePicker
-										label="Remind At"
+										label={$_('events.detail.remindAtLabel')}
 										name="editRemindAt"
 										bind:value={editRemindAt}
 										min={reminderMinDate}
 										required
 									/>
 									<Select
-										label="Audience"
+										label={$_('events.detail.audienceLabel')}
 										name="editTargetGroup"
 										bind:value={editTargetGroup}
 										options={reminderTargetOptions}
 									/>
 								</div>
 								<Textarea
-									label="Message (optional)"
+									label={$_('events.detail.messageLabel')}
 									name="editMessage"
 									bind:value={editMessage}
-									placeholder="Custom reminder message..."
+									placeholder={$_('events.detail.messagePlaceholder')}
 									rows={2}
 								/>
 								<div class="flex items-center justify-end gap-2">
-									<Button size="sm" variant="outline" onclick={cancelEditReminder}>Cancel</Button>
-									<Button size="sm" onclick={saveReminder} loading={savingReminder}>Save</Button>
+									<Button size="sm" variant="outline" onclick={cancelEditReminder}>{$_('events.detail.cancel')}</Button>
+									<Button size="sm" onclick={saveReminder} loading={savingReminder}>{$_('events.detail.save')}</Button>
 								</div>
 							</div>
 						{:else}
@@ -695,7 +696,7 @@
 										{formatDateTime(reminder.remindAt)}
 									</p>
 									<p class="text-xs text-neutral-500 mt-0.5">
-										Audience: {reminder.targetGroup}
+										{$_('events.detail.audiencePrefix', { values: { group: reminder.targetGroup } })}
 									</p>
 									{#if reminder.message}
 										<p class="text-sm text-neutral-700 mt-2 whitespace-pre-wrap">{reminder.message}</p>
@@ -704,8 +705,8 @@
 								<div class="flex items-center gap-2">
 									<Badge variant={statusVariant(reminder.status)}>{reminder.status}</Badge>
 									{#if reminder.status === 'scheduled'}
-										<Button size="sm" variant="outline" onclick={() => startEditReminder(reminder)}>Edit</Button>
-										<Button size="sm" variant="outline" onclick={() => { cancelReminderTarget = reminder; showCancelReminderModal = true; }}>Cancel</Button>
+										<Button size="sm" variant="outline" onclick={() => startEditReminder(reminder)}>{$_('events.detail.edit')}</Button>
+										<Button size="sm" variant="outline" onclick={() => { cancelReminderTarget = reminder; showCancelReminderModal = true; }}>{$_('events.detail.reminderCancel')}</Button>
 									{/if}
 								</div>
 							</div>
@@ -720,18 +721,18 @@
 			{#snippet header()}
 				<div class="flex items-center justify-between">
 					<div class="flex items-center gap-3">
-						<h2 class="text-lg font-semibold font-display text-neutral-900">Attendees</h2>
+						<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.detail.attendeesTitle')}</h2>
 						<!-- CSV Export split-button -->
 						<!-- svelte-ignore a11y_no_noninteractive_element_interactions -->
 					<div class="relative inline-flex" role="group" bind:this={exportDropdownRef} onkeydown={handleExportKeydown}>
 							<Button variant="outline" size="sm" class="rounded-r-none border-r-0" onclick={() => exportCSV('all')}>
-								Export CSV
+								{$_('events.detail.exportCsv')}
 							</Button>
 							<button
 								onclick={() => (exportMenuOpen = !exportMenuOpen)}
 								aria-expanded={exportMenuOpen}
 								aria-haspopup="true"
-								aria-label="Export options"
+								aria-label={$_('events.detail.exportOptions')}
 								class="inline-flex items-center rounded-l-none rounded-r-lg border border-neutral-300 bg-surface px-2 py-1.5 text-neutral-500 hover:bg-neutral-50 focus:outline-none focus:ring-2 focus:ring-primary/40"
 							>
 								<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -742,19 +743,19 @@
 								<div
 									class="absolute right-0 z-10 mt-1 w-48 rounded-lg bg-surface shadow-lg border border-neutral-200 py-1 top-full"
 									role="menu"
-									aria-label="Export filter options"
+									aria-label={$_('events.detail.exportFilterOptions')}
 								>
 									<button onclick={() => exportCSV('attending')} role="menuitem" class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none">
-										Attending Only
+										{$_('events.detail.attendingOnly')}
 									</button>
 									<button onclick={() => exportCSV('maybe')} role="menuitem" class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none">
-										Maybe Only
+										{$_('events.detail.maybeOnly')}
 									</button>
 									<button onclick={() => exportCSV('declined')} role="menuitem" class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none">
-										Declined Only
+										{$_('events.detail.declinedOnly')}
 									</button>
 									<button onclick={() => exportCSV('pending')} role="menuitem" class="block w-full text-left px-4 py-2 text-sm text-neutral-700 hover:bg-neutral-50 focus:bg-neutral-50 focus:outline-none">
-										Pending Only
+										{$_('events.detail.pendingOnly')}
 									</button>
 								</div>
 							{/if}
@@ -769,7 +770,7 @@
 									: 'bg-neutral-100 text-neutral-600 hover:bg-neutral-200'}"
 								onclick={() => (activeFilter = filter)}
 							>
-								{filter.charAt(0).toUpperCase() + filter.slice(1)}
+								{$_('events.detail.filter' + filter.charAt(0).toUpperCase() + filter.slice(1))}
 							</button>
 						{/each}
 					</div>
@@ -778,7 +779,7 @@
 
 			{#if filteredAttendees.length === 0}
 				<p class="text-sm text-neutral-500 text-center py-8">
-					{attendees.length === 0 ? 'No attendees yet. Share your event to start receiving RSVPs.' : 'No attendees match this filter.'}
+					{attendees.length === 0 ? $_('events.detail.noAttendeesYet') : $_('events.detail.noAttendeesFilter')}
 				</p>
 			{:else}
 				<div class="divide-y divide-neutral-200 -mx-6 -mb-4">
@@ -787,39 +788,39 @@
 							<div class="px-6 py-4 space-y-4 bg-neutral-50">
 								<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 									<div>
-										<label for="edit-name" class="block text-xs font-medium text-neutral-700 mb-1">Name</label>
+										<label for="edit-name" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.nameLabel')}</label>
 										<input id="edit-name" type="text" bind:value={editAttendee.name} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
 									<div>
-										<label for="edit-email" class="block text-xs font-medium text-neutral-700 mb-1">Email</label>
+										<label for="edit-email" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.emailLabel')}</label>
 										<input id="edit-email" type="email" bind:value={editAttendee.email} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
 									<div>
-										<label for="edit-phone" class="block text-xs font-medium text-neutral-700 mb-1">Phone</label>
+										<label for="edit-phone" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.phoneLabel')}</label>
 										<input id="edit-phone" type="tel" bind:value={editAttendee.phone} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
 									<div>
-										<label for="edit-status" class="block text-xs font-medium text-neutral-700 mb-1">Status</label>
+										<label for="edit-status" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.statusLabel')}</label>
 										<select id="edit-status" bind:value={editAttendee.rsvpStatus} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary">
-											<option value="attending">Attending</option>
-											<option value="maybe">Maybe</option>
-											<option value="declined">Declined</option>
-											<option value="pending">Pending</option>
-											<option value="waitlisted">Waitlisted</option>
+											<option value="attending">{$_('events.detail.statusAttending')}</option>
+											<option value="maybe">{$_('events.detail.statusMaybe')}</option>
+											<option value="declined">{$_('events.detail.statusDeclined')}</option>
+											<option value="pending">{$_('events.detail.statusPending')}</option>
+											<option value="waitlisted">{$_('events.detail.statusWaitlisted')}</option>
 										</select>
 									</div>
 									<div>
-										<label for="edit-dietary" class="block text-xs font-medium text-neutral-700 mb-1">Dietary Notes</label>
+										<label for="edit-dietary" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.dietaryNotesLabel')}</label>
 										<input id="edit-dietary" type="text" bind:value={editAttendee.dietaryNotes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
 									<div>
-										<label for="edit-plusones" class="block text-xs font-medium text-neutral-700 mb-1">Plus Ones</label>
+										<label for="edit-plusones" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.plusOnesLabel')}</label>
 										<input id="edit-plusones" type="number" min="0" max="10" bind:value={editAttendee.plusOnes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
 								</div>
 								<div class="flex items-center justify-end gap-2">
-									<Button size="sm" variant="outline" onclick={cancelEditAttendee}>Cancel</Button>
-									<Button size="sm" onclick={saveAttendee} loading={savingAttendee}>Save</Button>
+									<Button size="sm" variant="outline" onclick={cancelEditAttendee}>{$_('events.detail.cancel')}</Button>
+									<Button size="sm" onclick={saveAttendee} loading={savingAttendee}>{$_('events.detail.save')}</Button>
 								</div>
 							</div>
 						{:else}
@@ -827,12 +828,12 @@
 								<div class="flex-1 min-w-0">
 									<p class="text-sm font-medium text-neutral-900">{attendee.name}</p>
 									<p class="text-xs text-neutral-500">
-										{attendee.email || attendee.phone || 'No contact info'}
+										{attendee.email || attendee.phone || $_('events.detail.noContactInfo')}
 									</p>
 								</div>
 								<div class="flex items-center gap-3 ml-4">
 									{#if attendee.dietaryNotes}
-										<span class="text-xs text-neutral-500" title="Dietary notes">{attendee.dietaryNotes}</span>
+										<span class="text-xs text-neutral-500" title={$_('events.detail.dietaryNotesLabel')}>{attendee.dietaryNotes}</span>
 									{/if}
 									{#if attendee.plusOnes > 0}
 										<span class="text-xs text-neutral-500">+{attendee.plusOnes}</span>
@@ -841,10 +842,10 @@
 										{attendee.rsvpStatus}
 									</Badge>
 									{#if attendee.rsvpStatus === "waitlisted"}
-										<Button size="sm" loading={promotingAttendeeId === attendee.id} onclick={() => promoteAttendee(attendee.id)}>Promote</Button>
+										<Button size="sm" loading={promotingAttendeeId === attendee.id} onclick={() => promoteAttendee(attendee.id)}>{$_('events.detail.promote')}</Button>
 									{/if}
-									<Button size="sm" variant="outline" onclick={() => startEditAttendee(attendee)}>Edit</Button>
-									<Button size="sm" variant="danger" onclick={() => { removeAttendeeTarget = attendee; showRemoveAttendeeModal = true; }}>Remove</Button>
+									<Button size="sm" variant="outline" onclick={() => startEditAttendee(attendee)}>{$_('events.detail.edit')}</Button>
+									<Button size="sm" variant="danger" onclick={() => { removeAttendeeTarget = attendee; showRemoveAttendeeModal = true; }}>{$_('events.detail.remove')}</Button>
 								</div>
 							</div>
 						{/if}
@@ -858,20 +859,20 @@
 			<Card class="mt-6">
 				{#snippet header()}
 					<div class="flex items-center gap-2">
-						<h2 class="text-lg font-semibold font-display text-neutral-900">Co-hosts</h2>
+						<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.detail.cohostsTitle')}</h2>
 						<span class="group relative">
 							<svg class="h-4 w-4 text-neutral-400 cursor-help" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 								<circle cx="12" cy="12" r="10" /><path d="M12 16v-4m0-4h.01" />
 							</svg>
 							<span class="invisible group-hover:visible absolute left-6 top-0 z-10 w-64 rounded-lg bg-neutral-800 px-3 py-2 text-xs text-white shadow-lg">
-								Co-hosts can edit event details, manage guests, and send messages. Only the event owner can delete the event or manage co-hosts.
+								{$_('events.detail.cohostsTooltip')}
 							</span>
 						</span>
 					</div>
 				{/snippet}
 
 				{#if cohosts.length === 0}
-					<p class="text-sm text-neutral-500 py-2">No co-hosts yet.</p>
+					<p class="text-sm text-neutral-500 py-2">{$_('events.detail.noCohostsYet')}</p>
 				{:else}
 					<div class="divide-y divide-neutral-100">
 						{#each cohosts as cohost (cohost.id)}
@@ -881,7 +882,7 @@
 									<p class="text-xs text-neutral-500">{cohost.organizerEmail}</p>
 								</div>
 								<Button variant="ghost" size="sm" onclick={() => removeCoHost(cohost.id)}>
-									Remove
+									{$_('events.detail.remove')}
 								</Button>
 							</div>
 						{/each}
@@ -897,14 +898,14 @@
 							<Input
 								name="cohostEmail"
 								bind:value={cohostEmail}
-								placeholder="Co-host email address"
+								placeholder={$_('events.detail.cohostEmailPlaceholder')}
 								type="email"
 							/>
 						</div>
-						<Button type="submit" size="sm" loading={addingCohost}>Add</Button>
+						<Button type="submit" size="sm" loading={addingCohost}>{$_('events.detail.add')}</Button>
 					</form>
 				{:else}
-					<p class="text-xs text-neutral-400 mt-4">Maximum 10 co-hosts reached.</p>
+					<p class="text-xs text-neutral-400 mt-4">{$_('events.detail.maxCohosts')}</p>
 				{/if}
 			</Card>
 		{/if}
@@ -913,10 +914,10 @@
 		{#if event}
 			<Card class="mt-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Comments ({eventComments.length})</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.detail.commentsTitle', { values: { count: eventComments.length } })}</h2>
 				{/snippet}
 				{#if eventComments.length === 0}
-					<p class="text-sm text-neutral-500 text-center py-8">No comments yet.</p>
+					<p class="text-sm text-neutral-500 text-center py-8">{$_('events.detail.noComments')}</p>
 				{:else}
 					<div class="divide-y divide-neutral-200 -mx-6 -mb-4">
 						{#each eventComments as comment (comment.id)}
@@ -928,7 +929,7 @@
 									</div>
 									<p class="text-sm text-neutral-700 mt-1 whitespace-pre-wrap">{comment.body}</p>
 								</div>
-								<Button size="sm" variant="ghost" onclick={() => deleteComment(comment.id)}>Delete</Button>
+								<Button size="sm" variant="ghost" onclick={() => deleteComment(comment.id)}>{$_('events.detail.delete')}</Button>
 							</div>
 						{/each}
 					</div>
@@ -940,38 +941,38 @@
 		{#if emailStats && emailStats.totalSent > 0}
 			<Card class="mt-6">
 				{#snippet header()}
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Email Delivery</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.detail.emailDeliveryTitle')}</h2>
 				{/snippet}
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					<div class="text-center">
 						<p class="text-2xl font-bold font-display text-neutral-900">{emailStats.totalSent}</p>
-						<p class="text-xs text-neutral-500">Sent</p>
+						<p class="text-xs text-neutral-500">{$_('events.detail.sent')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-success">{emailStats.delivered}</p>
-						<p class="text-xs text-neutral-500">Delivered</p>
+						<p class="text-xs text-neutral-500">{$_('events.detail.delivered')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-info">{emailStats.opened}</p>
-						<p class="text-xs text-neutral-500">Opened</p>
+						<p class="text-xs text-neutral-500">{$_('events.detail.opened')}</p>
 					</div>
 					<div class="text-center">
 						<p class="text-2xl font-bold font-mono text-error">{emailStats.bounced}</p>
-						<p class="text-xs text-neutral-500">Bounced</p>
+						<p class="text-xs text-neutral-500">{$_('events.detail.bounced')}</p>
 					</div>
 				</div>
 			</Card>
 		{/if}
 	{:else}
 		<Card>
-			<p class="text-center text-neutral-500 py-8">Event not found.</p>
+			<p class="text-center text-neutral-500 py-8">{$_('events.detail.notFound')}</p>
 		</Card>
 	{/if}
 
 	{#if event}
-		<Modal bind:open={showCancelModal} title="Cancel Event">
+		<Modal bind:open={showCancelModal} title={$_('events.detail.cancelModalTitle')}>
 			<p class="text-sm text-neutral-600">
-				Are you sure you want to cancel <strong>{event.title}</strong>? Attendees will no longer be able to RSVP.
+				{$_('events.detail.cancelModalBody', { values: { title: event.title } })}
 			</p>
 			<label class="flex items-center gap-3 mt-4 cursor-pointer">
 				<input
@@ -979,37 +980,37 @@
 					bind:checked={notifyOnCancel}
 					class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 				/>
-				<span class="text-sm text-neutral-700">Notify attending and maybe attendees about cancellation</span>
+				<span class="text-sm text-neutral-700">{$_('events.detail.notifyOnCancel')}</span>
 			</label>
 			{#snippet actions()}
-				<Button variant="outline" size="sm" onclick={() => showCancelModal = false}>Keep Event</Button>
-				<Button variant="danger" size="sm" onclick={cancelEvent}>Cancel Event</Button>
+				<Button variant="outline" size="sm" onclick={() => showCancelModal = false}>{$_('events.detail.keepEvent')}</Button>
+				<Button variant="danger" size="sm" onclick={cancelEvent}>{$_('events.detail.cancelEvent')}</Button>
 			{/snippet}
 		</Modal>
 	{/if}
 
 	{#if removeAttendeeTarget}
 		{@const target = removeAttendeeTarget}
-		<Modal bind:open={showRemoveAttendeeModal} title="Remove Attendee">
+		<Modal bind:open={showRemoveAttendeeModal} title={$_('events.detail.removeAttendeeModalTitle')}>
 			<p class="text-sm text-neutral-600">
-				Are you sure you want to remove <strong>{target.name}</strong>? This action cannot be undone.
+				{$_('events.detail.removeAttendeeModalBody', { values: { name: target.name } })}
 			</p>
 			{#snippet actions()}
-				<Button variant="outline" size="sm" onclick={() => showRemoveAttendeeModal = false}>Keep Attendee</Button>
-				<Button variant="danger" size="sm" onclick={() => removeAttendee(target.id)}>Remove</Button>
+				<Button variant="outline" size="sm" onclick={() => showRemoveAttendeeModal = false}>{$_('events.detail.keepAttendee')}</Button>
+				<Button variant="danger" size="sm" onclick={() => removeAttendee(target.id)}>{$_('events.detail.remove')}</Button>
 			{/snippet}
 		</Modal>
 	{/if}
 
 	{#if cancelReminderTarget}
 		{@const target = cancelReminderTarget}
-		<Modal bind:open={showCancelReminderModal} title="Cancel Reminder">
+		<Modal bind:open={showCancelReminderModal} title={$_('events.detail.cancelReminderModalTitle')}>
 			<p class="text-sm text-neutral-600">
-				Are you sure you want to cancel the reminder scheduled for <strong>{formatDateTime(target.remindAt)}</strong>?
+				{$_('events.detail.cancelReminderModalBody', { values: { date: formatDateTime(target.remindAt) } })}
 			</p>
 			{#snippet actions()}
-				<Button variant="outline" size="sm" onclick={() => showCancelReminderModal = false}>Keep Reminder</Button>
-				<Button variant="danger" size="sm" onclick={() => cancelReminder(target.id)}>Cancel Reminder</Button>
+				<Button variant="outline" size="sm" onclick={() => showCancelReminderModal = false}>{$_('events.detail.keepReminder')}</Button>
+				<Button variant="danger" size="sm" onclick={() => cancelReminder(target.id)}>{$_('events.detail.reminderCancel')}</Button>
 			{/snippet}
 		</Modal>
 	{/if}
