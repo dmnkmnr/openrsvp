@@ -13,6 +13,7 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	const eventId = $derived($page.params.eventId);
 
@@ -36,76 +37,76 @@
 	let backgroundImageUrl = $state('');
 	let uploading = $state(false);
 
-	const templates = [
+	const templates = $derived([
 		{
 			id: 'balloon-party',
-			name: 'Balloon Party',
-			description: 'Colorful balloons and confetti',
+			name: $_('events.invite.templates.balloonParty.name'),
+			description: $_('events.invite.templates.balloonParty.description'),
 			emoji: '\u{1F388}'
 		},
 		{
 			id: 'confetti',
-			name: 'Confetti',
-			description: 'Colorful and celebratory',
+			name: $_('events.invite.templates.confetti.name'),
+			description: $_('events.invite.templates.confetti.description'),
 			emoji: '\u{1F38A}'
 		},
 		{
 			id: 'unicorn-magic',
-			name: 'Unicorn Magic',
-			description: 'Purple and pink dreamscape',
+			name: $_('events.invite.templates.unicornMagic.name'),
+			description: $_('events.invite.templates.unicornMagic.description'),
 			emoji: '\u{1F984}'
 		},
 		{
 			id: 'superhero',
-			name: 'Superhero',
-			description: 'Bold and action-packed',
+			name: $_('events.invite.templates.superhero.name'),
+			description: $_('events.invite.templates.superhero.description'),
 			emoji: '\u{26A1}'
 		},
 		{
 			id: 'garden-picnic',
-			name: 'Garden Picnic',
-			description: 'Green and floral',
+			name: $_('events.invite.templates.gardenPicnic.name'),
+			description: $_('events.invite.templates.gardenPicnic.description'),
 			emoji: '\u{1F33F}'
 		},
 		{
 			id: 'elegant-affair',
-			name: 'Elegant Affair',
-			description: 'Refined and sophisticated',
+			name: $_('events.invite.templates.elegantAffair.name'),
+			description: $_('events.invite.templates.elegantAffair.description'),
 			emoji: '\u{1F48E}'
 		},
 		{
 			id: 'clean-minimal',
-			name: 'Clean Minimal',
-			description: 'Simple and modern',
+			name: $_('events.invite.templates.cleanMinimal.name'),
+			description: $_('events.invite.templates.cleanMinimal.description'),
 			emoji: '\u{25FE}'
 		},
 		{
 			id: 'tropical-vibes',
-			name: 'Tropical Vibes',
-			description: 'Warm and beachy',
+			name: $_('events.invite.templates.tropicalVibes.name'),
+			description: $_('events.invite.templates.tropicalVibes.description'),
 			emoji: '\u{1F334}'
 		},
 		{
 			id: 'vintage-retro',
-			name: 'Vintage Retro',
-			description: 'Classic sepia tones',
+			name: $_('events.invite.templates.vintageRetro.name'),
+			description: $_('events.invite.templates.vintageRetro.description'),
 			emoji: '\u{1F4F7}'
 		},
 		{
 			id: 'chalkboard',
-			name: 'Chalkboard',
-			description: 'Dark and handwritten',
+			name: $_('events.invite.templates.chalkboard.name'),
+			description: $_('events.invite.templates.chalkboard.description'),
 			emoji: '\u{270D}'
 		}
-	];
+	]);
 
-	const fontOptions = [
-		{ value: 'Inter', label: 'Inter (Modern)' },
-		{ value: 'Georgia', label: 'Georgia (Serif)' },
-		{ value: 'Courier New', label: 'Courier New (Mono)' },
-		{ value: 'Comic Sans MS', label: 'Comic Sans (Fun)' },
-		{ value: 'Arial', label: 'Arial (Clean)' }
-	];
+	const fontOptions = $derived([
+		{ value: 'Inter', label: $_('events.invite.fontOptions.inter') },
+		{ value: 'Georgia', label: $_('events.invite.fontOptions.georgia') },
+		{ value: 'Courier New', label: $_('events.invite.fontOptions.courier') },
+		{ value: 'Comic Sans MS', label: $_('events.invite.fontOptions.comicSans') },
+		{ value: 'Arial', label: $_('events.invite.fontOptions.arial') }
+	]);
 
 	const customDataJSON = $derived(
 		backgroundImageUrl
@@ -145,7 +146,7 @@
 			}
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to load invite data');
+			toast.error(apiErr.message || $_('events.invite.loadError'));
 		} finally {
 			loading = false;
 		}
@@ -165,10 +166,10 @@
 				customData: customDataJSON
 			});
 			saved = true;
-			toast.success('Invite design saved!');
+			toast.success($_('events.invite.saveSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to save invite design');
+			toast.error(apiErr.message || $_('events.invite.saveError'));
 		} finally {
 			saving = false;
 		}
@@ -179,7 +180,7 @@
 		if (!file) return;
 
 		if (file.size > 2 * 1024 * 1024) {
-			toast.error('Image must be under 2MB');
+			toast.error($_('events.invite.imageTooLarge'));
 			return;
 		}
 
@@ -187,10 +188,10 @@
 		try {
 			const result = await api.upload<{ data: { url: string } }>(`/invite/event/${eventId}/image`, file);
 			backgroundImageUrl = result.data.url;
-			toast.success('Background image uploaded!');
+			toast.success($_('events.invite.imageUploaded'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to upload image');
+			toast.error(apiErr.message || $_('events.invite.imageUploadError'));
 		} finally {
 			uploading = false;
 		}
@@ -204,10 +205,10 @@
 			try {
 				const result = await api.post<{ data: Event }>(`/events/${eventId}/publish`);
 				event = result.data;
-				toast.success('Event published!');
+				toast.success($_('events.invite.publishSuccess'));
 			} catch (err: unknown) {
 				const apiErr = err as { message?: string };
-				toast.error(apiErr.message || 'Failed to publish event');
+				toast.error(apiErr.message || $_('events.invite.publishError'));
 				publishing = false;
 				return;
 			}
@@ -240,13 +241,13 @@
 </script>
 
 <svelte:head>
-	<title>Invite Designer -- OpenRSVP</title>
+	<title>{$_('events.invite.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="mb-6">
-		<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; Back to event</a>
-		<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">Invite Designer</h1>
+		<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.invite.backToEvent')}</a>
+		<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">{$_('events.invite.heading')}</h1>
 		{#if event}
 			<p class="text-sm text-neutral-500">{event.title}</p>
 		{/if}
@@ -263,7 +264,7 @@
 				<!-- Template picker -->
 				<Card>
 					{#snippet header()}
-						<h2 class="text-lg font-semibold font-display text-neutral-900">Choose a Template</h2>
+						<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.invite.chooseTemplateTitle')}</h2>
 					{/snippet}
 
 					<div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -286,25 +287,25 @@
 				<!-- Customization form -->
 				<Card>
 					{#snippet header()}
-						<h2 class="text-lg font-semibold font-display text-neutral-900">Customize</h2>
+						<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.invite.customizeTitle')}</h2>
 					{/snippet}
 
 					<div class="space-y-4">
-						<Input label="Heading" name="heading" bind:value={heading} placeholder="You're Invited!" />
+						<Input label={$_('events.invite.headingLabel')} name="heading" bind:value={heading} placeholder={$_('events.invite.headingPlaceholder')} />
 
 						<Textarea
-							label="Body Text"
+							label={$_('events.invite.bodyLabel')}
 							name="body"
 							bind:value={body}
-							placeholder="Join us for a wonderful celebration..."
+							placeholder={$_('events.invite.bodyPlaceholder')}
 							rows={3}
 						/>
 
-						<Input label="Footer Text" name="footer" bind:value={footer} placeholder="We hope to see you there!" />
+						<Input label={$_('events.invite.footerLabel')} name="footer" bind:value={footer} placeholder={$_('events.invite.footerPlaceholder')} />
 
 						<div class="grid grid-cols-2 gap-4">
 							<div class="space-y-1">
-								<label for="primaryColor" class="block text-sm font-medium text-neutral-700">Primary Color</label>
+								<label for="primaryColor" class="block text-sm font-medium text-neutral-700">{$_('events.invite.primaryColorLabel')}</label>
 								<input
 									id="primaryColor"
 									type="color"
@@ -313,7 +314,7 @@
 								/>
 							</div>
 							<div class="space-y-1">
-								<label for="secondaryColor" class="block text-sm font-medium text-neutral-700">Secondary Color</label>
+								<label for="secondaryColor" class="block text-sm font-medium text-neutral-700">{$_('events.invite.secondaryColorLabel')}</label>
 								<input
 									id="secondaryColor"
 									type="color"
@@ -323,19 +324,19 @@
 							</div>
 						</div>
 
-						<Select label="Font" name="font" bind:value={font} options={fontOptions} />
+						<Select label={$_('events.invite.fontLabel')} name="font" bind:value={font} options={fontOptions} />
 
 						<!-- Background Image Upload -->
 						<div class="space-y-2">
-							<label for="bg-image-input" class="block text-sm font-medium text-neutral-700">Background Image</label>
+							<label for="bg-image-input" class="block text-sm font-medium text-neutral-700">{$_('events.invite.backgroundImageLabel')}</label>
 							{#if backgroundImageUrl}
 								<div class="relative rounded-lg border border-neutral-200 overflow-hidden">
-									<img src={backgroundImageUrl} alt="Background preview" class="w-full h-24 object-cover" />
+									<img src={backgroundImageUrl} alt={$_('events.invite.backgroundPreviewAlt')} class="w-full h-24 object-cover" />
 									<button
 										type="button"
 										onclick={removeBackgroundImage}
 										class="absolute top-1 right-1 rounded-full bg-surface/90 p-1 text-neutral-500 hover:text-error shadow-sm transition-colors"
-										aria-label="Remove background image"
+										aria-label={$_('events.invite.removeBackgroundImage')}
 									>
 										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -360,14 +361,14 @@
 										{#if uploading}
 											<div class="flex items-center justify-center gap-2 text-primary">
 												<Spinner size="sm" />
-												<span class="text-sm">Uploading...</span>
+												<span class="text-sm">{$_('events.invite.uploading')}</span>
 											</div>
 										{:else}
 											<svg class="w-8 h-8 mx-auto text-neutral-400 mb-1" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.5">
 												<path stroke-linecap="round" stroke-linejoin="round" d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909M3.75 21h16.5A2.25 2.25 0 0022.5 18.75V5.25A2.25 2.25 0 0020.25 3H3.75A2.25 2.25 0 001.5 5.25v13.5A2.25 2.25 0 003.75 21z" />
 											</svg>
-											<p class="text-xs text-neutral-500">Drop an image or click to upload</p>
-											<p class="text-xs text-neutral-400 mt-0.5">JPEG, PNG, or WebP (max 2MB)</p>
+											<p class="text-xs text-neutral-500">{$_('events.invite.dropOrClick')}</p>
+											<p class="text-xs text-neutral-400 mt-0.5">{$_('events.invite.imageFormats')}</p>
 										{/if}
 									</label>
 								</div>
@@ -376,7 +377,7 @@
 					</div>
 				</Card>
 
-				<Button onclick={handleSave} loading={saving} class="w-full">Save Invite Design</Button>
+				<Button onclick={handleSave} loading={saving} class="w-full">{$_('events.invite.saveDesign')}</Button>
 
 				{#if saved}
 					<Card class="mt-4">
@@ -385,16 +386,16 @@
 								<svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 									<path stroke-linecap="round" stroke-linejoin="round" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
 								</svg>
-								<span class="text-sm font-medium">Design saved</span>
+								<span class="text-sm font-medium">{$_('events.invite.designSaved')}</span>
 							</div>
-							<p class="text-xs text-neutral-500">What would you like to do next?</p>
+							<p class="text-xs text-neutral-500">{$_('events.invite.whatNext')}</p>
 							<div class="flex flex-col gap-2">
 								{#if event && event.status === 'draft'}
-									<Button onclick={() => publishAndGo('share')} loading={publishing} variant="primary" size="sm" class="w-full">Publish & Share</Button>
-									<Button onclick={() => publishAndGo('dashboard')} variant="outline" size="sm" class="w-full">Publish & View Dashboard</Button>
+									<Button onclick={() => publishAndGo('share')} loading={publishing} variant="primary" size="sm" class="w-full">{$_('events.invite.publishAndShare')}</Button>
+									<Button onclick={() => publishAndGo('dashboard')} variant="outline" size="sm" class="w-full">{$_('events.invite.publishAndDashboard')}</Button>
 								{:else}
-									<Button href="/events/{eventId}/share" variant="primary" size="sm" class="w-full">Share & Get QR Code</Button>
-									<Button href="/events/{eventId}" variant="outline" size="sm" class="w-full">View Event Dashboard</Button>
+									<Button href="/events/{eventId}/share" variant="primary" size="sm" class="w-full">{$_('events.invite.shareAndQr')}</Button>
+									<Button href="/events/{eventId}" variant="outline" size="sm" class="w-full">{$_('events.invite.viewDashboard')}</Button>
 								{/if}
 							</div>
 						</div>
@@ -405,7 +406,7 @@
 			<!-- Right: Live preview -->
 			<div>
 				<div class="sticky top-8">
-					<h2 class="text-lg font-semibold font-display text-neutral-900 mb-4">Preview</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900 mb-4">{$_('events.invite.previewTitle')}</h2>
 					<InviteCardPreview
 						templateId={selectedTemplate}
 						{heading}
