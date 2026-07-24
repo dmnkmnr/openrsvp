@@ -8,6 +8,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
+	import { _ } from '$lib/i18n';
 
 	const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
@@ -36,11 +37,11 @@
 
 	function validateFile(file: File): string | null {
 		if (!file.name.toLowerCase().endsWith('.csv') && file.type !== 'text/csv') {
-			return 'Please select a CSV file.';
+			return $_('events.import.invalidFileType');
 		}
 		if (file.size > MAX_FILE_SIZE) {
 			const sizeMB = (file.size / (1024 * 1024)).toFixed(1);
-			return `File is too large (${sizeMB}MB). Maximum size is 1MB.`;
+			return $_('events.import.fileTooLarge', { values: { size: sizeMB } });
 		}
 		return null;
 	}
@@ -99,7 +100,7 @@
 			step = 'preview';
 		} catch (err) {
 			const apiErr = err as ApiError;
-			error = apiErr.message || 'Failed to parse CSV file';
+			error = apiErr.message || $_('events.import.parseError');
 			step = 'upload';
 		} finally {
 			uploading = false;
@@ -129,10 +130,10 @@
 			);
 			result = res.data;
 			step = 'result';
-			toast.success(`Imported ${res.data.imported} guest${res.data.imported !== 1 ? 's' : ''}`);
+			toast.success($_('events.import.importedToast', { values: { count: res.data.imported, plural: res.data.imported !== 1 ? 's' : '' } }));
 		} catch (err) {
 			const apiErr = err as ApiError;
-			error = apiErr.message || 'Failed to import guests';
+			error = apiErr.message || $_('events.import.importError');
 		} finally {
 			importing = false;
 		}
@@ -164,27 +165,27 @@
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
 		} catch {
-			toast.error('Failed to download template');
+			toast.error($_('events.import.templateDownloadError'));
 		}
 	}
 </script>
 
 <svelte:head>
-	<title>Import Guests — OpenRSVP</title>
+	<title>{$_('events.import.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="mb-6">
 		<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover font-medium">
-			&larr; Back to event
+			&larr; {$_('events.import.backToEvent')}
 		</a>
 	</div>
 
 	<!-- Step indicator -->
 	<div class="mb-8">
-		<nav aria-label="Import progress">
+		<nav aria-label={$_('events.import.progressLabel')}>
 			<ol class="flex items-center gap-2 text-sm">
-				{#each [{ num: 1, label: 'Upload' }, { num: 2, label: 'Preview' }, { num: 3, label: 'Confirm' }, { num: 4, label: 'Results' }] as s}
+				{#each [{ num: 1, label: $_('events.import.stepUpload') }, { num: 2, label: $_('events.import.stepPreview') }, { num: 3, label: $_('events.import.stepConfirm') }, { num: 4, label: $_('events.import.stepResults') }] as s}
 					<li class="flex items-center gap-2">
 						<span
 							class="inline-flex h-6 w-6 items-center justify-center rounded-full text-xs font-medium
@@ -233,27 +234,26 @@
 		<Card>
 			{#snippet header()}
 				<div class="flex items-center justify-between">
-					<h1 class="text-xl font-bold font-display text-neutral-900">Import Guest List</h1>
+					<h1 class="text-xl font-bold font-display text-neutral-900">{$_('events.import.uploadTitle')}</h1>
 					<button
 						onclick={downloadTemplate}
 						class="text-sm text-primary hover:text-primary font-medium"
 					>
-						Download CSV Template
+						{$_('events.import.downloadTemplate')}
 					</button>
 				</div>
 			{/snippet}
 
 			<div class="space-y-6">
 				<p class="text-sm text-neutral-600">
-					Upload a CSV file with your guest list. The file must include a <strong>Name</strong> column.
-					Optional columns: Email, Phone, Dietary Notes, Plus Ones. Maximum file size is 1MB.
+					{$_('events.import.uploadBody', { values: { name: $_('events.import.nameColumn') } })}
 				</p>
 
 				<!-- Drag & drop zone -->
 				<div
 					role="button"
 					tabindex="0"
-					aria-label="Drop CSV file here or click to browse"
+					aria-label={$_('events.import.dropZoneLabel')}
 					class="relative rounded-lg border-2 border-dashed p-8 text-center transition-colors
 						{dragging
 							? 'border-primary-light bg-primary-lighter'
@@ -267,7 +267,7 @@
 					{#if uploading}
 						<div class="flex flex-col items-center gap-3">
 							<Spinner size="lg" class="text-primary" />
-							<p class="text-sm text-neutral-600">Parsing CSV file...</p>
+							<p class="text-sm text-neutral-600">{$_('events.import.parsingFile')}</p>
 						</div>
 					{:else}
 						<div class="flex flex-col items-center gap-3">
@@ -277,12 +277,12 @@
 							<div>
 								<p class="text-sm font-medium text-neutral-700">
 									{#if dragging}
-										Drop your CSV file here
+										{$_('events.import.dropHere')}
 									{:else}
-										Drag and drop your CSV file here
+										{$_('events.import.dragDropHere')}
 									{/if}
 								</p>
-								<p class="mt-1 text-xs text-neutral-500">or click to browse (CSV, max 1MB)</p>
+								<p class="mt-1 text-xs text-neutral-500">{$_('events.import.clickToBrowse')}</p>
 							</div>
 						</div>
 					{/if}
@@ -303,7 +303,7 @@
 		<Card>
 			{#snippet header()}
 				<div class="flex items-center justify-between">
-					<h1 class="text-xl font-bold font-display text-neutral-900">Preview Import</h1>
+					<h1 class="text-xl font-bold font-display text-neutral-900">{$_('events.import.previewTitle')}</h1>
 					<span class="text-sm text-neutral-500">
 						{selectedFile?.name}
 					</span>
@@ -315,19 +315,19 @@
 				<div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
 					<div class="rounded-lg bg-neutral-50 border border-neutral-200 p-3 text-center">
 						<p class="text-2xl font-bold text-neutral-900">{preview.totalRows}</p>
-						<p class="text-xs text-neutral-500 mt-1">Total Rows</p>
+						<p class="text-xs text-neutral-500 mt-1">{$_('events.import.totalRows')}</p>
 					</div>
 					<div class="rounded-lg bg-success-light border border-success p-3 text-center">
 						<p class="text-2xl font-bold text-success">{preview.validRows}</p>
-						<p class="text-xs text-success mt-1">Valid</p>
+						<p class="text-xs text-success mt-1">{$_('events.import.valid')}</p>
 					</div>
 					<div class="rounded-lg bg-error-light border border-error p-3 text-center">
 						<p class="text-2xl font-bold text-error">{preview.errorRows}</p>
-						<p class="text-xs text-error mt-1">Errors</p>
+						<p class="text-xs text-error mt-1">{$_('events.import.errors')}</p>
 					</div>
 					<div class="rounded-lg bg-warning-light border border-warning p-3 text-center">
 						<p class="text-2xl font-bold text-warning">{preview.duplicates}</p>
-						<p class="text-xs text-warning mt-1">Duplicates</p>
+						<p class="text-xs text-warning mt-1">{$_('events.import.duplicates')}</p>
 					</div>
 				</div>
 
@@ -337,12 +337,12 @@
 						<table class="w-full text-sm">
 							<thead class="bg-neutral-50 sticky top-0">
 								<tr>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Status</th>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Name</th>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Email</th>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Phone</th>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">Dietary Notes</th>
-									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">+Ones</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.statusHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.nameHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.emailHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.phoneHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.dietaryHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.plusOnesHeader')}</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-neutral-100">
@@ -350,11 +350,11 @@
 									<tr class="{row.error ? 'bg-error-light' : row.duplicate ? 'bg-warning-light' : 'hover:bg-neutral-50'}">
 										<td class="px-4 py-2.5 whitespace-nowrap">
 											{#if row.error}
-												<Badge variant="error">Error</Badge>
+												<Badge variant="error">{$_('events.import.error')}</Badge>
 											{:else if row.duplicate}
-												<Badge variant="warning">Duplicate</Badge>
+												<Badge variant="warning">{$_('events.import.duplicate')}</Badge>
 											{:else}
-												<Badge variant="success">Valid</Badge>
+												<Badge variant="success">{$_('events.import.valid')}</Badge>
 											{/if}
 										</td>
 										<td class="px-4 py-2.5 text-neutral-900 font-medium">{row.name || '—'}</td>
@@ -379,15 +379,15 @@
 				<!-- Actions -->
 				<div class="flex items-center justify-between">
 					<Button variant="outline" onclick={startOver}>
-						Choose Different File
+						{$_('events.import.chooseDifferentFile')}
 					</Button>
 					{#if preview.validRows > 0}
 						<Button onclick={proceedToConfirm}>
-							Continue with {preview.validRows} Valid Guest{preview.validRows !== 1 ? 's' : ''}
+							{$_('events.import.continueWith', { values: { count: preview.validRows, plural: preview.validRows !== 1 ? 's' : '' } })}
 						</Button>
 					{:else}
 						<p class="text-sm text-error font-medium">
-							No valid rows to import. Please fix your CSV and try again.
+							{$_('events.import.noValidRows')}
 						</p>
 					{/if}
 				</div>
@@ -398,18 +398,18 @@
 	{:else if step === 'confirm' && preview}
 		<Card>
 			{#snippet header()}
-				<h1 class="text-xl font-bold font-display text-neutral-900">Confirm Import</h1>
+				<h1 class="text-xl font-bold font-display text-neutral-900">{$_('events.import.confirmTitle')}</h1>
 			{/snippet}
 
 			<div class="space-y-6">
 				<div class="rounded-lg bg-primary-lighter border border-primary-light p-4">
 					<p class="text-sm text-primary">
-						You are about to import <strong>{preview.validRows}</strong> guest{preview.validRows !== 1 ? 's' : ''} into this event.
+						{$_('events.import.confirmBody', { values: { count: preview.validRows, plural: preview.validRows !== 1 ? 's' : '' } })}
 						{#if preview.errorRows > 0}
-							<strong>{preview.errorRows}</strong> row{preview.errorRows !== 1 ? 's' : ''} with errors will be skipped.
+							{$_('events.import.errorsSkipped', { values: { count: preview.errorRows, plural: preview.errorRows !== 1 ? 's' : '' } })}
 						{/if}
 						{#if preview.duplicates > 0}
-							<strong>{preview.duplicates}</strong> duplicate{preview.duplicates !== 1 ? 's' : ''} will be skipped.
+							{$_('events.import.duplicatesSkipped', { values: { count: preview.duplicates, plural: preview.duplicates !== 1 ? 's' : '' } })}
 						{/if}
 					</p>
 				</div>
@@ -422,9 +422,9 @@
 							class="mt-0.5 rounded border-neutral-300 text-primary focus:ring-primary/40"
 						/>
 						<div>
-							<span class="text-sm font-medium text-neutral-900">Send invitation emails</span>
+							<span class="text-sm font-medium text-neutral-900">{$_('events.import.sendInvitationsLabel')}</span>
 							<p class="text-xs text-neutral-500 mt-0.5">
-								Each imported guest with an email address will receive an invitation to RSVP.
+								{$_('events.import.sendInvitationsHelper')}
 							</p>
 						</div>
 					</label>
@@ -432,13 +432,13 @@
 
 				<div class="flex items-center justify-between">
 					<Button variant="outline" onclick={backToPreview}>
-						Back to Preview
+						{$_('events.import.backToPreview')}
 					</Button>
 					<Button onclick={confirmImport} loading={importing}>
 						{#if importing}
-							Importing...
+							{$_('events.import.importing')}
 						{:else}
-							Import {preview.validRows} Guest{preview.validRows !== 1 ? 's' : ''}
+							{$_('events.import.importButton', { values: { count: preview.validRows, plural: preview.validRows !== 1 ? 's' : '' } })}
 						{/if}
 					</Button>
 				</div>
@@ -449,7 +449,7 @@
 	{:else if step === 'result' && result}
 		<Card>
 			{#snippet header()}
-				<h1 class="text-xl font-bold font-display text-neutral-900">Import Complete</h1>
+				<h1 class="text-xl font-bold font-display text-neutral-900">{$_('events.import.resultTitle')}</h1>
 			{/snippet}
 
 			<div class="space-y-6">
@@ -458,35 +458,35 @@
 						<svg class="h-6 w-6 text-success" viewBox="0 0 20 20" fill="currentColor">
 							<path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
 						</svg>
-						<h3 class="text-lg font-semibold font-display text-success">Import Successful</h3>
+						<h3 class="text-lg font-semibold font-display text-success">{$_('events.import.importSuccessTitle')}</h3>
 					</div>
 					<div class="grid grid-cols-2 sm:grid-cols-5 gap-4">
 						<div class="text-center">
 							<p class="text-2xl font-bold text-success">{result.imported}</p>
-							<p class="text-xs text-success mt-1">Imported</p>
+							<p class="text-xs text-success mt-1">{$_('events.import.imported')}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-neutral-600">{result.skipped}</p>
-							<p class="text-xs text-neutral-500 mt-1">Skipped</p>
+							<p class="text-xs text-neutral-500 mt-1">{$_('events.import.skipped')}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-error">{result.failed}</p>
-							<p class="text-xs text-error mt-1">Failed</p>
+							<p class="text-xs text-error mt-1">{$_('events.import.failed')}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-warning">{result.duplicates}</p>
-							<p class="text-xs text-warning mt-1">Duplicates</p>
+							<p class="text-xs text-warning mt-1">{$_('events.import.duplicates')}</p>
 						</div>
 						<div class="text-center">
 							<p class="text-2xl font-bold text-info">{result.invited}</p>
-							<p class="text-xs text-info mt-1">Invited</p>
+							<p class="text-xs text-info mt-1">{$_('events.import.invited')}</p>
 						</div>
 					</div>
 				</div>
 
 				<div class="flex items-center gap-3">
-					<Button href="/events/{eventId}">Back to Event</Button>
-					<Button variant="outline" onclick={startOver}>Import More</Button>
+					<Button href="/events/{eventId}">{$_('events.import.backToEventButton')}</Button>
+					<Button variant="outline" onclick={startOver}>{$_('events.import.importMore')}</Button>
 				</div>
 			</div>
 		</Card>
