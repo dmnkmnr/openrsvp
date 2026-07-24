@@ -18,6 +18,7 @@ export interface Event {
 	location: string;
 	timezone: string;
 	retentionDays: number;
+	language: string;
 	contactRequirement: 'email' | 'phone' | 'email_or_phone' | 'email_and_phone';
 	showHeadcount: boolean;
 	showGuestList: boolean;

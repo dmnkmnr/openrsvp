@@ -3,7 +3,7 @@
 	import { goto } from '$app/navigation';
 	import { api } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
-	import { smsEnabled, loadAppConfig } from '$lib/stores/config';
+	import { smsEnabled, supportedLanguages, loadAppConfig } from '$lib/stores/config';
 	import { toISOLocal, datetimeLocalToUTC, utcToDatetimeLocal } from '$lib/utils/dates';
 	import { getTimezoneOptions } from '$lib/utils/timezones';
 	import type { Event, RSVPStats } from '$lib/types';
@@ -31,6 +31,7 @@
 	let timezone = $state('');
 	let description = $state('');
 	let contactRequirement = $state('email_or_phone');
+	let language = $state('en');
 	let showHeadcount = $state(false);
 	let showGuestList = $state(false);
 	let rsvpDeadline = $state('');
@@ -57,6 +58,11 @@
 			: contactRequirementOptions.filter(o => o.value !== 'phone')
 	);
 
+	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageOptions = $derived(
+		$supportedLanguages.map(code => ({ value: code, label: languageNames[code] || code }))
+	);
+
 	let errors: Record<string, string> = $state({});
 
 	let tzOptions = $state(getTimezoneOptions());
@@ -79,6 +85,7 @@
 			tzOptions = getTimezoneOptions(e.timezone);
 			description = e.description;
 			contactRequirement = e.contactRequirement || 'email_or_phone';
+			language = e.language || 'en';
 			showHeadcount = e.showHeadcount ?? false;
 			showGuestList = e.showGuestList ?? false;
 			rsvpDeadline = e.rsvpDeadline ? utcToDatetimeLocal(e.rsvpDeadline, e.timezone) : '';
@@ -126,6 +133,7 @@
 				location: location.trim(),
 				timezone,
 				description: description.trim(),
+				language,
 				contactRequirement,
 				showHeadcount,
 				showGuestList,
@@ -226,6 +234,16 @@
 						placeholder={$_('events.new.descriptionPlaceholder')}
 						rows={6}
 					/>
+
+					<div>
+						<Select
+							label={$_('events.new.languageLabel')}
+							name="language"
+							bind:value={language}
+							options={languageOptions}
+						/>
+						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.languageHelper')}</p>
+					</div>
 
 					<Select
 						label={$_('events.new.contactRequirementLabel')}
@@ -330,6 +348,16 @@
 						<Button type="submit" loading={saving}>{$_('events.edit.saveChanges')}</Button>
 					</div>
 				</form>
+			</Card>
+
+			<Card class="mt-6">
+				<div class="flex items-center justify-between">
+					<div>
+						<h2 class="text-base font-semibold text-neutral-900">{$_('events.messageTemplates.cardHeading')}</h2>
+						<p class="text-sm text-neutral-500 mt-1">{$_('events.messageTemplates.cardDescription')}</p>
+					</div>
+					<Button variant="outline" href="/events/{eventId}/message-templates">{$_('events.messageTemplates.cardAction')}</Button>
+				</div>
 			</Card>
 
 			<Card class="mt-6">

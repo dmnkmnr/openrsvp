@@ -861,6 +861,33 @@
 			"updateSuccess": "Event updated successfully",
 			"updateError": "Failed to update event"
 		},
+		"messageTemplates": {
+			"cardHeading": "Notification Messages",
+			"cardDescription": "Customize the subject and text of the emails and texts guests receive for this event.",
+			"cardAction": "Edit Messages",
+			"pageTitle": "Message Templates -- OpenRSVP",
+			"heading": "Message Templates",
+			"pageDescription": "Customize the subject and body of each guest notification. Leave a template as-is to use the default text in this event's guest language.",
+			"loadError": "Failed to load message templates",
+			"saveSuccess": "Template saved",
+			"saveError": "Failed to save template",
+			"resetSuccess": "Reset to default",
+			"resetError": "Failed to reset template",
+			"customizedBadge": "Customized",
+			"defaultBadge": "Default",
+			"subjectLabel": "Subject",
+			"bodyLabel": "Message",
+			"variablesHint": "Available variables:",
+			"resetAction": "Reset to Default",
+			"saveAction": "Save",
+			"types": {
+				"rsvp_confirmation": "RSVP Confirmation",
+				"cancellation": "Event Cancellation",
+				"reminder": "Reminder",
+				"waitlist_promotion": "Waitlist Promotion",
+				"import_invite": "Invitation (Import)"
+			}
+		},
 		"new": {
 			"pageTitle": "Create Event -- OpenRSVP",
 			"backToEvents": "Back to events",
@@ -882,6 +909,8 @@
 			"step2Heading": "Description & Settings",
 			"descriptionLabel": "Description",
 			"descriptionPlaceholder": "Tell your guests what the event is about...",
+			"languageLabel": "Guest Language",
+			"languageHelper": "All guest notifications (email and SMS) for this event will be sent in this language.",
 			"contactRequirementLabel": "RSVP Contact Requirement",
 			"contactOptions": {
 				"emailOrPhone": "Email or Phone (at least one)",

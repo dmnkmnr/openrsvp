@@ -861,6 +861,33 @@
 			"updateSuccess": "Event erfolgreich aktualisiert",
 			"updateError": "Event konnte nicht aktualisiert werden"
 		},
+		"messageTemplates": {
+			"cardHeading": "Benachrichtigungstexte",
+			"cardDescription": "Passe Betreff und Text der E-Mails und SMS an, die Gäste für dieses Event erhalten.",
+			"cardAction": "Texte bearbeiten",
+			"pageTitle": "Benachrichtigungstexte -- OpenRSVP",
+			"heading": "Benachrichtigungstexte",
+			"pageDescription": "Passe Betreff und Text jeder Gast-Benachrichtigung an. Lässt du eine Vorlage unverändert, wird der Standardtext in der Gast-Sprache dieses Events verwendet.",
+			"loadError": "Benachrichtigungstexte konnten nicht geladen werden",
+			"saveSuccess": "Vorlage gespeichert",
+			"saveError": "Vorlage konnte nicht gespeichert werden",
+			"resetSuccess": "Auf Standard zurückgesetzt",
+			"resetError": "Zurücksetzen fehlgeschlagen",
+			"customizedBadge": "Angepasst",
+			"defaultBadge": "Standard",
+			"subjectLabel": "Betreff",
+			"bodyLabel": "Nachricht",
+			"variablesHint": "Verfügbare Variablen:",
+			"resetAction": "Auf Standard zurücksetzen",
+			"saveAction": "Speichern",
+			"types": {
+				"rsvp_confirmation": "RSVP-Bestätigung",
+				"cancellation": "Event-Absage",
+				"reminder": "Erinnerung",
+				"waitlist_promotion": "Warteliste-Beförderung",
+				"import_invite": "Einladung (Import)"
+			}
+		},
 		"new": {
 			"pageTitle": "Event erstellen -- OpenRSVP",
 			"backToEvents": "Zurück zu Events",
@@ -882,6 +909,8 @@
 			"step2Heading": "Beschreibung & Einstellungen",
 			"descriptionLabel": "Beschreibung",
 			"descriptionPlaceholder": "Erzähl deinen Gästen, worum es bei dem Event geht...",
+			"languageLabel": "Gäste-Sprache",
+			"languageHelper": "Alle Gast-Benachrichtigungen (E-Mail und SMS) für dieses Event werden in dieser Sprache verschickt.",
 			"contactRequirementLabel": "RSVP-Kontaktanforderung",
 			"contactOptions": {
 				"emailOrPhone": "E-Mail oder Telefon (mindestens eines)",
