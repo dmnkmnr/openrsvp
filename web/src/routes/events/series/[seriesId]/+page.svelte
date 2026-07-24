@@ -18,6 +18,7 @@
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	let loading = $state(true);
 	let series: EventSeries | null = $state(null);
@@ -45,23 +46,23 @@
 
 	const seriesId = $derived($page.params.seriesId);
 
-	const recurrenceLabels: Record<string, string> = {
-		weekly: 'Weekly',
-		biweekly: 'Every 2 weeks',
-		monthly: 'Monthly'
-	};
+	const recurrenceLabels: Record<string, string> = $derived({
+		weekly: $_('events.seriesList.recurrence.weekly'),
+		biweekly: $_('events.seriesList.recurrence.biweekly'),
+		monthly: $_('events.seriesList.recurrence.monthly')
+	});
 
 	const defaultTz = $currentUser?.timezone
 		|| Intl.DateTimeFormat().resolvedOptions().timeZone
 		|| '';
 	const tzOptions = getTimezoneOptions(defaultTz);
 
-	const contactRequirementOptions = [
-		{ value: 'email_or_phone', label: 'Email or Phone (at least one)' },
-		{ value: 'email', label: 'Email only' },
-		{ value: 'phone', label: 'Phone only' },
-		{ value: 'email_and_phone', label: 'Email and Phone (both required)' }
-	];
+	const contactRequirementOptions = $derived([
+		{ value: 'email_or_phone', label: $_('events.new.contactOptions.emailOrPhone') },
+		{ value: 'email', label: $_('events.new.contactOptions.emailOnly') },
+		{ value: 'phone', label: $_('events.new.contactOptions.phoneOnly') },
+		{ value: 'email_and_phone', label: $_('events.new.contactOptions.emailAndPhone') }
+	]);
 
 	const filteredContactOptions = $derived(
 		$smsEnabled
@@ -77,7 +78,7 @@
 			occurrences = result.data.occurrences;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to load series');
+			toast.error(apiErr.message || $_('events.seriesDetail.loadError'));
 		} finally {
 			loading = false;
 		}
@@ -118,20 +119,20 @@
 
 	async function saveEdit() {
 		editErrors = {};
-		if (!editTitle.trim()) editErrors.title = 'Title is required';
-		if (!editTimezone) editErrors.timezone = 'Timezone is required';
-		if (!editEventTime) editErrors.eventTime = 'Event time is required';
+		if (!editTitle.trim()) editErrors.title = $_('events.seriesDetail.titleRequired');
+		if (!editTimezone) editErrors.timezone = $_('events.seriesDetail.timezoneRequired');
+		if (!editEventTime) editErrors.eventTime = $_('events.seriesDetail.eventTimeRequired');
 		if (editDurationMinutes) {
 			const d = parseInt(editDurationMinutes);
-			if (isNaN(d) || d < 1) editErrors.durationMinutes = 'Must be at least 1';
+			if (isNaN(d) || d < 1) editErrors.durationMinutes = $_('events.seriesDetail.durationInvalid');
 		}
 		if (editMaxCapacity) {
 			const parsed = Number(editMaxCapacity);
-			if (!Number.isInteger(parsed) || parsed < 1) editErrors.maxCapacity = 'Must be at least 1';
+			if (!Number.isInteger(parsed) || parsed < 1) editErrors.maxCapacity = $_('events.seriesDetail.maxCapacityInvalid');
 		}
 		if (editRsvpDeadlineOffsetHours) {
 			const h = parseInt(editRsvpDeadlineOffsetHours);
-			if (isNaN(h) || h < 1) editErrors.rsvpDeadlineOffsetHours = 'Must be at least 1';
+			if (isNaN(h) || h < 1) editErrors.rsvpDeadlineOffsetHours = $_('events.seriesDetail.rsvpOffsetInvalid');
 		}
 		if (Object.keys(editErrors).length > 0) return;
 
@@ -154,10 +155,10 @@
 			const result = await api.put<{ data: EventSeries }>(`/events/series/${seriesId}`, body);
 			series = result.data;
 			editing = false;
-			toast.success('Series updated');
+			toast.success($_('events.seriesDetail.updateSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to update series');
+			toast.error(apiErr.message || $_('events.seriesDetail.updateError'));
 		} finally {
 			saving = false;
 		}
@@ -169,10 +170,10 @@
 			await api.post(`/events/series/${seriesId}/stop`);
 			if (series) series = { ...series, seriesStatus: 'stopped' };
 			showStopModal = false;
-			toast.success('Series stopped. No new occurrences will be generated.');
+			toast.success($_('events.seriesDetail.stopSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to stop series');
+			toast.error(apiErr.message || $_('events.seriesDetail.stopError'));
 		} finally {
 			stopping = false;
 		}
@@ -182,11 +183,11 @@
 		deleting = true;
 		try {
 			await api.delete(`/events/series/${seriesId}`);
-			toast.success('Series deleted');
+			toast.success($_('events.seriesDetail.deleteSuccess'));
 			goto('/events/series');
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to delete series');
+			toast.error(apiErr.message || $_('events.seriesDetail.deleteError'));
 		} finally {
 			deleting = false;
 		}
@@ -194,7 +195,7 @@
 </script>
 
 <svelte:head>
-	<title>{series?.title || 'Series Details'} -- OpenRSVP</title>
+	<title>{series?.title || $_('events.seriesDetail.pageTitleFallback')} -- OpenRSVP</title>
 </svelte:head>
 
 <AppShell>
@@ -204,15 +205,15 @@
 		</div>
 	{:else if series}
 		<div class="mb-6 flex items-center justify-between">
-			<a href="/events/series" class="text-sm text-primary hover:text-primary-hover">&larr; Back to series</a>
+			<a href="/events/series" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.seriesDetail.backToSeries')}</a>
 			<div class="flex items-center gap-2">
 				{#if !editing}
-					<Button variant="outline" size="sm" onclick={startEdit}>Edit</Button>
+					<Button variant="outline" size="sm" onclick={startEdit}>{$_('events.seriesDetail.edit')}</Button>
 				{/if}
 				{#if series.seriesStatus === 'active'}
-					<Button variant="outline" size="sm" onclick={() => showStopModal = true}>Stop Series</Button>
+					<Button variant="outline" size="sm" onclick={() => showStopModal = true}>{$_('events.seriesDetail.stopSeries')}</Button>
 				{/if}
-				<Button variant="danger" size="sm" onclick={() => showDeleteModal = true}>Delete</Button>
+				<Button variant="danger" size="sm" onclick={() => showDeleteModal = true}>{$_('events.seriesDetail.delete')}</Button>
 			</div>
 		</div>
 
@@ -223,10 +224,10 @@
 					onsubmit={(e) => { e.preventDefault(); saveEdit(); }}
 					class="space-y-6"
 				>
-					<h2 class="text-lg font-semibold font-display text-neutral-900">Edit Series</h2>
+					<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.seriesDetail.editSeriesHeading')}</h2>
 
 					<Input
-						label="Title"
+						label={$_('events.seriesDetail.titleLabel')}
 						name="editTitle"
 						bind:value={editTitle}
 						error={editErrors.title || ''}
@@ -234,20 +235,20 @@
 					/>
 
 					<Textarea
-						label="Description"
+						label={$_('events.seriesDetail.descriptionLabel')}
 						name="editDescription"
 						bind:value={editDescription}
 						rows={4}
 					/>
 
 					<Input
-						label="Location"
+						label={$_('events.seriesDetail.locationLabel')}
 						name="editLocation"
 						bind:value={editLocation}
 					/>
 
 					<Select
-						label="Timezone"
+						label={$_('events.seriesDetail.timezoneLabel')}
 						name="editTimezone"
 						bind:value={editTimezone}
 						options={tzOptions}
@@ -258,7 +259,7 @@
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<div class="space-y-1">
 							<label for="editEventTime" class="block text-sm font-medium text-neutral-700">
-								Event Time <span class="text-error">*</span>
+								{$_('events.seriesDetail.eventTimeLabel')} <span class="text-error">*</span>
 							</label>
 							<input
 								id="editEventTime"
@@ -274,7 +275,7 @@
 							{/if}
 						</div>
 						<Input
-							label="Duration (minutes)"
+							label={$_('events.seriesDetail.durationLabel')}
 							name="editDurationMinutes"
 							type="number"
 							bind:value={editDurationMinutes}
@@ -283,14 +284,14 @@
 					</div>
 
 					<Select
-						label="RSVP Contact Requirement"
+						label={$_('events.seriesDetail.contactRequirementLabel')}
 						name="editContactRequirement"
 						bind:value={editContactRequirement}
 						options={filteredContactOptions}
 					/>
 
 					<fieldset class="pt-2">
-						<legend class="text-sm font-medium text-neutral-700 mb-3">Guest Visibility</legend>
+						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.seriesDetail.guestVisibilityLegend')}</legend>
 						<div class="space-y-2">
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -298,7 +299,7 @@
 									bind:checked={editShowHeadcount}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show attendance count</span>
+								<span class="text-sm text-neutral-700">{$_('events.seriesDetail.showHeadcountLabel')}</span>
 							</label>
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -306,21 +307,21 @@
 									bind:checked={editShowGuestList}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show guest names</span>
+								<span class="text-sm text-neutral-700">{$_('events.seriesDetail.showGuestListLabel')}</span>
 							</label>
 						</div>
 					</fieldset>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<Input
-							label="RSVP Deadline Offset (hours)"
+							label={$_('events.seriesDetail.rsvpOffsetLabel')}
 							name="editRsvpDeadlineOffsetHours"
 							type="number"
 							bind:value={editRsvpDeadlineOffsetHours}
 							error={editErrors.rsvpDeadlineOffsetHours || ''}
 						/>
 						<Input
-							label="Max Attendees"
+							label={$_('events.seriesDetail.maxCapacityLabel')}
 							name="editMaxCapacity"
 							type="number"
 							bind:value={editMaxCapacity}
@@ -329,8 +330,8 @@
 					</div>
 
 					<div class="flex items-center justify-end gap-2 border-t border-neutral-200 pt-4">
-						<Button variant="outline" onclick={cancelEdit}>Cancel</Button>
-						<Button type="submit" loading={saving}>Save Changes</Button>
+						<Button variant="outline" onclick={cancelEdit}>{$_('events.seriesDetail.cancel')}</Button>
+						<Button type="submit" loading={saving}>{$_('events.seriesDetail.saveChanges')}</Button>
 					</div>
 				</form>
 			</Card>
@@ -341,7 +342,7 @@
 					<div>
 						<h1 class="text-2xl font-bold font-display text-neutral-900">{series.title}</h1>
 						<p class="mt-2 text-sm text-neutral-600">
-							{recurrenceLabels[series.recurrenceRule] || series.recurrenceRule} at {series.eventTime}
+							{$_('events.seriesDetail.atTime', { values: { recurrence: recurrenceLabels[series.recurrenceRule] || series.recurrenceRule, time: series.eventTime } })}
 						</p>
 						{#if series.location}
 							<p class="mt-1 text-sm text-neutral-500 flex items-center gap-1">
@@ -363,37 +364,37 @@
 				<div class="mt-4 pt-4 border-t border-neutral-200">
 					<dl class="grid grid-cols-2 sm:grid-cols-3 gap-4 text-sm">
 						<div>
-							<dt class="text-neutral-500">Timezone</dt>
+							<dt class="text-neutral-500">{$_('events.seriesDetail.timezoneField')}</dt>
 							<dd class="font-medium text-neutral-900">{getTimezoneLabel(series.timezone)}</dd>
 						</div>
 						{#if series.durationMinutes}
 							<div>
-								<dt class="text-neutral-500">Duration</dt>
-								<dd class="font-medium text-neutral-900">{series.durationMinutes} min</dd>
+								<dt class="text-neutral-500">{$_('events.seriesDetail.durationField')}</dt>
+								<dd class="font-medium text-neutral-900">{series.durationMinutes} {$_('events.seriesDetail.minutesSuffix')}</dd>
 							</div>
 						{/if}
 						{#if series.maxOccurrences}
 							<div>
-								<dt class="text-neutral-500">Max Occurrences</dt>
+								<dt class="text-neutral-500">{$_('events.seriesDetail.maxOccurrencesField')}</dt>
 								<dd class="font-medium text-neutral-900">{series.maxOccurrences}</dd>
 							</div>
 						{/if}
 						{#if series.recurrenceEnd}
 							<div>
-								<dt class="text-neutral-500">Ends</dt>
+								<dt class="text-neutral-500">{$_('events.seriesDetail.endsField')}</dt>
 								<dd class="font-medium text-neutral-900">{formatDateTime(series.recurrenceEnd, series.timezone)}</dd>
 							</div>
 						{/if}
 						{#if series.maxCapacity}
 							<div>
-								<dt class="text-neutral-500">Max Capacity</dt>
-								<dd class="font-medium text-neutral-900">{series.maxCapacity} per occurrence</dd>
+								<dt class="text-neutral-500">{$_('events.seriesDetail.maxCapacityField')}</dt>
+								<dd class="font-medium text-neutral-900">{series.maxCapacity} {$_('events.seriesDetail.perOccurrence')}</dd>
 							</div>
 						{/if}
 						{#if series.rsvpDeadlineOffsetHours}
 							<div>
-								<dt class="text-neutral-500">RSVP Closes</dt>
-								<dd class="font-medium text-neutral-900">{series.rsvpDeadlineOffsetHours}h before event</dd>
+								<dt class="text-neutral-500">{$_('events.seriesDetail.rsvpClosesField')}</dt>
+								<dd class="font-medium text-neutral-900">{$_('events.seriesDetail.hoursBeforeEvent', { values: { hours: series.rsvpDeadlineOffsetHours } })}</dd>
 							</div>
 						{/if}
 					</dl>
@@ -404,12 +405,12 @@
 		<!-- Occurrences list -->
 		<Card>
 			{#snippet header()}
-				<h2 class="text-lg font-semibold font-display text-neutral-900">Occurrences ({occurrences.length})</h2>
+				<h2 class="text-lg font-semibold font-display text-neutral-900">{$_('events.seriesDetail.occurrencesTitle', { values: { count: occurrences.length } })}</h2>
 			{/snippet}
 
 			{#if occurrences.length === 0}
 				<p class="text-sm text-neutral-500 text-center py-8">
-					No occurrences generated yet. They will appear here as they are created.
+					{$_('events.seriesDetail.noOccurrences')}
 				</p>
 			{:else}
 				<div class="divide-y divide-neutral-200 -mx-6 -mb-4">
@@ -423,7 +424,7 @@
 									<div class="flex items-center gap-2">
 										<p class="text-sm font-medium text-neutral-900 truncate">{occurrence.title}</p>
 										{#if occurrence.seriesOverride}
-											<Badge variant="warning">Modified</Badge>
+											<Badge variant="warning">{$_('events.seriesDetail.modified')}</Badge>
 										{/if}
 									</div>
 									<p class="mt-0.5 text-xs text-neutral-500">
@@ -442,29 +443,29 @@
 		</Card>
 
 		<!-- Stop Series Modal -->
-		<Modal bind:open={showStopModal} title="Stop Series">
+		<Modal bind:open={showStopModal} title={$_('events.seriesDetail.stopModalTitle')}>
 			<p class="text-sm text-neutral-600">
-				Are you sure you want to stop <strong>{series.title}</strong>? No new occurrences will be generated, but existing occurrences will remain.
+				{$_('events.seriesDetail.stopModalBody', { values: { title: series.title } })}
 			</p>
 			{#snippet actions()}
-				<Button variant="outline" size="sm" onclick={() => showStopModal = false}>Keep Running</Button>
-				<Button variant="danger" size="sm" onclick={stopSeries} loading={stopping}>Stop Series</Button>
+				<Button variant="outline" size="sm" onclick={() => showStopModal = false}>{$_('events.seriesDetail.keepRunning')}</Button>
+				<Button variant="danger" size="sm" onclick={stopSeries} loading={stopping}>{$_('events.seriesDetail.stopSeries')}</Button>
 			{/snippet}
 		</Modal>
 
 		<!-- Delete Series Modal -->
-		<Modal bind:open={showDeleteModal} title="Delete Series">
+		<Modal bind:open={showDeleteModal} title={$_('events.seriesDetail.deleteModalTitle')}>
 			<p class="text-sm text-neutral-600">
-				Are you sure you want to delete <strong>{series.title}</strong>? The series will be removed, but existing events will remain as standalone events.
+				{$_('events.seriesDetail.deleteModalBody', { values: { title: series.title } })}
 			</p>
 			{#snippet actions()}
-				<Button variant="outline" size="sm" onclick={() => showDeleteModal = false}>Keep Series</Button>
-				<Button variant="danger" size="sm" onclick={deleteSeries} loading={deleting}>Delete Series</Button>
+				<Button variant="outline" size="sm" onclick={() => showDeleteModal = false}>{$_('events.seriesDetail.keepSeries')}</Button>
+				<Button variant="danger" size="sm" onclick={deleteSeries} loading={deleting}>{$_('events.seriesDetail.delete')}</Button>
 			{/snippet}
 		</Modal>
 	{:else}
 		<Card>
-			<p class="text-center text-neutral-500 py-8">Series not found.</p>
+			<p class="text-center text-neutral-500 py-8">{$_('events.seriesDetail.notFound')}</p>
 		</Card>
 	{/if}
 </AppShell>
