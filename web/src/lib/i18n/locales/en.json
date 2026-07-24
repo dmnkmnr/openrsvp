@@ -139,6 +139,13 @@
 		"deleteSuccess": "Your account and all associated data have been deleted.",
 		"deleteError": "Failed to delete your account"
 	},
+	"addToCalendar": {
+		"addToCalendar": "Add to Calendar",
+		"calendarOptions": "Calendar options",
+		"googleCalendar": "Google Calendar",
+		"appleCalendar": "Apple Calendar (.ics)",
+		"outlook": "Outlook (.ics)"
+	},
 	"questions": {
 		"yourAnswer": "Your answer"
 	},

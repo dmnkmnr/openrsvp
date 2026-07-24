@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { onMount } from 'svelte';
 	import type { PublicEvent } from '$lib/types';
+	import { _ } from '$lib/i18n';
 
 	interface Props {
 		event: PublicEvent;
@@ -64,13 +65,13 @@
 				d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 			/>
 		</svg>
-		Add to Calendar
+		{$_('addToCalendar.addToCalendar')}
 	</button>
 	{#if open}
 		<div
 			class="absolute left-0 z-10 mt-1 w-56 rounded-md bg-surface shadow-lg border border-neutral-200 py-1"
 			role="menu"
-			aria-label="Calendar options"
+			aria-label={$_('addToCalendar.calendarOptions')}
 		>
 			<a
 				href={googleUrl}
@@ -84,7 +85,7 @@
 						d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 17.93c-3.95-.49-7-3.85-7-7.93 0-.62.08-1.21.21-1.79L9 15v1c0 1.1.9 2 2 2v1.93zm6.9-2.54c-.26-.81-1-1.39-1.9-1.39h-1v-3c0-.55-.45-1-1-1H8v-2h2c.55 0 1-.45 1-1V7h2c1.1 0 2-.9 2-2v-.41c2.93 1.19 5 4.06 5 7.41 0 2.08-.8 3.97-2.1 5.39z"
 					/>
 				</svg>
-				Google Calendar
+				{$_('addToCalendar.googleCalendar')}
 			</a>
 			<a
 				href={icsUrl}
@@ -99,7 +100,7 @@
 						d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2z"
 					/>
 				</svg>
-				Apple Calendar (.ics)
+				{$_('addToCalendar.appleCalendar')}
 			</a>
 			<a
 				href={icsUrl}
@@ -114,7 +115,7 @@
 						d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"
 					/>
 				</svg>
-				Outlook (.ics)
+				{$_('addToCalendar.outlook')}
 			</a>
 		</div>
 	{/if}
