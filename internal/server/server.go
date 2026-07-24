@@ -101,6 +101,16 @@ func (a *commentRSVPStoreAdapter) FindByToken(ctx context.Context, token string)
 	}, nil
 }
 
+// prefersSMS reports whether an attendee-facing notification should go out
+// via SMS instead of email: only when the attendee explicitly chose "sms" as
+// their contact method AND a phone number is actually on file. Otherwise the
+// caller falls back to email-if-present, then SMS-if-present, so a stale or
+// unreachable preference (e.g. an organizer removed the attendee's email
+// after they'd chosen it) never results in a silently dropped notification.
+func prefersSMS(contactMethod string, hasPhone bool) bool {
+	return contactMethod == "sms" && hasPhone
+}
+
 // New creates a new Server instance.
 func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	// Wire up auth layer.
@@ -327,9 +337,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				location = "TBD"
 			}
 
-			// Send confirmation to the attendee: email first, falling back to
-			// SMS -- same precedence as scheduled reminders and cancellations.
-			if attendee.Email != nil && *attendee.Email != "" {
+			// Send confirmation to the attendee via their preferred channel,
+			// falling back to whichever channel actually has data.
+			hasEmail := attendee.Email != nil && *attendee.Email != ""
+			hasPhone := attendee.Phone != nil && *attendee.Phone != ""
+			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
 				modifyURL := cfg.BaseURL + "/r/" + attendee.RSVPToken
 				htmlBody, plainBody, err := templates.RenderRSVPConfirmation(ev.Title, eventDate, location, attendee.RSVPStatus, modifyURL)
 				if err != nil {
@@ -369,7 +381,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("rsvp notify: failed to send attendee email")
 					}
 				}
-			} else if attendee.Phone != nil && *attendee.Phone != "" {
+			} else if hasPhone {
 				smsBody := "RSVP confirmed (" + attendee.RSVPStatus + ") for " + ev.Title + " on " + eventDate + "."
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -439,10 +451,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			inviteURL := cfg.BaseURL + "/i/" + ev.ShareToken
 
-			// Email first, falling back to SMS -- same precedence as
-			// scheduled reminders and cancellations. Imported guests are
-			// frequently phone-only (e.g. CSV lists without emails).
-			if attendee.Email != nil && *attendee.Email != "" {
+			// Respect the attendee's contact method preference (CSV import
+			// infers it from what the row provided), falling back to whichever
+			// channel actually has data.
+			hasEmail := attendee.Email != nil && *attendee.Email != ""
+			hasPhone := attendee.Phone != nil && *attendee.Phone != ""
+			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
 				htmlBody, plainBody, err := templates.RenderEventReminder(
 					ev.Title, eventDate, location,
 					"You've been invited! Click the link below to RSVP.",
@@ -464,7 +478,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			if attendee.Phone != nil && *attendee.Phone != "" {
+			if hasPhone {
 				smsBody := "You've been invited to " + ev.Title + " on " + eventDate + ". RSVP: " + inviteURL
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -531,9 +545,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			modifyURL := cfg.BaseURL + "/r/" + attendee.RSVPToken
 
-			// Email first, falling back to SMS -- same precedence as
-			// scheduled reminders and cancellations.
-			if attendee.Email != nil && *attendee.Email != "" {
+			// Respect the attendee's contact method preference, falling back
+			// to whichever channel actually has data.
+			hasEmail := attendee.Email != nil && *attendee.Email != ""
+			hasPhone := attendee.Phone != nil && *attendee.Phone != ""
+			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
 				htmlBody, plainBody, err := templates.RenderWaitlistPromotion(ev.Title, eventDate, location, modifyURL)
 				if err != nil {
 					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("waitlist promote: failed to render template")
@@ -551,7 +567,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			if attendee.Phone != nil && *attendee.Phone != "" {
+			if hasPhone {
 				smsBody := "A spot opened up for " + ev.Title + "! Manage your RSVP: " + modifyURL
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -653,9 +669,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					continue
 				}
 
-				// Email first, falling back to SMS -- same precedence as
-				// scheduled reminders and cancellations.
-				if a.Email != nil && *a.Email != "" {
+				// Respect each attendee's contact method preference, falling
+				// back to whichever channel actually has data.
+				hasEmail := a.Email != nil && *a.Email != ""
+				hasPhone := a.Phone != nil && *a.Phone != ""
+				if !prefersSMS(a.ContactMethod, hasPhone) && hasEmail {
 					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Title, eventDate, location, body, inviteURL)
 					if err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
@@ -675,7 +693,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					continue
 				}
 
-				if a.Phone != nil && *a.Phone != "" {
+				if hasPhone {
 					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
 						Body: subject + ": " + body,
@@ -855,9 +873,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					continue
 				}
 
-				// Try email first, falling back to SMS -- same precedence as
-				// scheduled reminders (scheduler.reminder.go).
-				if a.Email != nil && *a.Email != "" {
+				// Respect each attendee's contact method preference, falling
+				// back to whichever channel actually has data.
+				hasEmail := a.Email != nil && *a.Email != ""
+				hasPhone := a.Phone != nil && *a.Phone != ""
+				if !prefersSMS(a.ContactMethod, hasPhone) && hasEmail {
 					htmlBody, plainBody, err := templates.RenderEventReminder(
 						e.Title, eventDate, location, cancelMessage,
 						cfg.BaseURL+"/i/"+e.ShareToken,
@@ -880,7 +900,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					continue
 				}
 
-				if a.Phone != nil && *a.Phone != "" {
+				if hasPhone {
 					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
 						Body: e.Title + ": " + cancelMessage,

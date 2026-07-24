@@ -286,13 +286,22 @@ func (s *Service) ExecuteCSVImport(ctx context.Context, eventID, organizerID str
 			continue
 		}
 
+		// Infer contact method from what the row actually provides: prefer
+		// email when present (matches existing default expectations), but
+		// fall back to SMS for phone-only rows so notifications don't
+		// silently target an unreachable "email" preference.
+		contactMethod := "email"
+		if row.Email == "" && row.Phone != "" {
+			contactMethod = "sms"
+		}
+
 		attendee := &Attendee{
 			ID:            uuid.Must(uuid.NewV7()).String(),
 			EventID:       eventID,
 			Name:          row.Name,
 			RSVPStatus:    "pending",
 			RSVPToken:     rsvpToken,
-			ContactMethod: "email",
+			ContactMethod: contactMethod,
 			DietaryNotes:  row.DietaryNotes,
 			PlusOnes:      row.PlusOnes,
 		}

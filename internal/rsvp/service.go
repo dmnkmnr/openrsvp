@@ -341,6 +341,16 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	// Validate contact info based on the event's contact requirement.
 	hasEmail := req.Email != nil && *req.Email != ""
 	hasPhone := req.Phone != nil && *req.Phone != ""
+
+	// The chosen contact method must actually be reachable: a guest can't
+	// prefer SMS without giving a phone number, or email without an address.
+	if req.ContactMethod == "sms" && !hasPhone {
+		return nil, fmt.Errorf("phone is required to be contacted by sms")
+	}
+	if req.ContactMethod == "email" && !hasEmail {
+		return nil, fmt.Errorf("email is required to be contacted by email")
+	}
+
 	switch ev.ContactRequirement {
 	case "email":
 		if !hasEmail {

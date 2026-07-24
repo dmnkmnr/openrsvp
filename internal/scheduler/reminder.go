@@ -133,10 +133,11 @@ func (j *ReminderJob) processReminder(ctx context.Context, reminder *Reminder) e
 
 // attendeeTarget holds the minimal info needed to send a notification.
 type attendeeTarget struct {
-	id        string
-	email     *string
-	phone     *string
-	rsvpToken string
+	id            string
+	email         *string
+	phone         *string
+	rsvpToken     string
+	contactMethod string
 }
 
 // findTargetAttendees queries for attendees matching the reminder's target
@@ -146,10 +147,10 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	var args []any
 
 	if targetGroup == "all" {
-		query = `SELECT id, email, phone, rsvp_token FROM attendees WHERE event_id = ?`
+		query = `SELECT id, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ?`
 		args = []any{eventID}
 	} else {
-		query = `SELECT id, email, phone, rsvp_token FROM attendees WHERE event_id = ? AND rsvp_status = ?`
+		query = `SELECT id, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ? AND rsvp_status = ?`
 		args = []any{eventID, targetGroup}
 	}
 
@@ -163,7 +164,7 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	for rows.Next() {
 		var a attendeeTarget
 		var email, phone *string
-		if err := rows.Scan(&a.id, &email, &phone, &a.rsvpToken); err != nil {
+		if err := rows.Scan(&a.id, &email, &phone, &a.rsvpToken, &a.contactMethod); err != nil {
 			return nil, fmt.Errorf("scan attendee: %w", err)
 		}
 		a.email = email
@@ -225,15 +226,21 @@ func (j *ReminderJob) lookupEvent(ctx context.Context, eventID string) (*eventIn
 }
 
 // sendToAttendee sends a reminder notification to a single attendee via their
-// preferred channel (email if available, then SMS).
+// preferred channel. Respects the attendee's chosen contact method (email or
+// sms); falls back to whichever channel actually has data when the preferred
+// one is unreachable (e.g. an organizer removed the attendee's email after
+// they'd chosen "email" as their preference).
 func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, attendee attendeeTarget, ev *eventInfo) error {
 	message := reminder.Message
 	if message == "" {
 		message = "You have an upcoming event. Don't forget!"
 	}
 
-	// Try email first.
-	if attendee.email != nil && *attendee.email != "" {
+	hasEmail := attendee.email != nil && *attendee.email != ""
+	hasPhone := attendee.phone != nil && *attendee.phone != ""
+	preferSMS := attendee.contactMethod == "sms" && hasPhone
+
+	if !preferSMS && hasEmail {
 		eventDate := ev.eventDate.Format("January 2, 2006 at 3:04 PM")
 		location := ev.location
 		if location == "" {
@@ -286,8 +293,8 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		return j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelEmail, msg)
 	}
 
-	// Fall back to SMS if available.
-	if attendee.phone != nil && *attendee.phone != "" {
+	// SMS: either explicitly preferred, or the only channel with data.
+	if hasPhone {
 		msg := &notification.Message{
 			To:   *attendee.phone,
 			Body: message,

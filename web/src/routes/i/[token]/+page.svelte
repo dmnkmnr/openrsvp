@@ -35,6 +35,7 @@
 	let name = $state('');
 	let email = $state('');
 	let phone = $state('');
+	let contactMethod = $state<'email' | 'sms'>('email');
 	let rsvpStatus = $state<'attending' | 'maybe' | 'declined'>('attending');
 	let dietaryNotes = $state('');
 	let plusOnes = $state(0);
@@ -226,11 +227,16 @@
 		submitting = true;
 		submitError = '';
 
+		// Only meaningful when both are provided -- otherwise there's no real
+		// choice, so send whichever channel actually has data.
+		const effectiveContactMethod = hasEmail && hasPhone ? contactMethod : (hasEmail ? 'email' : 'sms');
+
 		try {
 			const payload: Record<string, unknown> = {
 				name: name.trim(),
 				email: email.trim(),
 				phone: phone.trim() || undefined,
+				contactMethod: effectiveContactMethod,
 				rsvpStatus,
 				dietaryNotes: dietaryNotes.trim() || undefined,
 				plusOnes
@@ -562,6 +568,26 @@
 								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 							/>
 						</div>
+
+						<!-- Preferred contact method: only a meaningful choice when both
+							 email and phone are actually filled in. -->
+						{#if $smsEnabled && email.trim() && phone.trim()}
+							<fieldset>
+								<legend class="block text-sm font-medium text-neutral-700 mb-2">
+									{$_('guestInvite.contactMethodLabel')}
+								</legend>
+								<div class="flex gap-4">
+									<label class="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
+										<input type="radio" name="contactMethod" value="email" bind:group={contactMethod} class="text-primary focus:ring-primary/40" />
+										{$_('guestInvite.contactMethodEmail')}
+									</label>
+									<label class="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
+										<input type="radio" name="contactMethod" value="sms" bind:group={contactMethod} class="text-primary focus:ring-primary/40" />
+										{$_('guestInvite.contactMethodSms')}
+									</label>
+								</div>
+							</fieldset>
+						{/if}
 
 						<!-- RSVP Status -->
 						<fieldset>
