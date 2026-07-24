@@ -34,18 +34,21 @@ jobs:
     strategy:
       matrix:
         go: ['1.24', '1.25']
-    # setup-go@v6+ pins GOTOOLCHAIN=local by default (a breaking change from the
-    # previous "auto" default). go.mod's `go 1.25.0` directive is a minimum
-    # source-compatibility floor, not the toolchain matrix entries build with;
-    # restore "auto" so a matrix entry below that floor (e.g. 1.24) transparently
-    # upgrades via go.mod's `toolchain` line instead of failing on `go mod download`.
-    env:
-      GOTOOLCHAIN: auto
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
       - uses: actions/setup-go@b7ad1dad31e06c5925ef5d2fc7ad053ef454303e # v7.0.0
         with:
           go-version: ${{ matrix.go }}
+      - name: Restore GOTOOLCHAIN=auto
+        # setup-go@v6+ exports GOTOOLCHAIN=local via $GITHUB_ENV (a breaking
+        # change from the previous "auto" default), which overrides any
+        # job-level `env:` for all later steps. go.mod's `go 1.25.0` directive
+        # is a minimum source-compatibility floor, not the toolchain matrix
+        # entries build with, so re-export "auto" here — after setup-go's own
+        # write — so a matrix entry below that floor (e.g. 1.24) transparently
+        # upgrades via go.mod's `toolchain` line instead of failing on
+        # `go mod download`.
+        run: echo "GOTOOLCHAIN=auto" >> "$GITHUB_ENV"
       - name: Install dependencies
         run: sudo apt-get update && sudo apt-get install -y gcc
       - run: go mod download
