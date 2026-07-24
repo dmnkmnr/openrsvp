@@ -1000,6 +1000,20 @@
 		"myEvents": "Meine Events"
 	},
 	"auth": {
+		"logout": {
+			"pageTitle": "Abmelden -- OpenRSVP",
+			"signingOut": "Du wirst abgemeldet..."
+		},
+		"verify": {
+			"pageTitle": "Verifizieren -- OpenRSVP",
+			"noTokenError": "Kein Verifizierungstoken gefunden. Bitte fordere einen neuen Magic Link an.",
+			"verifiedSuccess": "Erfolgreich angemeldet!",
+			"verificationFailedError": "Verifizierung fehlgeschlagen. Der Link ist möglicherweise abgelaufen.",
+			"verifyingHeading": "Anmeldung wird überprüft",
+			"verifyingBody": "Bitte warte, während wir deinen Magic Link überprüfen...",
+			"failedHeading": "Verifizierung fehlgeschlagen",
+			"tryAgain": "Erneut versuchen"
+		},
 		"login": {
 			"pageTitle": "Anmelden -- OpenRSVP",
 			"heading": "Bei deinem Konto anmelden",

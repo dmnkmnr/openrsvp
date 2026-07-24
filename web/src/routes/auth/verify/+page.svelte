@@ -8,6 +8,7 @@
 	import Button from '$lib/components/ui/Button.svelte';
 	import type { Organizer } from '$lib/types';
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	let verifying = $state(true);
 	let error = $state('');
@@ -16,7 +17,7 @@
 		const token = $page.url.searchParams.get('token');
 
 		if (!token) {
-			error = 'No verification token found. Please request a new magic link.';
+			error = $_('auth.verify.noTokenError');
 			verifying = false;
 			return;
 		}
@@ -36,18 +37,18 @@
 		try {
 			const result = await api.post<{ token: string; organizer: Organizer }>('/auth/verify', { token });
 			$currentUser = result.organizer;
-			toast.success('Successfully signed in!');
+			toast.success($_('auth.verify.verifiedSuccess'));
 			goto('/events');
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			error = apiErr.message || 'Verification failed. The link may have expired.';
+			error = apiErr.message || $_('auth.verify.verificationFailedError');
 			verifying = false;
 		}
 	});
 </script>
 
 <svelte:head>
-	<title>Verify -- OpenRSVP</title>
+	<title>{$_('auth.verify.pageTitle')}</title>
 </svelte:head>
 
 <div class="min-h-screen flex items-center justify-center px-4">
@@ -55,10 +56,10 @@
 		<a href="/" class="text-2xl font-bold text-primary">OpenRSVP</a>
 
 		{#if verifying}
-			<h1 class="font-display mt-4 text-2xl font-semibold text-neutral-900">Verifying your login</h1>
+			<h1 class="font-display mt-4 text-2xl font-semibold text-neutral-900">{$_('auth.verify.verifyingHeading')}</h1>
 			<div class="mt-6 flex flex-col items-center">
 				<Spinner size="md" class="text-primary" />
-				<p class="mt-4 text-neutral-600">Please wait while we verify your magic link...</p>
+				<p class="mt-4 text-neutral-600">{$_('auth.verify.verifyingBody')}</p>
 			</div>
 		{:else if error}
 			<div class="mt-6">
@@ -74,9 +75,9 @@
 						/>
 					</svg>
 				</div>
-				<h2 class="font-display text-lg font-semibold text-neutral-900 mb-2">Verification failed</h2>
+				<h2 class="font-display text-lg font-semibold text-neutral-900 mb-2">{$_('auth.verify.failedHeading')}</h2>
 				<p class="text-sm text-neutral-600 mb-6">{error}</p>
-				<Button href="/auth/login">Try again</Button>
+				<Button href="/auth/login">{$_('auth.verify.tryAgain')}</Button>
 			</div>
 		{/if}
 	</div>

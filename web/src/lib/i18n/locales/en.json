@@ -1000,6 +1000,20 @@
 		"myEvents": "My Events"
 	},
 	"auth": {
+		"logout": {
+			"pageTitle": "Signing out -- OpenRSVP",
+			"signingOut": "Signing you out..."
+		},
+		"verify": {
+			"pageTitle": "Verify -- OpenRSVP",
+			"noTokenError": "No verification token found. Please request a new magic link.",
+			"verifiedSuccess": "Successfully signed in!",
+			"verificationFailedError": "Verification failed. The link may have expired.",
+			"verifyingHeading": "Verifying your login",
+			"verifyingBody": "Please wait while we verify your magic link...",
+			"failedHeading": "Verification failed",
+			"tryAgain": "Try again"
+		},
 		"login": {
 			"pageTitle": "Sign In -- OpenRSVP",
 			"heading": "Sign in to your account",
