@@ -140,6 +140,17 @@
 		"deleteError": "Dein Konto konnte nicht gelöscht werden"
 	},
 	"events": {
+		"edit": {
+			"pageTitle": "Event bearbeiten -- OpenRSVP",
+			"backToEvent": "Zurück zum Event",
+			"heading": "Event bearbeiten",
+			"loadError": "Event konnte nicht geladen werden",
+			"capacityWarning": "Achtung: Die aktuelle Anzahl an Zusagen ({count}) überschreitet dieses Limit. Bestehende RSVPs werden nicht entfernt, aber es werden keine neuen Zusagen mehr akzeptiert.",
+			"cancel": "Abbrechen",
+			"saveChanges": "Änderungen speichern",
+			"updateSuccess": "Event erfolgreich aktualisiert",
+			"updateError": "Event konnte nicht aktualisiert werden"
+		},
 		"new": {
 			"pageTitle": "Event erstellen -- OpenRSVP",
 			"backToEvents": "Zurück zu Events",

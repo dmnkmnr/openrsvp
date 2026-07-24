@@ -140,6 +140,17 @@
 		"deleteError": "Failed to delete your account"
 	},
 	"events": {
+		"edit": {
+			"pageTitle": "Edit Event -- OpenRSVP",
+			"backToEvent": "Back to event",
+			"heading": "Edit Event",
+			"loadError": "Failed to load event",
+			"capacityWarning": "Warning: Current attending headcount ({count}) exceeds this limit. Existing RSVPs will not be removed, but no new attending RSVPs will be accepted.",
+			"cancel": "Cancel",
+			"saveChanges": "Save Changes",
+			"updateSuccess": "Event updated successfully",
+			"updateError": "Failed to update event"
+		},
 		"new": {
 			"pageTitle": "Create Event -- OpenRSVP",
 			"backToEvents": "Back to events",

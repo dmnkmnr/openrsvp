@@ -17,6 +17,7 @@
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import QuestionBuilder from '$lib/components/questions/QuestionBuilder.svelte';
 	import { onMount } from 'svelte';
+	import { _ } from '$lib/i18n';
 
 	const eventId = $derived($page.params.eventId);
 
@@ -43,12 +44,12 @@
 		maxCapacity && parseInt(maxCapacity) > 0 && attendingHeadcount > parseInt(maxCapacity)
 	);
 
-	const contactRequirementOptions = [
-		{ value: 'email_or_phone', label: 'Email or Phone (at least one)' },
-		{ value: 'email', label: 'Email only' },
-		{ value: 'phone', label: 'Phone only' },
-		{ value: 'email_and_phone', label: 'Email and Phone (both required)' }
-	];
+	const contactRequirementOptions = $derived([
+		{ value: 'email_or_phone', label: $_('events.new.contactOptions.emailOrPhone') },
+		{ value: 'email', label: $_('events.new.contactOptions.emailOnly') },
+		{ value: 'phone', label: $_('events.new.contactOptions.phoneOnly') },
+		{ value: 'email_and_phone', label: $_('events.new.contactOptions.emailAndPhone') }
+	]);
 
 	const filteredContactOptions = $derived(
 		$smsEnabled
@@ -88,7 +89,7 @@
 			attendingHeadcount = statsResult.data.attendingHeadcount;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to load event');
+			toast.error(apiErr.message || $_('events.edit.loadError'));
 		} finally {
 			loading = false;
 		}
@@ -96,19 +97,19 @@
 
 	function validate(): boolean {
 		errors = {};
-		if (!title.trim()) errors.title = 'Title is required';
-		if (!eventDate) errors.eventDate = 'Event date is required';
-		if (!timezone) errors.timezone = 'Timezone is required';
+		if (!title.trim()) errors.title = $_('events.new.titleRequired');
+		if (!eventDate) errors.eventDate = $_('events.new.eventDateRequired');
+		if (!timezone) errors.timezone = $_('events.new.timezoneRequired');
 		if (showRetention) {
 			const days = parseInt(retentionDays);
 			if (isNaN(days) || days < 1 || days > 365) {
-				errors.retentionDays = 'Retention days must be between 1 and 365';
+				errors.retentionDays = $_('events.new.retentionInvalid');
 			}
 		}
 		if (maxCapacity) {
 			const parsed = Number(maxCapacity);
 			if (!Number.isInteger(parsed) || parsed < 1) {
-				errors.maxCapacity = 'Max attendees must be a whole number of at least 1';
+				errors.maxCapacity = $_('events.new.maxCapacityInvalid');
 			}
 		}
 		return Object.keys(errors).length === 0;
@@ -142,11 +143,11 @@
 			}
 
 			await api.put(`/events/${eventId}`, body);
-			toast.success('Event updated successfully');
+			toast.success($_('events.edit.updateSuccess'));
 			goto(`/events/${eventId}`);
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to update event');
+			toast.error(apiErr.message || $_('events.edit.updateError'));
 		} finally {
 			saving = false;
 		}
@@ -154,14 +155,14 @@
 </script>
 
 <svelte:head>
-	<title>Edit Event -- OpenRSVP</title>
+	<title>{$_('events.edit.pageTitle')}</title>
 </svelte:head>
 
 <AppShell>
 	<div class="max-w-3xl mx-auto">
 		<div class="mb-8">
-			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; Back to event</a>
-			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">Edit Event</h1>
+			<a href="/events/{eventId}" class="text-sm text-primary hover:text-primary-hover">&larr; {$_('events.edit.backToEvent')}</a>
+			<h1 class="mt-2 text-2xl font-bold font-display text-neutral-900">{$_('events.edit.heading')}</h1>
 		</div>
 
 		{#if loading}
@@ -178,24 +179,24 @@
 					class="space-y-6"
 				>
 					<Input
-						label="Event Title"
+						label={$_('events.new.titleLabel')}
 						name="title"
 						bind:value={title}
-						placeholder="Birthday Party, Team Lunch, etc."
+						placeholder={$_('events.new.titlePlaceholder')}
 						error={errors.title || ''}
 						required
 					/>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<DateTimePicker
-							label="Event Date"
+							label={$_('events.new.eventDateLabel')}
 							name="eventDate"
 							bind:value={eventDate}
 							error={errors.eventDate || ''}
 							required
 						/>
 						<DateTimePicker
-							label="End Date (optional)"
+							label={$_('events.new.endDateLabel')}
 							name="endDate"
 							bind:value={endDate}
 							min={eventDate}
@@ -203,14 +204,14 @@
 					</div>
 
 					<Input
-						label="Location"
+						label={$_('events.new.locationLabel')}
 						name="location"
 						bind:value={location}
-						placeholder="123 Main St, New York, NY"
+						placeholder={$_('events.new.locationPlaceholder')}
 					/>
 
 					<Select
-						label="Timezone"
+						label={$_('events.new.timezoneLabel')}
 						name="timezone"
 						bind:value={timezone}
 						options={tzOptions}
@@ -219,23 +220,23 @@
 					/>
 
 					<Textarea
-						label="Description"
+						label={$_('events.new.descriptionLabel')}
 						name="description"
 						bind:value={description}
-						placeholder="Tell your guests what the event is about..."
+						placeholder={$_('events.new.descriptionPlaceholder')}
 						rows={6}
 					/>
 
 					<Select
-						label="RSVP Contact Requirement"
+						label={$_('events.new.contactRequirementLabel')}
 						name="contactRequirement"
 						bind:value={contactRequirement}
 						options={filteredContactOptions}
 					/>
 
 					<fieldset class="pt-2">
-						<legend class="text-sm font-medium text-neutral-700 mb-3">Guest Visibility</legend>
-						<p class="text-xs text-neutral-400 mb-3">Control what attendance info is shown on the public invite page.</p>
+						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.new.guestVisibilityLegend')}</legend>
+						<p class="text-xs text-neutral-400 mb-3">{$_('events.new.guestVisibilityHelper')}</p>
 						<div class="space-y-2">
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -243,7 +244,7 @@
 									bind:checked={showHeadcount}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show attendance count</span>
+								<span class="text-sm text-neutral-700">{$_('events.new.showHeadcountLabel')}</span>
 							</label>
 							<label class="flex items-center gap-3 cursor-pointer">
 								<input
@@ -251,26 +252,26 @@
 									bind:checked={showGuestList}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Show guest names</span>
+								<span class="text-sm text-neutral-700">{$_('events.new.showGuestListLabel')}</span>
 							</label>
 						</div>
 					</fieldset>
 
 					<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
 						<DateTimePicker
-							label="RSVP Deadline (optional)"
+							label={$_('events.new.rsvpDeadlineLabel')}
 							name="rsvpDeadline"
 							bind:value={rsvpDeadline}
 							max={eventDate || undefined}
-							helper="Guests won't be able to RSVP or change their response after this date."
+							helper={$_('events.new.rsvpDeadlineHelper')}
 						/>
 						<Input
-							label="Max Attendees (optional)"
+							label={$_('events.new.maxCapacityLabel')}
 							name="maxCapacity"
 							type="number"
 							bind:value={maxCapacity}
-							placeholder="Leave empty for unlimited"
-							helper="Total headcount including plus-ones. Leave empty for no limit."
+							placeholder={$_('events.new.maxCapacityPlaceholder')}
+							helper={$_('events.new.maxCapacityHelper')}
 							error={errors.maxCapacity || ''}
 						/>
 					</div>
@@ -281,7 +282,7 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 							</svg>
 							<span>
-								Warning: Current attending headcount ({attendingHeadcount}) exceeds this limit. Existing RSVPs will not be removed, but no new attending RSVPs will be accepted.
+								{$_('events.edit.capacityWarning', { values: { count: attendingHeadcount } })}
 							</span>
 						</div>
 					{/if}
@@ -294,8 +295,8 @@
 								class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 							/>
 							<div>
-								<span class="text-sm text-neutral-700">Enable waitlist</span>
-								<p class="text-xs text-neutral-400">When at capacity, guests can join a waitlist instead of being turned away.</p>
+								<span class="text-sm text-neutral-700">{$_('events.new.waitlistLabel')}</span>
+								<p class="text-xs text-neutral-400">{$_('events.new.waitlistHelper')}</p>
 							</div>
 						</label>
 					{/if}
@@ -303,30 +304,30 @@
 					<div class="pt-2">
 						{#if showRetention}
 							<Input
-								label="Data Retention (days)"
+								label={$_('events.new.retentionLabel')}
 								name="retentionDays"
 								type="number"
 								bind:value={retentionDays}
-								helper="Guest data is automatically deleted this many days after the event (1-365)."
+								helper={$_('events.new.retentionHelper')}
 								error={errors.retentionDays || ''}
 							/>
 						{:else}
 							<p class="text-xs text-neutral-400">
-								Guest data will be automatically deleted 30 days after the event.
+								{$_('events.new.retentionDefaultNote')}
 								<button
 									type="button"
 									class="text-primary hover:text-primary-hover underline underline-offset-2"
 									onclick={() => (showRetention = true)}
 								>
-									Specify custom data retention
+									{$_('events.new.retentionCustomize')}
 								</button>
 							</p>
 						{/if}
 					</div>
 
 					<div class="flex items-center justify-end gap-3 pt-4 border-t border-neutral-200">
-						<Button variant="outline" href="/events/{eventId}">Cancel</Button>
-						<Button type="submit" loading={saving}>Save Changes</Button>
+						<Button variant="outline" href="/events/{eventId}">{$_('events.edit.cancel')}</Button>
+						<Button type="submit" loading={saving}>{$_('events.edit.saveChanges')}</Button>
 					</div>
 				</form>
 			</Card>
