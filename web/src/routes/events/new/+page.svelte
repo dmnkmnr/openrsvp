@@ -4,7 +4,7 @@
 	import { api } from '$lib/api/client';
 	import { currentUser } from '$lib/stores/auth';
 	import { toast } from '$lib/stores/toast';
-	import { smsEnabled, loadAppConfig } from '$lib/stores/config';
+	import { smsEnabled, supportedLanguages, loadAppConfig } from '$lib/stores/config';
 	import { toISOLocal, datetimeLocalToUTC } from '$lib/utils/dates';
 	import { getTimezoneOptions, getTimezoneLabel } from '$lib/utils/timezones';
 	import type { Event } from '$lib/types';
@@ -34,6 +34,7 @@
 
 	// Step 2 fields
 	let description = $state('');
+	let language = $state('en');
 	let contactRequirement = $state('email');
 	let showHeadcount = $state(false);
 	let showGuestList = $state(false);
@@ -54,6 +55,11 @@
 		$smsEnabled
 			? contactRequirementOptions
 			: contactRequirementOptions.filter(o => o.value !== 'phone')
+	);
+
+	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageOptions = $derived(
+		$supportedLanguages.map(code => ({ value: code, label: languageNames[code] || code }))
 	);
 
 	onMount(() => {
@@ -113,6 +119,7 @@
 				location: location.trim(),
 				timezone,
 				description: description.trim(),
+				language,
 				contactRequirement,
 				showHeadcount,
 				showGuestList,
@@ -232,6 +239,16 @@
 						placeholder={$_('events.new.descriptionPlaceholder')}
 						rows={6}
 					/>
+
+					<div>
+						<Select
+							label={$_('events.new.languageLabel')}
+							name="language"
+							bind:value={language}
+							options={languageOptions}
+						/>
+						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.languageHelper')}</p>
+					</div>
 
 					<Select
 						label={$_('events.new.contactRequirementLabel')}
@@ -353,6 +370,12 @@
 							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
 								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.reviewDescription')}</dt>
 								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0 whitespace-pre-wrap">{description}</dd>
+							</div>
+						{/if}
+						{#if language !== 'en'}
+							<div class="py-3 sm:grid sm:grid-cols-3 sm:gap-4">
+								<dt class="text-sm font-medium text-neutral-500">{$_('events.new.languageLabel')}</dt>
+								<dd class="mt-1 text-sm text-neutral-900 sm:col-span-2 sm:mt-0">{languageOptions.find(o => o.value === language)?.label}</dd>
 							</div>
 						{/if}
 						{#if contactRequirement !== 'email_or_phone'}
