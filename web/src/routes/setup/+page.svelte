@@ -10,6 +10,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { _ } from '$lib/i18n';
 
 	interface SetupConfig {
 		instance_name: string;
@@ -60,7 +61,7 @@
 			if (apiErr.status === 401 || apiErr.status === 403) {
 				needsAdmin = true;
 			} else {
-				toast.error('Failed to load instance settings');
+				toast.error($_('setup.loadError'));
 			}
 		} finally {
 			loading = false;
@@ -70,10 +71,10 @@
 	function validate(): boolean {
 		errors = {};
 		if (!instanceName.trim()) {
-			errors.instanceName = 'Instance name is required';
+			errors.instanceName = $_('setup.instanceNameRequired');
 		}
 		if (supportEmail.trim() && !EMAIL_RE.test(supportEmail.trim())) {
-			errors.supportEmail = 'Enter a valid email address';
+			errors.supportEmail = $_('setup.supportEmailInvalid');
 		}
 		return Object.keys(errors).length === 0;
 	}
@@ -89,14 +90,14 @@
 				support_email: supportEmail.trim()
 			});
 			configured = true;
-			toast.success('Instance configured');
+			toast.success($_('setup.configuredSuccess'));
 		} catch (e: unknown) {
 			const apiErr = e as { status?: number; message?: string };
 			if (apiErr.status === 401 || apiErr.status === 403) {
 				needsAdmin = true;
-				toast.error('You must be signed in as an admin to save settings');
+				toast.error($_('setup.adminRequiredToast'));
 			} else {
-				toast.error(apiErr.message || 'Failed to save settings');
+				toast.error(apiErr.message || $_('setup.saveError'));
 			}
 		} finally {
 			submitting = false;
@@ -105,7 +106,7 @@
 </script>
 
 <svelte:head>
-	<title>{configured ? 'Instance Settings' : 'Setup'} -- OpenRSVP</title>
+	<title>{configured ? $_('setup.pageTitleSettings') : $_('setup.pageTitleSetup')} -- OpenRSVP</title>
 </svelte:head>
 
 <AppShell>
@@ -117,28 +118,25 @@
 		{:else if needsAdmin}
 			<Card>
 				<div class="text-center py-6 space-y-4">
-					<h1 class="text-xl font-bold font-display text-neutral-900">Admin sign-in required</h1>
+					<h1 class="text-xl font-bold font-display text-neutral-900">{$_('setup.adminRequiredTitle')}</h1>
 					<p class="text-sm text-neutral-500">
-						Instance configuration can only be changed by an administrator. Please sign in
-						with an admin account to continue.
+						{$_('setup.adminRequiredBody')}
 					</p>
 					<div class="pt-2">
-						<Button href="/auth/login">Sign in as admin</Button>
+						<Button href="/auth/login">{$_('setup.signInAsAdmin')}</Button>
 					</div>
 				</div>
 			</Card>
 		{:else}
 			<div class="mb-8">
 				<h1 class="text-2xl font-bold font-display text-neutral-900">
-					{configured ? 'Instance Settings' : 'Welcome to OpenRSVP'}
+					{configured ? $_('setup.headingSettings') : $_('setup.headingSetup')}
 				</h1>
 				<p class="mt-2 text-sm text-neutral-500">
 					{#if configured}
-						Update your instance-wide configuration. These settings apply to every event and
-						organizer on this server.
+						{$_('setup.descSettings')}
 					{:else}
-						Let's get your instance set up. These settings apply across the whole server and
-						can be changed later from this page.
+						{$_('setup.descSetup')}
 					{/if}
 				</p>
 			</div>
@@ -146,27 +144,27 @@
 			<Card>
 				<div class="space-y-6">
 					<Input
-						label="Instance name"
+						label={$_('setup.instanceNameLabel')}
 						name="instanceName"
 						bind:value={instanceName}
 						placeholder="Acme Events"
-						helper="Shown to organizers and guests across the instance."
+						helper={$_('setup.instanceNameHelper')}
 						error={errors.instanceName || ''}
 						required
 					/>
 
 					<div>
 						<Select
-							label="Default timezone"
+							label={$_('setup.defaultTimezoneLabel')}
 							name="defaultTimezone"
 							bind:value={defaultTimezone}
 							options={tzOptions}
 						/>
-						<p class="mt-1 text-sm text-neutral-500">Used as the default when creating new events.</p>
+						<p class="mt-1 text-sm text-neutral-500">{$_('setup.defaultTimezoneHelper')}</p>
 					</div>
 
 					<fieldset class="pt-1">
-						<legend class="text-sm font-medium text-neutral-700 mb-2">Organizer signups</legend>
+						<legend class="text-sm font-medium text-neutral-700 mb-2">{$_('setup.signupsLegend')}</legend>
 						<label class="flex items-start gap-3 cursor-pointer">
 							<input
 								type="checkbox"
@@ -174,29 +172,28 @@
 								class="mt-0.5 rounded border-neutral-300 text-primary focus:ring-primary/40"
 							/>
 							<div>
-								<span class="text-sm text-neutral-700">Allow new organizer signups</span>
+								<span class="text-sm text-neutral-700">{$_('setup.allowSignupsLabel')}</span>
 								<p class="text-xs text-neutral-400">
-									When off, only existing organizers can sign in. New accounts must be
-									invited.
+									{$_('setup.allowSignupsHelper')}
 								</p>
 							</div>
 						</label>
 					</fieldset>
 
 					<Input
-						label="Support email (optional)"
+						label={$_('setup.supportEmailLabel')}
 						name="supportEmail"
 						type="email"
 						bind:value={supportEmail}
 						placeholder="support@example.com"
-						helper="Shown to users who need help. Leave blank to hide."
+						helper={$_('setup.supportEmailHelper')}
 						error={errors.supportEmail || ''}
 					/>
 				</div>
 
 				<div class="mt-8 flex items-center justify-end border-t border-neutral-200 pt-6">
 					<Button onclick={handleSubmit} loading={submitting}>
-						{configured ? 'Save settings' : 'Finish setup'}
+						{configured ? $_('setup.saveSettings') : $_('setup.finishSetup')}
 					</Button>
 				</div>
 			</Card>

@@ -3,6 +3,7 @@
 	import { onMount } from 'svelte';
 	import { api } from '$lib/api/client';
 	import type { ApiError } from '$lib/types';
+	import { _ } from '$lib/i18n';
 
 	type View = 'loading' | 'invalid' | 'confirm' | 'success' | 'error';
 
@@ -16,14 +17,14 @@
 
 	// Wording: GET only resolves an eventId (not a name), so scope is phrased
 	// generically — event-scoped vs. all OpenRSVP emails.
-	const scopeLabel = $derived(eventId ? "this event's emails" : 'all OpenRSVP emails');
+	const scopeLabel = $derived(eventId ? $_('unsubscribe.scopeEvent') : $_('unsubscribe.scopeAll'));
 
 	onMount(async () => {
 		const t = $page.url.searchParams.get('token');
 
 		if (!t) {
 			view = 'invalid';
-			errorMessage = 'This unsubscribe link is invalid or incomplete.';
+			errorMessage = $_('unsubscribe.invalidLinkBody');
 			return;
 		}
 		token = t;
@@ -39,9 +40,9 @@
 			const apiErr = err as ApiError;
 			view = 'invalid';
 			if (apiErr.status === 404 || apiErr.status === 400) {
-				errorMessage = 'This unsubscribe link is invalid or has expired.';
+				errorMessage = $_('unsubscribe.expiredLinkBody');
 			} else {
-				errorMessage = apiErr.message || 'We could not load this unsubscribe link. Please try again later.';
+				errorMessage = apiErr.message || $_('unsubscribe.loadErrorBody');
 			}
 		}
 	});
@@ -55,7 +56,7 @@
 		} catch (err) {
 			const apiErr = err as ApiError;
 			view = 'error';
-			errorMessage = apiErr.message || 'We could not complete your request. Please try again.';
+			errorMessage = apiErr.message || $_('unsubscribe.confirmErrorBody');
 		} finally {
 			submitting = false;
 		}
@@ -63,7 +64,7 @@
 </script>
 
 <svelte:head>
-	<title>Unsubscribe — OpenRSVP</title>
+	<title>{$_('unsubscribe.pageTitle')}</title>
 </svelte:head>
 
 <div
@@ -79,7 +80,7 @@
 			{#if view === 'loading'}
 				<div class="flex flex-col items-center gap-4 py-4">
 					<div class="animate-spin rounded-full h-10 w-10 border-b-2 border-primary"></div>
-					<p class="text-neutral-500 text-sm">Checking your unsubscribe link…</p>
+					<p class="text-neutral-500 text-sm">{$_('unsubscribe.checkingLink')}</p>
 				</div>
 			{:else if view === 'invalid'}
 				<div class="w-16 h-16 rounded-full bg-error-light flex items-center justify-center mx-auto mb-4">
@@ -87,7 +88,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
 					</svg>
 				</div>
-				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">Invalid unsubscribe link</h1>
+				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">{$_('unsubscribe.invalidTitle')}</h1>
 				<p class="text-neutral-600 text-sm">{errorMessage}</p>
 			{:else if view === 'confirm'}
 				<div class="w-16 h-16 rounded-full bg-primary-light flex items-center justify-center mx-auto mb-4">
@@ -95,11 +96,11 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75" />
 					</svg>
 				</div>
-				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">Unsubscribe from emails?</h1>
+				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">{$_('unsubscribe.confirmTitle')}</h1>
 				<p class="text-neutral-600 text-sm mb-1">
-					Unsubscribe <span class="font-medium text-neutral-900">{email}</span> from {scopeLabel}?
+					{$_('unsubscribe.confirmBodyPrefix')} <span class="font-medium text-neutral-900">{email}</span> {$_('unsubscribe.confirmBodySuffix', { values: { scope: scopeLabel } })}
 				</p>
-				<p class="text-neutral-400 text-xs mb-6">You won't receive any further emails to this address.</p>
+				<p class="text-neutral-400 text-xs mb-6">{$_('unsubscribe.confirmNote')}</p>
 
 				{#if errorMessage}
 					<div class="rounded-md bg-error-light border border-error/20 px-4 py-3 text-sm text-error mb-4 text-left">
@@ -119,14 +120,14 @@
 								<circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
 								<path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
 							</svg>
-							Unsubscribing…
+							{$_('unsubscribe.unsubscribing')}
 						</span>
 					{:else}
-						Unsubscribe
+						{$_('unsubscribe.unsubscribeButton')}
 					{/if}
 				</button>
 				<p class="text-neutral-400 text-xs mt-4">
-					Changed your mind later? You can re-subscribe by RSVPing again or contacting the event organizer.
+					{$_('unsubscribe.resubscribeNote')}
 				</p>
 			{:else if view === 'success'}
 				<div class="w-16 h-16 rounded-full bg-success-light flex items-center justify-center mx-auto mb-4">
@@ -134,16 +135,16 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
 					</svg>
 				</div>
-				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">You've been unsubscribed</h1>
+				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">{$_('unsubscribe.successTitle')}</h1>
 				<p class="text-neutral-600 text-sm">
 					{#if email}
-						<span class="font-medium text-neutral-900">{email}</span> will no longer receive {scopeLabel}.
+						<span class="font-medium text-neutral-900">{email}</span> {$_('unsubscribe.successBodySuffix', { values: { scope: scopeLabel } })}
 					{:else}
-						You will no longer receive these emails.
+						{$_('unsubscribe.successBodyNoEmail')}
 					{/if}
 				</p>
 				<p class="text-neutral-400 text-xs mt-4">
-					You can re-subscribe at any time by RSVPing again or contacting the event organizer.
+					{$_('unsubscribe.successNote')}
 				</p>
 			{:else if view === 'error'}
 				<div class="w-16 h-16 rounded-full bg-error-light flex items-center justify-center mx-auto mb-4">
@@ -151,7 +152,7 @@
 						<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m9-.75a9 9 0 11-18 0 9 9 0 0118 0zm-9 3.75h.008v.008H12v-.008z" />
 					</svg>
 				</div>
-				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">Something went wrong</h1>
+				<h1 class="font-display text-xl font-semibold text-neutral-900 mb-2">{$_('unsubscribe.errorTitle')}</h1>
 				<p class="text-neutral-600 text-sm mb-6">{errorMessage}</p>
 				<button
 					type="button"
@@ -159,14 +160,14 @@
 					disabled={submitting}
 					class="w-full rounded-lg bg-primary px-4 py-2.5 text-sm font-semibold text-white hover:bg-primary-hover transition-colors disabled:opacity-50 disabled:cursor-not-allowed shadow-sm"
 				>
-					{submitting ? 'Trying again…' : 'Try again'}
+					{submitting ? $_('unsubscribe.tryingAgain') : $_('unsubscribe.tryAgain')}
 				</button>
 			{/if}
 		</div>
 
 		<div class="text-center mt-8">
 			<a href="/" class="text-xs text-neutral-400 hover:text-neutral-500 transition-colors">
-				Powered by OpenRSVP
+				{$_('unsubscribe.poweredBy')}
 			</a>
 		</div>
 	</div>

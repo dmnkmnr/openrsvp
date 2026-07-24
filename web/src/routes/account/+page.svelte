@@ -9,6 +9,7 @@
 	import Input from '$lib/components/ui/Input.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { _ } from '$lib/i18n';
 
 	// Mirror the events layout guard: redirect to login once auth has loaded
 	// and there's no current user.
@@ -32,7 +33,7 @@
 			await api.download('/auth/me/export', 'openrsvp-export.json');
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to export your data');
+			toast.error(apiErr.message || $_('account.exportError'));
 		} finally {
 			exporting = false;
 		}
@@ -51,11 +52,11 @@
 			await api.delete('/auth/me');
 			deleteModalOpen = false;
 			$currentUser = null;
-			toast.success('Your account and all associated data have been deleted.');
+			toast.success($_('account.deleteSuccess'));
 			goto('/');
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to delete your account');
+			toast.error(apiErr.message || $_('account.deleteError'));
 		} finally {
 			deleting = false;
 		}
@@ -63,7 +64,7 @@
 </script>
 
 <svelte:head>
-	<title>Account Settings -- OpenRSVP</title>
+	<title>{$_('account.pageTitle')}</title>
 </svelte:head>
 
 {#if $isLoading}
@@ -74,7 +75,7 @@
 	<AppShell>
 		<div class="max-w-3xl mx-auto">
 			<div class="mb-8">
-				<h1 class="text-2xl font-bold font-display text-neutral-900">Account Settings</h1>
+				<h1 class="text-2xl font-bold font-display text-neutral-900">{$_('account.heading')}</h1>
 				<p class="mt-1 text-sm text-neutral-500">{$currentUser.email}</p>
 			</div>
 
@@ -82,15 +83,14 @@
 			<Card>
 				<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 					<div class="sm:pr-8">
-						<h2 class="text-lg font-display font-semibold text-neutral-900">Your data</h2>
+						<h2 class="text-lg font-display font-semibold text-neutral-900">{$_('account.dataTitle')}</h2>
 						<p class="mt-1 text-sm text-neutral-600">
-							Download a complete copy of your data as a JSON file. This includes all of your
-							events, guests, RSVPs, and messages.
+							{$_('account.dataBody')}
 						</p>
 					</div>
 					<div class="flex-shrink-0">
 						<Button variant="outline" loading={exporting} onclick={handleExport}>
-							Export my data
+							{$_('account.exportData')}
 						</Button>
 					</div>
 				</div>
@@ -100,33 +100,31 @@
 			<Card class="mt-6 border-error-light">
 				<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 					<div class="sm:pr-8">
-						<h2 class="text-lg font-display font-semibold text-error">Danger zone</h2>
+						<h2 class="text-lg font-display font-semibold text-error">{$_('account.dangerZoneTitle')}</h2>
 						<p class="mt-1 text-sm text-neutral-600">
-							Permanently delete your account along with all of your events, guests, RSVPs, and
-							messages. This action cannot be undone.
+							{$_('account.dangerZoneBody')}
 						</p>
 					</div>
 					<div class="flex-shrink-0">
-						<Button variant="danger" onclick={openDeleteModal}>Delete account</Button>
+						<Button variant="danger" onclick={openDeleteModal}>{$_('account.deleteAccount')}</Button>
 					</div>
 				</div>
 			</Card>
 		</div>
 	</AppShell>
 
-	<Modal bind:open={deleteModalOpen} title="Delete account">
+	<Modal bind:open={deleteModalOpen} title={$_('account.deleteAccount')}>
 		<div class="space-y-4">
 			<div class="rounded-lg bg-error-light border border-error px-4 py-3 text-sm text-error flex items-start gap-2">
 				<svg class="h-4 w-4 text-error mt-0.5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 					<path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
 				</svg>
 				<span>
-					This permanently deletes your account and <strong>all</strong> of your events, guests,
-					RSVPs, and messages. This cannot be undone.
+					{$_('account.deleteModalWarningPrefix')} <strong>{$_('account.deleteModalWarningAll')}</strong> {$_('account.deleteModalWarningSuffix')}
 				</span>
 			</div>
 			<p class="text-sm text-neutral-600">
-				To confirm, type <span class="font-mono font-semibold text-neutral-900">DELETE</span> in the box below.
+				{$_('account.deleteConfirmPrompt')}
 			</p>
 			<Input
 				name="deleteConfirm"
@@ -137,10 +135,10 @@
 
 		{#snippet actions()}
 			<Button variant="outline" onclick={() => (deleteModalOpen = false)} disabled={deleting}>
-				Cancel
+				{$_('common.cancel')}
 			</Button>
 			<Button variant="danger" loading={deleting} disabled={!canDelete} onclick={handleDelete}>
-				Delete my account
+				{$_('account.deleteMyAccount')}
 			</Button>
 		{/snippet}
 	</Modal>
