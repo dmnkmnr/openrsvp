@@ -185,6 +185,15 @@
   --duration-long: 500ms;
 }
 
+/* Tells the browser to render native controls (select dropdowns,
+   scrollbars, etc.) with light or dark UA styling to match our own theme --
+   without this, an open <select> popup renders as a light box even under
+   [data-theme="dark"]. Declared before the [data-theme="dark"] override
+   below so that, at equal specificity, source order lets dark mode win. */
+:root {
+  color-scheme: light;
+}
+
 /* ===== Dark Mode ===== */
 [data-theme="dark"] {
   --color-primary: #F06B85;
@@ -219,6 +228,12 @@
   --color-neutral-800: #F5F5F4;
   --color-neutral-900: #FAFAF9;
   --color-neutral-950: #FFFFFF;
+
+  /* Tells the browser to render native controls (select dropdowns,
+     scrollbars, etc.) with their dark UA styling instead of defaulting to
+     light regardless of our own theme -- without this, an open <select>
+     popup renders as a light box even under [data-theme="dark"]. */
+  color-scheme: dark;
 }
 
 /* ===== Base Styles ===== */

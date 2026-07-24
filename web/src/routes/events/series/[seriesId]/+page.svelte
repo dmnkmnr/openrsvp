@@ -96,6 +96,10 @@
 		return map[status] || 'neutral';
 	}
 
+	function eventStatusLabel(status: string): string {
+		return $_('events.detail.eventStatus.' + status);
+	}
+
 	function startEdit() {
 		if (!series) return;
 		editTitle = series.title;
@@ -434,7 +438,7 @@
 										{/if}
 									</p>
 								</div>
-								<Badge variant={statusVariant(occurrence.status)}>{occurrence.status}</Badge>
+								<Badge variant={statusVariant(occurrence.status)}>{eventStatusLabel(occurrence.status)}</Badge>
 							</div>
 						</a>
 					{/each}
