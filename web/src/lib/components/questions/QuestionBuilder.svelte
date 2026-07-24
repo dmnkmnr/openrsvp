@@ -8,6 +8,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import { _ } from '$lib/i18n';
 
 	interface Props {
 		eventId: string;
@@ -33,11 +34,11 @@
 	let editRequired = $state(false);
 	let editSaving = $state(false);
 
-	const typeOptions = [
-		{ value: 'text', label: 'Text' },
-		{ value: 'select', label: 'Multiple Choice' },
-		{ value: 'checkbox', label: 'Checkboxes' }
-	];
+	const typeOptions = $derived([
+		{ value: 'text', label: $_('questionBuilder.typeText') },
+		{ value: 'select', label: $_('questionBuilder.typeMultipleChoice') },
+		{ value: 'checkbox', label: $_('questionBuilder.typeCheckboxes') }
+	]);
 
 	const atLimit = $derived(questions.length >= 10);
 
@@ -83,12 +84,12 @@
 
 	async function handleAddQuestion() {
 		if (!newLabel.trim()) {
-			toast.error('Question label is required');
+			toast.error($_('questionBuilder.labelRequired'));
 			return;
 		}
 
 		if ((newType === 'select' || newType === 'checkbox') && newOptions.filter((o) => o.trim()).length < 2) {
-			toast.error('Please add at least 2 options');
+			toast.error($_('questionBuilder.minTwoOptions'));
 			return;
 		}
 
@@ -108,10 +109,10 @@
 			newType = 'text';
 			newOptions = [''];
 			newRequired = false;
-			toast.success('Question added');
+			toast.success($_('questionBuilder.addSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to add question');
+			toast.error(apiErr.message || $_('questionBuilder.addError'));
 		} finally {
 			saving = false;
 		}
@@ -132,12 +133,12 @@
 	async function saveEdit() {
 		if (!editingId) return;
 		if (!editLabel.trim()) {
-			toast.error('Question label is required');
+			toast.error($_('questionBuilder.labelRequired'));
 			return;
 		}
 
 		if ((editType === 'select' || editType === 'checkbox') && editOptions.filter((o) => o.trim()).length < 2) {
-			toast.error('Please add at least 2 options');
+			toast.error($_('questionBuilder.minTwoOptions'));
 			return;
 		}
 
@@ -152,10 +153,10 @@
 			const result = await api.put<{ data: EventQuestion }>(`/events/${eventId}/questions/${editingId}`, body);
 			questions = questions.map((q) => (q.id === editingId ? result.data : q));
 			editingId = null;
-			toast.success('Question updated');
+			toast.success($_('questionBuilder.updateSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to update question');
+			toast.error(apiErr.message || $_('questionBuilder.updateError'));
 		} finally {
 			editSaving = false;
 		}
@@ -165,10 +166,10 @@
 		try {
 			await api.delete(`/events/${eventId}/questions/${qId}`);
 			questions = questions.filter((q) => q.id !== qId);
-			toast.success('Question deleted');
+			toast.success($_('questionBuilder.deleteSuccess'));
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to delete question');
+			toast.error(apiErr.message || $_('questionBuilder.deleteError'));
 		}
 	}
 
@@ -187,23 +188,23 @@
 			await api.put(`/events/${eventId}/questions/reorder`, { questionIds });
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
-			toast.error(apiErr.message || 'Failed to reorder questions');
+			toast.error(apiErr.message || $_('questionBuilder.reorderError'));
 			await loadQuestions();
 		}
 	}
 
 	function typeLabel(type: string): string {
 		switch (type) {
-			case 'text': return 'Text';
-			case 'select': return 'Multiple Choice';
-			case 'checkbox': return 'Checkboxes';
+			case 'text': return $_('questionBuilder.typeText');
+			case 'select': return $_('questionBuilder.typeMultipleChoice');
+			case 'checkbox': return $_('questionBuilder.typeCheckboxes');
 			default: return type;
 		}
 	}
 </script>
 
 <div class="mt-8">
-	<h2 class="text-lg font-display font-semibold text-neutral-900 mb-4">Custom RSVP Questions</h2>
+	<h2 class="text-lg font-display font-semibold text-neutral-900 mb-4">{$_('questionBuilder.heading')}</h2>
 
 	{#if loading}
 		<div class="flex items-center justify-center py-8">
@@ -218,15 +219,15 @@
 						<!-- Inline edit mode -->
 						<div class="bg-neutral-50 rounded-md border border-neutral-200 p-4 space-y-4">
 							<Input
-								label="Question Label"
+								label={$_('questionBuilder.questionLabelLabel')}
 								name="edit-question-label"
 								bind:value={editLabel}
-								placeholder="e.g. What song should we add to the playlist?"
+								placeholder={$_('questionBuilder.questionLabelPlaceholder')}
 								required
 							/>
 
 							<Select
-								label="Question Type"
+								label={$_('questionBuilder.questionTypeLabel')}
 								name="edit-question-type"
 								bind:value={editType}
 								options={typeOptions}
@@ -234,7 +235,7 @@
 
 							{#if editType === 'select' || editType === 'checkbox'}
 								<div>
-									<span class="block text-sm font-medium text-neutral-700 mb-2">Options</span>
+									<span class="block text-sm font-medium text-neutral-700 mb-2">{$_('questionBuilder.optionsLabel')}</span>
 									<div class="space-y-2">
 										{#each editOptions as option, optIndex}
 											<div class="flex items-center gap-2">
@@ -242,7 +243,7 @@
 													type="text"
 													value={option}
 													oninput={(e) => updateEditOption(optIndex, (e.target as HTMLInputElement).value)}
-													placeholder="Option {optIndex + 1}"
+													placeholder={$_('questionBuilder.optionPlaceholder', { values: { index: optIndex + 1 } })}
 													class="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 												/>
 												{#if editOptions.length > 1}
@@ -250,7 +251,7 @@
 														type="button"
 														onclick={() => removeEditOption(optIndex)}
 														class="text-neutral-400 hover:text-error transition-colors duration-short ease-out p-1"
-														aria-label="Remove option"
+														aria-label={$_('questionBuilder.removeOption')}
 													>
 														<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 															<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -265,7 +266,7 @@
 										onclick={addEditOption}
 										class="mt-2 text-sm text-primary hover:text-primary-hover font-medium"
 									>
-										+ Add option
+										{$_('questionBuilder.addOption')}
 									</button>
 								</div>
 							{/if}
@@ -276,12 +277,12 @@
 									bind:checked={editRequired}
 									class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 								/>
-								<span class="text-sm text-neutral-700">Required</span>
+								<span class="text-sm text-neutral-700">{$_('questionBuilder.required')}</span>
 							</label>
 
 							<div class="flex items-center justify-end gap-2 pt-2">
-								<Button variant="outline" size="sm" onclick={cancelEdit}>Cancel</Button>
-								<Button size="sm" onclick={saveEdit} loading={editSaving}>Save</Button>
+								<Button variant="outline" size="sm" onclick={cancelEdit}>{$_('questionBuilder.cancel')}</Button>
+								<Button size="sm" onclick={saveEdit} loading={editSaving}>{$_('questionBuilder.save')}</Button>
 							</div>
 						</div>
 					{:else}
@@ -292,13 +293,13 @@
 									<div class="flex items-center gap-2 mb-1">
 										<p class="text-sm font-medium text-neutral-900">{question.label}</p>
 										{#if question.required}
-											<Badge variant="info">Required</Badge>
+											<Badge variant="info">{$_('questionBuilder.required')}</Badge>
 										{/if}
 									</div>
 									<p class="text-xs text-neutral-500">{typeLabel(question.type)}</p>
 									{#if question.options && question.options.length > 0}
 										<p class="text-xs text-neutral-400 mt-1">
-											Options: {question.options.join(', ')}
+											{$_('questionBuilder.optionsPrefix', { values: { options: question.options.join(', ') } })}
 										</p>
 									{/if}
 								</div>
@@ -308,7 +309,7 @@
 										onclick={() => moveQuestion(index, 'up')}
 										disabled={index === 0}
 										class="p-1 text-neutral-400 hover:text-neutral-600 transition-colors duration-short ease-out disabled:opacity-30 disabled:cursor-not-allowed"
-										aria-label="Move up"
+										aria-label={$_('questionBuilder.moveUp')}
 									>
 										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M5 15l7-7 7 7" />
@@ -319,15 +320,15 @@
 										onclick={() => moveQuestion(index, 'down')}
 										disabled={index === questions.length - 1}
 										class="p-1 text-neutral-400 hover:text-neutral-600 transition-colors duration-short ease-out disabled:opacity-30 disabled:cursor-not-allowed"
-										aria-label="Move down"
+										aria-label={$_('questionBuilder.moveDown')}
 									>
 										<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 											<path stroke-linecap="round" stroke-linejoin="round" d="M19 9l-7 7-7-7" />
 										</svg>
 									</button>
-									<Button size="sm" variant="ghost" onclick={() => startEdit(question)}>Edit</Button>
+									<Button size="sm" variant="ghost" onclick={() => startEdit(question)}>{$_('questionBuilder.edit')}</Button>
 									<Button size="sm" variant="ghost" onclick={() => deleteQuestion(question.id)}>
-										<span class="text-error">Delete</span>
+										<span class="text-error">{$_('questionBuilder.delete')}</span>
 									</Button>
 								</div>
 							</div>
@@ -340,18 +341,18 @@
 		<!-- Add question form -->
 		{#if !atLimit}
 			<div class="border border-dashed border-neutral-300 rounded-md p-4 space-y-4">
-				<p class="text-sm font-medium text-neutral-700">Add a Question</p>
+				<p class="text-sm font-medium text-neutral-700">{$_('questionBuilder.addQuestionTitle')}</p>
 
 				<Input
-					label="Question Label"
+					label={$_('questionBuilder.questionLabelLabel')}
 					name="new-question-label"
 					bind:value={newLabel}
-					placeholder="e.g. What song should we add to the playlist?"
+					placeholder={$_('questionBuilder.questionLabelPlaceholder')}
 					required
 				/>
 
 				<Select
-					label="Question Type"
+					label={$_('questionBuilder.questionTypeLabel')}
 					name="new-question-type"
 					bind:value={newType}
 					options={typeOptions}
@@ -359,7 +360,7 @@
 
 				{#if newType === 'select' || newType === 'checkbox'}
 					<div>
-						<span class="block text-sm font-medium text-neutral-700 mb-2">Options</span>
+						<span class="block text-sm font-medium text-neutral-700 mb-2">{$_('questionBuilder.optionsLabel')}</span>
 						<div class="space-y-2">
 							{#each newOptions as option, optIndex}
 								<div class="flex items-center gap-2">
@@ -367,7 +368,7 @@
 										type="text"
 										value={option}
 										oninput={(e) => updateOption(optIndex, (e.target as HTMLInputElement).value)}
-										placeholder="Option {optIndex + 1}"
+										placeholder={$_('questionBuilder.optionPlaceholder', { values: { index: optIndex + 1 } })}
 										class="flex-1 rounded-md border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
 									/>
 									{#if newOptions.length > 1}
@@ -375,7 +376,7 @@
 											type="button"
 											onclick={() => removeOption(optIndex)}
 											class="text-neutral-400 hover:text-error transition-colors duration-short ease-out p-1"
-											aria-label="Remove option"
+											aria-label={$_('questionBuilder.removeOption')}
 										>
 											<svg class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
 												<path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -390,7 +391,7 @@
 							onclick={addOption}
 							class="mt-2 text-sm text-primary hover:text-primary-hover font-medium"
 						>
-							+ Add option
+							{$_('questionBuilder.addOption')}
 						</button>
 					</div>
 				{/if}
@@ -401,19 +402,19 @@
 						bind:checked={newRequired}
 						class="rounded border-neutral-300 text-primary focus:ring-primary/40"
 					/>
-					<span class="text-sm text-neutral-700">Required</span>
+					<span class="text-sm text-neutral-700">{$_('questionBuilder.required')}</span>
 				</label>
 
 				<div class="flex justify-end">
-					<Button size="sm" onclick={handleAddQuestion} loading={saving}>Add Question</Button>
+					<Button size="sm" onclick={handleAddQuestion} loading={saving}>{$_('questionBuilder.addQuestion')}</Button>
 				</div>
 			</div>
 		{:else}
-			<p class="text-xs text-neutral-400 text-center py-2">Maximum of 10 questions reached.</p>
+			<p class="text-xs text-neutral-400 text-center py-2">{$_('questionBuilder.maxQuestions')}</p>
 		{/if}
 
 		{#if questions.length > 0}
-			<p class="text-xs text-neutral-400 mt-3">{questions.length} / 10 questions</p>
+			<p class="text-xs text-neutral-400 mt-3">{$_('questionBuilder.questionsCount', { values: { count: questions.length } })}</p>
 		{/if}
 	{/if}
 </div>

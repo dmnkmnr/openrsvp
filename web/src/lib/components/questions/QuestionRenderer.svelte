@@ -1,5 +1,6 @@
 <script lang="ts">
 	import type { EventQuestion } from '$lib/types';
+	import { _ } from '$lib/i18n';
 
 	interface Props {
 		questions: EventQuestion[];
@@ -61,7 +62,7 @@
 						oninput={(e) => handleTextInput(question.id, (e.target as HTMLInputElement).value)}
 						maxlength={1000}
 						required={question.required}
-						placeholder="Your answer"
+						placeholder={$_('questions.yourAnswer')}
 						class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors duration-short ease-out"
 					/>
 				{:else if question.type === 'select'}
