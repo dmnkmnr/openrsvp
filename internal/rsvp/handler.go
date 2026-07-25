@@ -291,7 +291,7 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 	writer := csv.NewWriter(w)
 
 	// Build header with optional question columns.
-	header := []string{"Name", "Email", "Phone", "RSVP Status", "Dietary Notes", "Plus Ones", "RSVP Date"}
+	header := []string{"Name", "Email", "Phone", "RSVP Status", "Dietary Notes", "Plus Ones", "Children Under 12", "RSVP Date"}
 	if exportData != nil {
 		header = append(header, exportData.Labels...)
 	}
@@ -317,6 +317,7 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 			DefangCSVCell(a.RSVPStatus),
 			DefangCSVCell(a.DietaryNotes),
 			strconv.Itoa(a.PlusOnes),
+			strconv.Itoa(a.PlusOnesChildren),
 			a.CreatedAt.Format("2006-01-02 15:04:05"),
 		}
 

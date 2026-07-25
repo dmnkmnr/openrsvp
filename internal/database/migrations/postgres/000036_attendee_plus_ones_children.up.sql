@@ -1,0 +1,1 @@
+ALTER TABLE attendees ADD COLUMN plus_ones_children INTEGER NOT NULL DEFAULT 0;

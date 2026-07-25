@@ -454,7 +454,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			htmlBody, plainBody, err := templates.RenderOrganizerRSVPNotification(
 				ev.Title, attendee.Name, attendee.RSVPStatus,
-				guestEmail, guestPhone, attendee.PlusOnes, dashboardURL,
+				guestEmail, guestPhone, attendee.PlusOnes, attendee.PlusOnesChildren, dashboardURL,
 			)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("rsvp notify: failed to render organizer template")

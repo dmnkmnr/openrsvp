@@ -69,6 +69,49 @@ func TestSubmitRSVP(t *testing.T) {
 	assert.Equal(t, "email", attendee.ContactMethod)
 }
 
+func TestSubmitRSVPPlusOnesChildren(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	// Valid: children within plusOnes.
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
+		PlusOnes: 3, PlusOnesChildren: 2,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 3, attendee.PlusOnes)
+	assert.Equal(t, 2, attendee.PlusOnesChildren)
+
+	// Invalid: children exceeds plusOnes.
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Bob", Email: strPtr("bob@example.com"), RSVPStatus: "attending",
+		PlusOnes: 1, PlusOnesChildren: 2,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "plusOnesChildren must be between 0 and plusOnes")
+
+	// Invalid: negative children.
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Carol", Email: strPtr("carol@example.com"), RSVPStatus: "attending",
+		PlusOnes: 2, PlusOnesChildren: -1,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "plusOnesChildren must be between 0 and plusOnes")
+
+	// Declining resets both plusOnes and plusOnesChildren to 0.
+	declined, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Dave", Email: strPtr("dave@example.com"), RSVPStatus: "declined",
+		PlusOnes: 2, PlusOnesChildren: 1,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, 0, declined.PlusOnes)
+	assert.Equal(t, 0, declined.PlusOnesChildren)
+}
+
 func TestSubmitRSVPDuplicateEmail(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	ctx := context.Background()
@@ -284,7 +327,7 @@ func TestGetStats(t *testing.T) {
 	ev := createPublishedEvent(t, eventSvc, org.ID)
 
 	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
-		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending", PlusOnes: 2,
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending", PlusOnes: 2, PlusOnesChildren: 1,
 	})
 	require.NoError(t, err)
 	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
@@ -304,6 +347,7 @@ func TestGetStats(t *testing.T) {
 	require.NoError(t, err)
 	assert.Equal(t, 2, stats.Attending)
 	assert.Equal(t, 5, stats.AttendingHeadcount) // 2 attendees + 2 + 1 plus ones
+	assert.Equal(t, 1, stats.AttendingChildren)
 	assert.Equal(t, 1, stats.Maybe)
 	assert.Equal(t, 1, stats.MaybeHeadcount)
 	assert.Equal(t, 1, stats.Declined)

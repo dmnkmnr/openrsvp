@@ -40,6 +40,7 @@
 	let rsvpStatus = $state<'attending' | 'maybe' | 'declined'>('attending');
 	let dietaryNotes = $state('');
 	let plusOnes = $state(0);
+	let plusOnesChildren = $state(0);
 	let answers: Record<string, string> = $state({});
 	let honeypot = $state('');
 	let submitting = $state(false);
@@ -252,7 +253,8 @@
 				contactMethod: effectiveContactMethod,
 				rsvpStatus,
 				dietaryNotes: dietaryNotes.trim() || undefined,
-				plusOnes
+				plusOnes,
+				plusOnesChildren
 			};
 			if (Object.keys(answers).length > 0) {
 				payload.answers = answers;
@@ -671,6 +673,29 @@
 									<span class="text-sm text-neutral-500">{$_(plusOnes === 1 ? 'guestInvite.additionalGuest' : 'guestInvite.additionalGuests')}</span>
 								</div>
 							</div>
+
+							{#if plusOnes > 0}
+								<div>
+									<label for="rsvp-plusones-children" class="block text-sm font-medium text-neutral-700 mb-1.5">
+										{$_('guestInvite.childrenLabel')}
+									</label>
+									<div class="flex items-center gap-3">
+										<input
+											id="rsvp-plusones-children"
+											type="number"
+											min="0"
+											max={plusOnes}
+											bind:value={plusOnesChildren}
+											onchange={() => {
+												if (plusOnesChildren > plusOnes) plusOnesChildren = plusOnes;
+												if (plusOnesChildren < 0) plusOnesChildren = 0;
+											}}
+											class="w-20 rounded-md border border-neutral-300 px-3 py-2.5 text-neutral-900 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+										/>
+										<span class="text-sm text-neutral-500">{$_('guestInvite.childrenHelper')}</span>
+									</div>
+								</div>
+							{/if}
 						{/if}
 
 						<!-- Custom Questions -->

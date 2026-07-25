@@ -311,6 +311,9 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	if req.PlusOnes < 0 {
 		return nil, fmt.Errorf("plusOnes must not be negative")
 	}
+	if req.PlusOnesChildren < 0 || req.PlusOnesChildren > req.PlusOnes {
+		return nil, fmt.Errorf("plusOnesChildren must be between 0 and plusOnes")
+	}
 	if req.ContactMethod != "" && req.ContactMethod != "email" && req.ContactMethod != "sms" && req.ContactMethod != "both" {
 		return nil, fmt.Errorf("invalid contactMethod: must be email, sms, or both")
 	}
@@ -339,6 +342,7 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	}
 	if req.RSVPStatus == "declined" {
 		req.PlusOnes = 0
+		req.PlusOnesChildren = 0
 	}
 
 	// Look up the event by share token.
@@ -447,6 +451,7 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 		existing.RSVPStatus = req.RSVPStatus
 		existing.DietaryNotes = req.DietaryNotes
 		existing.PlusOnes = req.PlusOnes
+		existing.PlusOnesChildren = req.PlusOnesChildren
 		existing.ContactMethod = req.ContactMethod
 		if req.Email != nil {
 			existing.Email = req.Email
@@ -496,16 +501,17 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	}
 
 	attendee := &Attendee{
-		ID:            uuid.Must(uuid.NewV7()).String(),
-		EventID:       ev.ID,
-		Name:          req.Name,
-		Email:         req.Email,
-		Phone:         req.Phone,
-		RSVPStatus:    req.RSVPStatus,
-		RSVPToken:     rsvpToken,
-		ContactMethod: req.ContactMethod,
-		DietaryNotes:  req.DietaryNotes,
-		PlusOnes:      req.PlusOnes,
+		ID:               uuid.Must(uuid.NewV7()).String(),
+		EventID:          ev.ID,
+		Name:             req.Name,
+		Email:            req.Email,
+		Phone:            req.Phone,
+		RSVPStatus:       req.RSVPStatus,
+		RSVPToken:        rsvpToken,
+		ContactMethod:    req.ContactMethod,
+		DietaryNotes:     req.DietaryNotes,
+		PlusOnes:         req.PlusOnes,
+		PlusOnesChildren: req.PlusOnesChildren,
 	}
 
 	if err := s.store.Create(ctx, attendee); err != nil {
@@ -661,6 +667,15 @@ func (s *Service) UpdateByToken(ctx context.Context, rsvpToken string, req Updat
 	if req.PlusOnes != nil && *req.PlusOnes < 0 {
 		return nil, fmt.Errorf("plusOnes must not be negative")
 	}
+	if req.PlusOnesChildren != nil {
+		effectivePlusOnes := a.PlusOnes
+		if req.PlusOnes != nil {
+			effectivePlusOnes = *req.PlusOnes
+		}
+		if *req.PlusOnesChildren < 0 || *req.PlusOnesChildren > effectivePlusOnes {
+			return nil, fmt.Errorf("plusOnesChildren must be between 0 and plusOnes")
+		}
+	}
 
 	// Prevent waitlisted guests from changing directly to attending.
 	if a.RSVPStatus == "waitlisted" && req.RSVPStatus != nil && *req.RSVPStatus == "attending" {
@@ -739,8 +754,12 @@ func (s *Service) UpdateByToken(ctx context.Context, rsvpToken string, req Updat
 	if req.PlusOnes != nil {
 		a.PlusOnes = *req.PlusOnes
 	}
+	if req.PlusOnesChildren != nil {
+		a.PlusOnesChildren = *req.PlusOnesChildren
+	}
 	if a.RSVPStatus == "declined" {
 		a.PlusOnes = 0
+		a.PlusOnesChildren = 0
 	}
 
 	if err := s.store.Update(ctx, a); err != nil {
@@ -887,6 +906,15 @@ func (s *Service) UpdateAttendeeAsOrganizer(ctx context.Context, eventID, attend
 	if req.PlusOnes != nil && *req.PlusOnes < 0 {
 		return nil, fmt.Errorf("plusOnes must not be negative")
 	}
+	if req.PlusOnesChildren != nil {
+		effectivePlusOnes := a.PlusOnes
+		if req.PlusOnes != nil {
+			effectivePlusOnes = *req.PlusOnes
+		}
+		if *req.PlusOnesChildren < 0 || *req.PlusOnesChildren > effectivePlusOnes {
+			return nil, fmt.Errorf("plusOnesChildren must be between 0 and plusOnes")
+		}
+	}
 
 	oldStatus := a.RSVPStatus
 
@@ -955,8 +983,12 @@ func (s *Service) UpdateAttendeeAsOrganizer(ctx context.Context, eventID, attend
 	if req.PlusOnes != nil {
 		a.PlusOnes = *req.PlusOnes
 	}
+	if req.PlusOnesChildren != nil {
+		a.PlusOnesChildren = *req.PlusOnesChildren
+	}
 	if a.RSVPStatus == "declined" {
 		a.PlusOnes = 0
+		a.PlusOnesChildren = 0
 	}
 
 	if err := s.store.Update(ctx, a); err != nil {

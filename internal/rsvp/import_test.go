@@ -135,6 +135,37 @@ func TestParseCSVPreview_NegativePlusOnes(t *testing.T) {
 	assert.Contains(t, preview.Rows[0].Error, "plus ones must not be negative")
 }
 
+func TestParseCSVPreview_ChildrenExceedsPlusOnes(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	csv := "Name,Plus Ones,Children\nAlice,1,2\n"
+	preview, err := svc.ParseCSVPreview(ctx, ev.ID, org.ID, strings.NewReader(csv))
+	require.NoError(t, err)
+	assert.Equal(t, 1, preview.ErrorRows)
+	assert.Contains(t, preview.Rows[0].Error, "children under 12 must be between 0 and plus ones")
+}
+
+func TestParseCSVPreview_ChildrenValid(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	csv := "Name,Plus Ones,Children\nAlice,3,1\n"
+	preview, err := svc.ParseCSVPreview(ctx, ev.ID, org.ID, strings.NewReader(csv))
+	require.NoError(t, err)
+	assert.Equal(t, 1, preview.ValidRows)
+	assert.Equal(t, 3, preview.Rows[0].PlusOnes)
+	assert.Equal(t, 1, preview.Rows[0].PlusOnesChildren)
+}
+
 func TestParseCSVPreview_DuplicateDetection(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	ctx := context.Background()

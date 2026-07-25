@@ -59,14 +59,15 @@ type retentionWarningData struct {
 // organizerRSVPNotificationData holds the template data for notifying an
 // organizer about a new or updated RSVP.
 type organizerRSVPNotificationData struct {
-	EventTitle   string
-	GuestName    string
-	RSVPStatus   string
-	GuestEmail   string
-	GuestPhone   string
-	PlusOnes     int
-	DashboardURL string
-	Colors       EmailColors
+	EventTitle       string
+	GuestName        string
+	RSVPStatus       string
+	GuestEmail       string
+	GuestPhone       string
+	PlusOnes         int
+	PlusOnesChildren int
+	DashboardURL     string
+	Colors           EmailColors
 }
 
 // displayStatus returns a human-friendly label for an RSVP status value.
@@ -169,17 +170,18 @@ func RenderRetentionWarning(eventTitle, expiresAt, dashboardURL string) (html, p
 
 // RenderOrganizerRSVPNotification renders the organizer RSVP notification email
 // and returns the HTML body and a plain text fallback.
-func RenderOrganizerRSVPNotification(eventTitle, guestName, rsvpStatus, guestEmail, guestPhone string, plusOnes int, dashboardURL string) (html, plain string, err error) {
+func RenderOrganizerRSVPNotification(eventTitle, guestName, rsvpStatus, guestEmail, guestPhone string, plusOnes, plusOnesChildren int, dashboardURL string) (html, plain string, err error) {
 	label := displayStatus(rsvpStatus)
 	data := organizerRSVPNotificationData{
-		EventTitle:   eventTitle,
-		GuestName:    guestName,
-		RSVPStatus:   label,
-		GuestEmail:   guestEmail,
-		GuestPhone:   guestPhone,
-		PlusOnes:     plusOnes,
-		DashboardURL: dashboardURL,
-		Colors:       DefaultEmailColors(),
+		EventTitle:       eventTitle,
+		GuestName:        guestName,
+		RSVPStatus:       label,
+		GuestEmail:       guestEmail,
+		GuestPhone:       guestPhone,
+		PlusOnes:         plusOnes,
+		PlusOnesChildren: plusOnesChildren,
+		DashboardURL:     dashboardURL,
+		Colors:           DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
@@ -199,7 +201,11 @@ func RenderOrganizerRSVPNotification(eventTitle, guestName, rsvpStatus, guestEma
 		sb.WriteString(fmt.Sprintf("Phone: %s\n", guestPhone))
 	}
 	if plusOnes > 0 {
-		sb.WriteString(fmt.Sprintf("Additional Guests: +%d\n", plusOnes))
+		if plusOnesChildren > 0 {
+			sb.WriteString(fmt.Sprintf("Additional Guests: +%d (%d child(ren) under 12)\n", plusOnes, plusOnesChildren))
+		} else {
+			sb.WriteString(fmt.Sprintf("Additional Guests: +%d\n", plusOnes))
+		}
 	}
 	sb.WriteString(fmt.Sprintf("\nView your event dashboard:\n%s\n", dashboardURL))
 

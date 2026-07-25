@@ -41,6 +41,7 @@
 	let editStatus = $state<'attending' | 'maybe' | 'declined'>('attending');
 	let editDietary = $state('');
 	let editPlusOnes = $state(0);
+	let editPlusOnesChildren = $state(0);
 	let saving = $state(false);
 	let saveError = $state('');
 	let saveSuccess = $state(false);
@@ -108,6 +109,7 @@
 		editStatus = (attendee.rsvpStatus === 'pending' || attendee.rsvpStatus === 'waitlisted') ? 'attending' : attendee.rsvpStatus;
 		editDietary = attendee.dietaryNotes || '';
 		editPlusOnes = attendee.plusOnes;
+		editPlusOnesChildren = attendee.plusOnesChildren;
 	}
 
 	async function handleSave(e: SubmitEvent) {
@@ -126,7 +128,8 @@
 				name: editName.trim(),
 				rsvpStatus: editStatus,
 				dietaryNotes: editDietary.trim() || undefined,
-				plusOnes: editPlusOnes
+				plusOnes: editPlusOnes,
+				plusOnesChildren: editPlusOnesChildren
 			};
 			if (Object.keys(editAnswers).length > 0) {
 				payload.answers = editAnswers;
@@ -463,6 +466,29 @@
 							</div>
 						</div>
 
+						{#if editPlusOnes > 0}
+							<div>
+								<label for="edit-plusones-children" class="block text-sm font-medium text-neutral-700 mb-1.5">
+									{$_('guestManage.childrenLabel')}
+								</label>
+								<div class="flex items-center gap-3">
+									<input
+										id="edit-plusones-children"
+										type="number"
+										min="0"
+										max={editPlusOnes}
+										bind:value={editPlusOnesChildren}
+										onchange={() => {
+											if (editPlusOnesChildren > editPlusOnes) editPlusOnesChildren = editPlusOnes;
+											if (editPlusOnesChildren < 0) editPlusOnesChildren = 0;
+										}}
+										class="w-20 rounded-md border border-neutral-300 px-3 py-2.5 text-neutral-900 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+									/>
+									<span class="text-sm text-neutral-500">{$_('guestManage.childrenHelper')}</span>
+								</div>
+							</div>
+						{/if}
+
 						<!-- Custom Questions -->
 						{#if eventQuestions.length > 0}
 							<QuestionRenderer questions={eventQuestions} bind:answers={editAnswers} />
@@ -532,6 +558,12 @@
 							<span class="text-sm text-neutral-500">{$_('guestManage.additionalGuestsLabel')}</span>
 							<span class="text-sm font-medium text-neutral-900">{attendee.plusOnes}</span>
 						</div>
+						{#if attendee.plusOnesChildren > 0}
+							<div class="flex items-center justify-between">
+								<span class="text-sm text-neutral-500">{$_('guestManage.childrenLabel')}</span>
+								<span class="text-sm font-medium text-neutral-900">{attendee.plusOnesChildren}</span>
+							</div>
+						{/if}
 					</div>
 				{/if}
 			</div>

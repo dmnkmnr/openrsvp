@@ -343,6 +343,7 @@
 									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.phoneHeader')}</th>
 									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.dietaryHeader')}</th>
 									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.plusOnesHeader')}</th>
+									<th class="px-4 py-2.5 text-left text-xs font-medium text-neutral-500 uppercase tracking-wider">{$_('events.import.childrenHeader')}</th>
 								</tr>
 							</thead>
 							<tbody class="divide-y divide-neutral-100">
@@ -362,10 +363,11 @@
 										<td class="px-4 py-2.5 text-neutral-600">{row.phone || '—'}</td>
 										<td class="px-4 py-2.5 text-neutral-600">{row.dietaryNotes || '—'}</td>
 										<td class="px-4 py-2.5 text-neutral-600">{row.plusOnes || 0}</td>
+										<td class="px-4 py-2.5 text-neutral-600">{row.plusOnesChildren || 0}</td>
 									</tr>
 									{#if row.error}
 										<tr class="bg-error-light">
-											<td colspan="6" class="px-4 py-1.5 text-xs text-error italic">
+											<td colspan="7" class="px-4 py-1.5 text-xs text-error italic">
 												{row.error}
 											</td>
 										</tr>

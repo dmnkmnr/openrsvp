@@ -31,7 +31,7 @@
 	let event: Event | null = $state(null);
 	let attendees: Attendee[] = $state([]);
 	let reminders: Reminder[] = $state([]);
-	let stats: RSVPStats = $state({ attending: 0, attendingHeadcount: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 });
+	let stats: RSVPStats = $state({ attending: 0, attendingHeadcount: 0, attendingChildren: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 });
 	let activeFilter: string = $state('all');
 	let creatingReminder = $state(false);
 	let reminderRemindAt = $state(toISOLocal(new Date(Date.now() + 60 * 60 * 1000)));
@@ -74,7 +74,7 @@
 					api.get<{ data: Event }>(`/events/${eventId}`),
 					api.get<{ data: Attendee[] }>(`/rsvp/event/${eventId}`).catch(() => ({ data: [] })),
 					api.get<{ data: RSVPStats }>(`/rsvp/event/${eventId}/stats`).catch(() => ({
-						data: { attending: 0, attendingHeadcount: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 }
+						data: { attending: 0, attendingHeadcount: 0, attendingChildren: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 }
 					})),
 					api.get<{ data: Reminder[] }>(`/reminders/event/${eventId}`).catch(() => ({ data: [] })),
 					api.get<{ data: CoHost[] }>(`/events/${eventId}/cohosts`).catch(() => ({ data: [] })),
@@ -261,7 +261,7 @@
 
 	// Editing attendees
 	let editingAttendeeId: string | null = $state(null);
-	let editAttendee = $state({ name: '', email: '', phone: '', rsvpStatus: '', dietaryNotes: '', plusOnes: 0 });
+	let editAttendee = $state({ name: '', email: '', phone: '', rsvpStatus: '', dietaryNotes: '', plusOnes: 0, plusOnesChildren: 0 });
 	let savingAttendee = $state(false);
 
 	function startEditAttendee(attendee: Attendee) {
@@ -272,7 +272,8 @@
 			phone: attendee.phone || '',
 			rsvpStatus: attendee.rsvpStatus,
 			dietaryNotes: attendee.dietaryNotes,
-			plusOnes: attendee.plusOnes
+			plusOnes: attendee.plusOnes,
+			plusOnesChildren: attendee.plusOnesChildren
 		};
 	}
 
@@ -290,7 +291,8 @@
 				phone: editAttendee.phone || undefined,
 				rsvpStatus: editAttendee.rsvpStatus,
 				dietaryNotes: editAttendee.dietaryNotes,
-				plusOnes: editAttendee.plusOnes
+				plusOnes: editAttendee.plusOnes,
+				plusOnesChildren: editAttendee.plusOnesChildren
 			});
 			attendees = attendees.map((a) => (a.id === editingAttendeeId ? result.data : a));
 			editingAttendeeId = null;
@@ -562,6 +564,9 @@
 					{/if}
 				</div>
 				<p class="text-xs font-medium text-success mt-1">{$_('events.detail.attending')}</p>
+				{#if stats.attendingChildren > 0}
+					<p class="text-xs text-success/70 mt-0.5">{stats.attendingChildren} {$_('events.detail.childrenSuffix')}</p>
+				{/if}
 			</div>
 			<div class="rounded-lg border border-neutral-200 p-4 bg-warning-light">
 				<div class="flex items-baseline gap-2">
@@ -834,6 +839,23 @@
 										<label for="edit-plusones" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.plusOnesLabel')}</label>
 										<input id="edit-plusones" type="number" min="0" max="10" bind:value={editAttendee.plusOnes} class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary" />
 									</div>
+									{#if editAttendee.plusOnes > 0}
+										<div>
+											<label for="edit-plusones-children" class="block text-xs font-medium text-neutral-700 mb-1">{$_('events.detail.childrenLabel')}</label>
+											<input
+												id="edit-plusones-children"
+												type="number"
+												min="0"
+												max={editAttendee.plusOnes}
+												bind:value={editAttendee.plusOnesChildren}
+												onchange={() => {
+													if (editAttendee.plusOnesChildren > editAttendee.plusOnes) editAttendee.plusOnesChildren = editAttendee.plusOnes;
+													if (editAttendee.plusOnesChildren < 0) editAttendee.plusOnesChildren = 0;
+												}}
+												class="w-full rounded-lg border border-neutral-300 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary"
+											/>
+										</div>
+									{/if}
 								</div>
 								<div class="flex items-center justify-end gap-2">
 									<Button size="sm" variant="outline" onclick={cancelEditAttendee}>{$_('events.detail.cancel')}</Button>
@@ -853,7 +875,9 @@
 										<span class="text-xs text-neutral-500" title={$_('events.detail.dietaryNotesLabel')}>{attendee.dietaryNotes}</span>
 									{/if}
 									{#if attendee.plusOnes > 0}
-										<span class="text-xs text-neutral-500">+{attendee.plusOnes}</span>
+										<span class="text-xs text-neutral-500">
+											+{attendee.plusOnes}{#if attendee.plusOnesChildren > 0} ({attendee.plusOnesChildren} {$_('events.detail.childrenSuffix')}){/if}
+										</span>
 									{/if}
 									<Badge variant={statusVariant(attendee.rsvpStatus)}>
 										{attendeeStatusLabel(attendee.rsvpStatus)}

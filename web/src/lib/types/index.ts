@@ -84,6 +84,7 @@ export interface Attendee {
 	contactMethod: 'email' | 'sms';
 	dietaryNotes: string;
 	plusOnes: number;
+	plusOnesChildren: number;
 	createdAt: string;
 	updatedAt: string;
 }
@@ -115,6 +116,7 @@ export interface Reminder {
 export interface RSVPStats {
 	attending: number;
 	attendingHeadcount: number;
+	attendingChildren: number;
 	maybe: number;
 	maybeHeadcount: number;
 	declined: number;
@@ -259,6 +261,7 @@ export interface CSVImportRow {
 	phone: string;
 	dietaryNotes: string;
 	plusOnes: number;
+	plusOnesChildren: number;
 	error?: string;
 	duplicate?: boolean;
 }

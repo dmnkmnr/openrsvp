@@ -73,7 +73,7 @@
 			const [eventResult, statsResult] = await Promise.all([
 				api.get<{ data: Event }>(`/events/${eventId}`),
 				api.get<{ data: RSVPStats }>(`/rsvp/event/${eventId}/stats`).catch(() => ({
-					data: { attending: 0, attendingHeadcount: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 }
+					data: { attending: 0, attendingHeadcount: 0, attendingChildren: 0, maybe: 0, maybeHeadcount: 0, declined: 0, pending: 0, waitlisted: 0, total: 0, totalHeadcount: 0 }
 				}))
 			]);
 			const e = eventResult.data;

@@ -11,7 +11,7 @@ import (
 
 // csvTemplateContent is the CSV template provided to organizers for guest
 // list imports. It includes all supported column headers and a sample row.
-const csvTemplateContent = "Name,Email,Phone,Dietary Notes,Plus Ones\nJane Doe,jane@example.com,+14155551234,Vegetarian,1\n"
+const csvTemplateContent = "Name,Email,Phone,Dietary Notes,Plus Ones,Children Under 12\nJane Doe,jane@example.com,+14155551234,Vegetarian,1,0\n"
 
 // handleImportTemplate returns a downloadable CSV template file that
 // organizers can fill in with their guest list data.

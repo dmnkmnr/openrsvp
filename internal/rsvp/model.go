@@ -4,37 +4,40 @@ import "time"
 
 // Attendee represents a person who has RSVPed to an event.
 type Attendee struct {
-	ID            string    `json:"id"`
-	EventID       string    `json:"eventId"`
-	Name          string    `json:"name"`
-	Email         *string   `json:"email,omitempty"`
-	Phone         *string   `json:"phone,omitempty"`
-	RSVPStatus    string    `json:"rsvpStatus"`
-	RSVPToken     string    `json:"rsvpToken"`
-	ContactMethod string    `json:"contactMethod"`
-	DietaryNotes  string    `json:"dietaryNotes"`
-	PlusOnes      int       `json:"plusOnes"`
-	ImportSource  *string   `json:"importSource,omitempty"`
-	CreatedAt     time.Time `json:"createdAt"`
-	UpdatedAt     time.Time `json:"updatedAt"`
+	ID               string    `json:"id"`
+	EventID          string    `json:"eventId"`
+	Name             string    `json:"name"`
+	Email            *string   `json:"email,omitempty"`
+	Phone            *string   `json:"phone,omitempty"`
+	RSVPStatus       string    `json:"rsvpStatus"`
+	RSVPToken        string    `json:"rsvpToken"`
+	ContactMethod    string    `json:"contactMethod"`
+	DietaryNotes     string    `json:"dietaryNotes"`
+	PlusOnes         int       `json:"plusOnes"`
+	PlusOnesChildren int       `json:"plusOnesChildren"`
+	ImportSource     *string   `json:"importSource,omitempty"`
+	CreatedAt        time.Time `json:"createdAt"`
+	UpdatedAt        time.Time `json:"updatedAt"`
 }
 
 // RSVPRequest is the request body for submitting a new RSVP.
 type RSVPRequest struct {
-	Name          string            `json:"name"`
-	Email         *string           `json:"email,omitempty"`
-	Phone         *string           `json:"phone,omitempty"`
-	RSVPStatus    string            `json:"rsvpStatus"`
-	ContactMethod string            `json:"contactMethod"`
-	DietaryNotes  string            `json:"dietaryNotes"`
-	PlusOnes      int               `json:"plusOnes"`
-	Answers       map[string]string `json:"answers,omitempty"` // questionID -> answer
+	Name             string            `json:"name"`
+	Email            *string           `json:"email,omitempty"`
+	Phone            *string           `json:"phone,omitempty"`
+	RSVPStatus       string            `json:"rsvpStatus"`
+	ContactMethod    string            `json:"contactMethod"`
+	DietaryNotes     string            `json:"dietaryNotes"`
+	PlusOnes         int               `json:"plusOnes"`
+	PlusOnesChildren int               `json:"plusOnesChildren"`
+	Answers          map[string]string `json:"answers,omitempty"` // questionID -> answer
 }
 
 // RSVPStats holds aggregate counts of RSVP responses for an event.
 type RSVPStats struct {
 	Attending          int `json:"attending"`
 	AttendingHeadcount int `json:"attendingHeadcount"`
+	AttendingChildren  int `json:"attendingChildren"`
 	Maybe              int `json:"maybe"`
 	MaybeHeadcount     int `json:"maybeHeadcount"`
 	Declined           int `json:"declined"`
@@ -46,22 +49,24 @@ type RSVPStats struct {
 
 // UpdateRSVPRequest is the request body for updating an existing RSVP.
 type UpdateRSVPRequest struct {
-	Name         *string           `json:"name,omitempty"`
-	RSVPStatus   *string           `json:"rsvpStatus,omitempty"`
-	DietaryNotes *string           `json:"dietaryNotes,omitempty"`
-	PlusOnes     *int              `json:"plusOnes,omitempty"`
-	Answers      map[string]string `json:"answers,omitempty"` // questionID -> answer
+	Name             *string           `json:"name,omitempty"`
+	RSVPStatus       *string           `json:"rsvpStatus,omitempty"`
+	DietaryNotes     *string           `json:"dietaryNotes,omitempty"`
+	PlusOnes         *int              `json:"plusOnes,omitempty"`
+	PlusOnesChildren *int              `json:"plusOnesChildren,omitempty"`
+	Answers          map[string]string `json:"answers,omitempty"` // questionID -> answer
 }
 
 // OrganizerUpdateAttendeeRequest is the request body for an organizer editing
 // any attendee's RSVP, including contact fields that attendees cannot change.
 type OrganizerUpdateAttendeeRequest struct {
-	Name         *string `json:"name,omitempty"`
-	Email        *string `json:"email,omitempty"`
-	Phone        *string `json:"phone,omitempty"`
-	RSVPStatus   *string `json:"rsvpStatus,omitempty"`
-	DietaryNotes *string `json:"dietaryNotes,omitempty"`
-	PlusOnes     *int    `json:"plusOnes,omitempty"`
+	Name             *string `json:"name,omitempty"`
+	Email            *string `json:"email,omitempty"`
+	Phone            *string `json:"phone,omitempty"`
+	RSVPStatus       *string `json:"rsvpStatus,omitempty"`
+	DietaryNotes     *string `json:"dietaryNotes,omitempty"`
+	PlusOnes         *int    `json:"plusOnes,omitempty"`
+	PlusOnesChildren *int    `json:"plusOnesChildren,omitempty"`
 }
 
 // LookupRSVPRequest is the request body for looking up an RSVP by email.

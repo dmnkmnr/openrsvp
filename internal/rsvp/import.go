@@ -17,22 +17,24 @@ const maxImportRows = 500
 
 // columnAliases maps canonical column names to their accepted aliases.
 var columnAliases = map[string][]string{
-	"name":          {"name", "full name", "full_name", "guest name", "guest_name", "attendee"},
-	"email":         {"email", "email address", "email_address", "e-mail", "mail"},
-	"phone":         {"phone", "phone number", "phone_number", "telephone", "mobile", "cell"},
-	"dietary_notes": {"dietary notes", "dietary_notes", "dietary", "diet", "food", "allergies", "restrictions"},
-	"plus_ones":     {"plus ones", "plus_ones", "plusones", "guests", "additional guests", "extra"},
+	"name":               {"name", "full name", "full_name", "guest name", "guest_name", "attendee"},
+	"email":              {"email", "email address", "email_address", "e-mail", "mail"},
+	"phone":              {"phone", "phone number", "phone_number", "telephone", "mobile", "cell"},
+	"dietary_notes":      {"dietary notes", "dietary_notes", "dietary", "diet", "food", "allergies", "restrictions"},
+	"plus_ones":          {"plus ones", "plus_ones", "plusones", "guests", "additional guests", "extra"},
+	"plus_ones_children": {"children", "children under 12", "children_under_12", "kids", "plus_ones_children"},
 }
 
 // CSVImportRow represents a single row from a CSV import file.
 type CSVImportRow struct {
-	Name         string `json:"name"`
-	Email        string `json:"email"`
-	Phone        string `json:"phone"`
-	DietaryNotes string `json:"dietaryNotes"`
-	PlusOnes     int    `json:"plusOnes"`
-	Error        string `json:"error,omitempty"`
-	Duplicate    bool   `json:"duplicate,omitempty"`
+	Name             string `json:"name"`
+	Email            string `json:"email"`
+	Phone            string `json:"phone"`
+	DietaryNotes     string `json:"dietaryNotes"`
+	PlusOnes         int    `json:"plusOnes"`
+	PlusOnesChildren int    `json:"plusOnesChildren"`
+	Error            string `json:"error,omitempty"`
+	Duplicate        bool   `json:"duplicate,omitempty"`
 }
 
 // CSVPreviewResponse contains the parsed and validated CSV data for review
@@ -210,6 +212,14 @@ func (s *Service) ParseCSVPreview(ctx context.Context, eventID, organizerID stri
 			continue
 		}
 
+		// Validate plus_ones_children is between 0 and plus_ones.
+		if row.PlusOnesChildren < 0 || row.PlusOnesChildren > row.PlusOnes {
+			row.Error = "children under 12 must be between 0 and plus ones"
+			resp.ErrorRows++
+			resp.Rows = append(resp.Rows, row)
+			continue
+		}
+
 		// Check for duplicates by email.
 		if row.Email != "" && existingEmails[strings.ToLower(row.Email)] {
 			row.Duplicate = true
@@ -296,14 +306,15 @@ func (s *Service) ExecuteCSVImport(ctx context.Context, eventID, organizerID str
 		}
 
 		attendee := &Attendee{
-			ID:            uuid.Must(uuid.NewV7()).String(),
-			EventID:       eventID,
-			Name:          row.Name,
-			RSVPStatus:    "pending",
-			RSVPToken:     rsvpToken,
-			ContactMethod: contactMethod,
-			DietaryNotes:  row.DietaryNotes,
-			PlusOnes:      row.PlusOnes,
+			ID:               uuid.Must(uuid.NewV7()).String(),
+			EventID:          eventID,
+			Name:             row.Name,
+			RSVPStatus:       "pending",
+			RSVPToken:        rsvpToken,
+			ContactMethod:    contactMethod,
+			DietaryNotes:     row.DietaryNotes,
+			PlusOnes:         row.PlusOnes,
+			PlusOnesChildren: row.PlusOnesChildren,
 		}
 
 		importSrc := "csv"
@@ -389,6 +400,17 @@ func parseCSVRow(record []string, colMap map[string]int) CSVImportRow {
 				row.Error = "invalid plus ones value: must be a number"
 			} else {
 				row.PlusOnes = n
+			}
+		}
+	}
+	if idx, ok := colMap["plus_ones_children"]; ok && idx < len(record) {
+		val := strings.TrimSpace(record[idx])
+		if val != "" {
+			n, err := strconv.Atoi(val)
+			if err != nil {
+				row.Error = "invalid children under 12 value: must be a number"
+			} else {
+				row.PlusOnesChildren = n
 			}
 		}
 	}
