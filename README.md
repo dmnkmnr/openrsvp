@@ -29,7 +29,7 @@ A self-hosted, privacy-first alternative to Evite. Create beautiful event invita
 ### Docker One-Liner
 
 ```bash
-docker run -d -p 8080:8080 -v openrsvp-data:/data -e BASE_URL=http://localhost:8080 ghcr.io/yannkr/openrsvp:latest
+docker run -d -p 8080:8080 -v openrsvp-data:/data -e BASE_URL=http://localhost:8080 ghcr.io/dmnkmnr/openrsvp:latest
 ```
 
 Visit http://localhost:8080 and you're good to go! 🎊
@@ -37,7 +37,7 @@ Visit http://localhost:8080 and you're good to go! 🎊
 ### Docker Compose
 
 ```bash
-git clone https://github.com/yannkr/openrsvp.git
+git clone https://github.com/dmnkmnr/openrsvp.git
 cd openrsvp
 cp .env.example .env
 docker compose up -d
@@ -338,7 +338,7 @@ The fastest way to get a production instance running:
 # docker-compose.yml
 services:
   openrsvp:
-    image: ghcr.io/yannkr/openrsvp:latest
+    image: ghcr.io/dmnkmnr/openrsvp:latest
     restart: unless-stopped
     expose:
       - 8080
