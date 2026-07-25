@@ -189,6 +189,11 @@
 	}
 </script>
 
+<!-- The invite card is a fixed design the organizer picked (own colors/font),
+	 independent of the viewer's site theme -- pin the neutral-* tokens back to
+	 their light-mode values here so [data-theme="dark"] (set from the viewer's
+	 OS preference, even for guests who never touched a theme toggle) can't
+	 flip this card's text to near-white while its background stays light. -->
 <div
 	class="invite-card {templateConfig.wrapperClass}"
 	style="
@@ -198,6 +203,13 @@
 		--border-color: {templateConfig.borderColor};
 		--accent-color: {templateConfig.accentColor};
 		--card-font: {font || 'inherit'};
+		--color-neutral-100: #F5F5F4;
+		--color-neutral-200: #E7E5E4;
+		--color-neutral-300: #D6D3D1;
+		--color-neutral-400: #A8A29E;
+		--color-neutral-500: #78716C;
+		--color-neutral-700: #44403C;
+		--color-neutral-900: #1C1917;
 	"
 >
 	<!-- Background image with readability overlay -->

@@ -562,7 +562,7 @@ func TestHandleExportCSV_Success(t *testing.T) {
 	assert.Contains(t, rr.Header().Get("Content-Type"), "text/csv")
 	assert.Contains(t, rr.Header().Get("Content-Disposition"), ".csv")
 	body := rr.Body.String()
-	assert.Contains(t, body, "Name,Email,Phone,RSVP Status,Dietary Notes,Plus Ones,RSVP Date")
+	assert.Contains(t, body, "Name,Email,Phone,RSVP Status,Dietary Notes,Plus Ones,Children Under 12,RSVP Date")
 	assert.Contains(t, body, "Alice")
 	assert.Contains(t, body, "Bob")
 }
@@ -618,7 +618,7 @@ func TestExportCSV_EmptyGuestList(t *testing.T) {
 	assert.Contains(t, rr.Header().Get("Content-Type"), "text/csv")
 	body := rr.Body.String()
 	// Should contain the BOM + header row and nothing else.
-	assert.Contains(t, body, "Name,Email,Phone,RSVP Status,Dietary Notes,Plus Ones,RSVP Date")
+	assert.Contains(t, body, "Name,Email,Phone,RSVP Status,Dietary Notes,Plus Ones,Children Under 12,RSVP Date")
 	// Count the number of newlines: header row only means exactly 1 data line.
 	lines := strings.Split(strings.TrimSpace(body), "\n")
 	assert.Equal(t, 1, len(lines), "empty guest list should produce header row only")
