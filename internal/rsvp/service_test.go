@@ -421,6 +421,52 @@ func TestSubmitRSVPContactRequirementBoth(t *testing.T) {
 	assert.Contains(t, err.Error(), "email is required")
 }
 
+func TestSubmitRSVPContactMethodBoth(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	svc.SetSMSEnabled(true)
+	eventSvc.SetSMSEnabled(true)
+	ctx := context.Background()
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEventWithContactReq(t, eventSvc, org.ID, "email_or_phone")
+
+	// Both email and phone provided, contactMethod "both" -- should succeed
+	// and persist "both".
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), Phone: strPtr("+15551234567"),
+		RSVPStatus: "attending", ContactMethod: "both",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "both", attendee.ContactMethod)
+
+	// "both" is rejected when SMS is instance-wide disabled.
+	svc2, eventSvc2, authStore2 := setupRSVP(t)
+	ctx2 := context.Background()
+	org2, err := authStore2.CreateOrganizer(ctx2, "org2@example.com")
+	require.NoError(t, err)
+	ev2 := createPublishedEventWithContactReq(t, eventSvc2, org2.ID, "email_or_phone")
+	_, err = svc2.SubmitRSVP(ctx2, ev2.ShareToken, RSVPRequest{
+		Name: "Bob", Email: strPtr("bob@example.com"), Phone: strPtr("+15551234567"),
+		RSVPStatus: "attending", ContactMethod: "both",
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "sms contact method is not available")
+}
+
+func TestSubmitRSVPContactMethodInvalid(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEventWithContactReq(t, eventSvc, org.ID, "email_or_phone")
+
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending", ContactMethod: "carrier-pigeon",
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid contactMethod")
+}
+
 func TestSubmitRSVPContactRequirementEmailOrPhone(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	svc.SetSMSEnabled(true)

@@ -103,16 +103,6 @@ func (a *commentRSVPStoreAdapter) FindByToken(ctx context.Context, token string)
 	}, nil
 }
 
-// prefersSMS reports whether an attendee-facing notification should go out
-// via SMS instead of email: only when the attendee explicitly chose "sms" as
-// their contact method AND a phone number is actually on file. Otherwise the
-// caller falls back to email-if-present, then SMS-if-present, so a stale or
-// unreachable preference (e.g. an organizer removed the attendee's email
-// after they'd chosen it) never results in a silently dropped notification.
-func prefersSMS(contactMethod string, hasPhone bool) bool {
-	return contactMethod == "sms" && hasPhone
-}
-
 // New creates a new Server instance.
 func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	// Wire up auth layer.
@@ -385,7 +375,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				"rsvpLink":   modifyURL,
 			}
 			subjectTpl, bodyTpl := resolveTemplateOrDefault(ctx, eventID, messagetemplate.TypeRSVPConfirmation, ev.Language)
-			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
+			wantEmail, wantSMS := rsvp.ResolveChannels(attendee.ContactMethod, hasEmail, hasPhone)
+			if wantEmail {
 				subject, htmlBody, plainBody, err := templates.RenderNotification(ev.Language, subjectTpl, bodyTpl, vars, modifyURL, templates.CTALabel(messagetemplate.TypeRSVPConfirmation, ev.Language))
 				if err != nil {
 					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("rsvp notify: failed to render attendee template")
@@ -425,7 +416,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("rsvp notify: failed to send attendee email")
 					}
 				}
-			} else if hasPhone {
+			}
+			if wantSMS {
 				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -510,14 +502,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			// channel actually has data.
 			hasEmail := attendee.Email != nil && *attendee.Email != ""
 			hasPhone := attendee.Phone != nil && *attendee.Phone != ""
-			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
+			wantEmail, wantSMS := rsvp.ResolveChannels(attendee.ContactMethod, hasEmail, hasPhone)
+			if wantEmail {
 				subject, htmlBody, plainBody, err := templates.RenderNotification(ev.Language, subjectTpl, bodyTpl, vars, inviteURL, templates.CTALabel(messagetemplate.TypeImportInvite, ev.Language))
 				if err != nil {
 					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("import invite: failed to render template")
-					return
-				}
-
-				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
+				} else if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
 					To:      *attendee.Email,
 					Subject: subject,
 					Body:    htmlBody,
@@ -526,10 +516,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				}); err != nil {
 					logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("import invite: failed to send email")
 				}
-				return
 			}
-
-			if hasPhone {
+			if wantSMS {
 				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -610,14 +598,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			// to whichever channel actually has data.
 			hasEmail := attendee.Email != nil && *attendee.Email != ""
 			hasPhone := attendee.Phone != nil && *attendee.Phone != ""
-			if !prefersSMS(attendee.ContactMethod, hasPhone) && hasEmail {
+			wantEmail, wantSMS := rsvp.ResolveChannels(attendee.ContactMethod, hasEmail, hasPhone)
+			if wantEmail {
 				subject, htmlBody, plainBody, err := templates.RenderNotification(ev.Language, subjectTpl, bodyTpl, vars, modifyURL, templates.CTALabel(messagetemplate.TypeWaitlistPromotion, ev.Language))
 				if err != nil {
 					logger.Error().Err(err).Str("attendee_id", attendee.ID).Msg("waitlist promote: failed to render template")
-					return
-				}
-
-				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
+				} else if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
 					To:      *attendee.Email,
 					Subject: subject,
 					Body:    htmlBody,
@@ -626,10 +612,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				}); err != nil {
 					logger.Error().Err(err).Str("attendee_email", *attendee.Email).Msg("waitlist promote: failed to send email")
 				}
-				return
 			}
-
-			if hasPhone {
+			if wantSMS {
 				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
@@ -738,35 +722,31 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				// back to whichever channel actually has data.
 				hasEmail := a.Email != nil && *a.Email != ""
 				hasPhone := a.Phone != nil && *a.Phone != ""
-				if !prefersSMS(a.ContactMethod, hasPhone) && hasEmail {
+				wantEmail, wantSMS := rsvp.ResolveChannels(a.ContactMethod, hasEmail, hasPhone)
+				if wantEmail {
 					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Title, eventDate, location, body, inviteURL)
 					if err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
-						continue
-					}
-
-					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
+					} else if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
 						To:      *a.Email,
 						Subject: subject,
 						Body:    htmlBody,
 						Plain:   plainBody,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("message notify: failed to send email")
-						continue
+					} else {
+						sent++
 					}
-					sent++
-					continue
 				}
-
-				if hasPhone {
+				if wantSMS {
 					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
 						Body: subject + ": " + body,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to send SMS")
-						continue
+					} else {
+						sent++
 					}
-					sent++
 				}
 			}
 
@@ -945,14 +925,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				// back to whichever channel actually has data.
 				hasEmail := a.Email != nil && *a.Email != ""
 				hasPhone := a.Phone != nil && *a.Phone != ""
-				if !prefersSMS(a.ContactMethod, hasPhone) && hasEmail {
+				wantEmail, wantSMS := rsvp.ResolveChannels(a.ContactMethod, hasEmail, hasPhone)
+				if wantEmail {
 					subject, htmlBody, plainBody, err := templates.RenderNotification(e.Language, subjectTpl, bodyTpl, vars, inviteURL, templates.CTALabel(messagetemplate.TypeCancellation, e.Language))
 					if err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("cancel notify: failed to render template")
-						continue
-					}
-
-					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelEmail, &notification.Message{
+					} else if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelEmail, &notification.Message{
 						To:      *a.Email,
 						Subject: subject,
 						Body:    htmlBody,
@@ -960,13 +938,11 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						Lang:    e.Language,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("cancel notify: failed to send email")
-						continue
+					} else {
+						sent++
 					}
-					sent++
-					continue
 				}
-
-				if hasPhone {
+				if wantSMS {
 					smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), 300)
 					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
@@ -974,9 +950,9 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						Lang: e.Language,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("cancel notify: failed to send SMS")
-						continue
+					} else {
+						sent++
 					}
-					sent++
 				}
 			}
 

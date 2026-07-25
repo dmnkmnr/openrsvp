@@ -2,6 +2,7 @@ package scheduler
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"time"
 
@@ -11,6 +12,7 @@ import (
 	"github.com/yannkr/openrsvp/internal/database"
 	"github.com/yannkr/openrsvp/internal/notification"
 	"github.com/yannkr/openrsvp/internal/notification/templates"
+	"github.com/yannkr/openrsvp/internal/rsvp"
 )
 
 // TemplateResolver resolves the effective subject/body for a guest
@@ -292,9 +294,11 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 
 	hasEmail := attendee.email != nil && *attendee.email != ""
 	hasPhone := attendee.phone != nil && *attendee.phone != ""
-	preferSMS := attendee.contactMethod == "sms" && hasPhone
+	wantEmail, wantSMS := rsvp.ResolveChannels(attendee.contactMethod, hasEmail, hasPhone)
 
-	if !preferSMS && hasEmail {
+	var errs []error
+
+	if wantEmail {
 		subject, htmlBody, plainBody, err := templates.RenderNotification(lang, subjectTpl, bodyTpl, vars, rsvpLink, templates.CTALabel(reminderMessageType, lang))
 		if err != nil {
 			j.logger.Error().Err(err).Str("reminder_id", reminder.ID).Msg("failed to render reminder template, falling back to plain text")
@@ -336,25 +340,30 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 			}
 		}
 
-		return j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelEmail, msg)
+		if err := j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelEmail, msg); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	// SMS: either explicitly preferred, or the only channel with data.
-	if hasPhone {
+	if wantSMS {
 		plain := templates.Interpolate(bodyTpl, vars)
 		msg := &notification.Message{
 			To:   *attendee.phone,
 			Body: templates.SMSFrom(plain, 300),
 			Lang: lang,
 		}
-		return j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelSMS, msg)
+		if err := j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelSMS, msg); err != nil {
+			errs = append(errs, err)
+		}
 	}
 
-	j.logger.Warn().
-		Str("attendee_id", attendee.id).
-		Msg("attendee has no email or phone for notification")
+	if !wantEmail && !wantSMS {
+		j.logger.Warn().
+			Str("attendee_id", attendee.id).
+			Msg("attendee has no email or phone for notification")
+	}
 
-	return nil
+	return errors.Join(errs...)
 }
 
 // reminderMessageType is the message type key used to resolve reminder

@@ -311,8 +311,8 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 	if req.PlusOnes < 0 {
 		return nil, fmt.Errorf("plusOnes must not be negative")
 	}
-	if req.ContactMethod != "" && req.ContactMethod != "email" && req.ContactMethod != "sms" {
-		return nil, fmt.Errorf("invalid contactMethod: must be email or sms")
+	if req.ContactMethod != "" && req.ContactMethod != "email" && req.ContactMethod != "sms" && req.ContactMethod != "both" {
+		return nil, fmt.Errorf("invalid contactMethod: must be email, sms, or both")
 	}
 	// Infer an unset contact method from what was actually provided, rather
 	// than defaulting blindly to "email": a phone-only submission (valid
@@ -334,7 +334,7 @@ func (s *Service) SubmitRSVP(ctx context.Context, shareToken string, req RSVPReq
 			req.ContactMethod = "email"
 		}
 	}
-	if !s.smsEnabled && req.ContactMethod == "sms" {
+	if !s.smsEnabled && (req.ContactMethod == "sms" || req.ContactMethod == "both") {
 		return nil, fmt.Errorf("sms contact method is not available when SMS is disabled")
 	}
 	if req.RSVPStatus == "declined" {

@@ -35,7 +35,8 @@
 	let name = $state('');
 	let email = $state('');
 	let phone = $state('');
-	let contactMethod = $state<'email' | 'sms'>('email');
+	let wantsEmail = $state(true);
+	let wantsSms = $state(true);
 	let rsvpStatus = $state<'attending' | 'maybe' | 'declined'>('attending');
 	let dietaryNotes = $state('');
 	let plusOnes = $state(0);
@@ -223,13 +224,25 @@
 			submitError = $_('guestInvite.emailOrPhoneRequired');
 			return;
 		}
+		if ($smsEnabled && hasEmail && hasPhone && !wantsEmail && !wantsSms) {
+			submitError = $_('guestInvite.contactMethodRequired');
+			return;
+		}
 
 		submitting = true;
 		submitError = '';
 
 		// Only meaningful when both are provided -- otherwise there's no real
 		// choice, so send whichever channel actually has data.
-		const effectiveContactMethod = hasEmail && hasPhone ? contactMethod : (hasEmail ? 'email' : 'sms');
+		const effectiveContactMethod = !hasEmail && hasPhone
+			? 'sms'
+			: hasEmail && !hasPhone
+				? 'email'
+				: wantsEmail && wantsSms
+					? 'both'
+					: wantsSms
+						? 'sms'
+						: 'email';
 
 		try {
 			const payload: Record<string, unknown> = {
@@ -578,11 +591,11 @@
 								</legend>
 								<div class="flex gap-4">
 									<label class="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
-										<input type="radio" name="contactMethod" value="email" bind:group={contactMethod} class="text-primary focus:ring-primary/40" />
+										<input type="checkbox" name="contactMethodEmail" bind:checked={wantsEmail} class="rounded text-primary focus:ring-primary/40" />
 										{$_('guestInvite.contactMethodEmail')}
 									</label>
 									<label class="flex items-center gap-2 cursor-pointer text-sm text-neutral-700">
-										<input type="radio" name="contactMethod" value="sms" bind:group={contactMethod} class="text-primary focus:ring-primary/40" />
+										<input type="checkbox" name="contactMethodSms" bind:checked={wantsSms} class="rounded text-primary focus:ring-primary/40" />
 										{$_('guestInvite.contactMethodSms')}
 									</label>
 								</div>
