@@ -56,6 +56,10 @@
 		{ value: 'pending', label: $_('events.messages.recipient.pending') }
 	]);
 
+	function audienceLabel(group: string): string {
+		return reminderTargetOptions.find(o => o.value === group)?.label ?? group;
+	}
+
 	let filteredAttendees = $derived.by(() => {
 		if (activeFilter === 'all') return attendees;
 		return attendees.filter((a) => a.rsvpStatus === activeFilter);
@@ -709,7 +713,7 @@
 										{formatDateTime(reminder.remindAt)}
 									</p>
 									<p class="text-xs text-neutral-500 mt-0.5">
-										{$_('events.detail.audiencePrefix', { values: { group: reminder.targetGroup } })}
+										{$_('events.detail.audiencePrefix', { values: { group: audienceLabel(reminder.targetGroup) } })}
 									</p>
 									{#if reminder.message}
 										<p class="text-sm text-neutral-700 mt-2 whitespace-pre-wrap">{reminder.message}</p>

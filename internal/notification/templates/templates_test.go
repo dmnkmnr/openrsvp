@@ -2,6 +2,7 @@ package templates
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/require"
@@ -133,4 +134,19 @@ func TestSMSFromTruncates(t *testing.T) {
 func TestSMSFromNoTruncationNeeded(t *testing.T) {
 	short := "Short message"
 	assert.Equal(t, short, SMSFrom(short, 40))
+}
+
+func TestFormatEventDateEnglish(t *testing.T) {
+	d := time.Date(2026, time.June, 5, 15, 4, 0, 0, time.UTC)
+	assert.Equal(t, "June 5, 2026 at 3:04 PM", FormatEventDate(d, "en"))
+}
+
+func TestFormatEventDateGerman(t *testing.T) {
+	d := time.Date(2026, time.June, 5, 15, 4, 0, 0, time.UTC)
+	assert.Equal(t, "5. Juni 2026 um 15:04 Uhr", FormatEventDate(d, "de"))
+}
+
+func TestFormatEventDateUnsupportedLanguageFallsBackToEnglish(t *testing.T) {
+	d := time.Date(2026, time.June, 5, 15, 4, 0, 0, time.UTC)
+	assert.Equal(t, "June 5, 2026 at 3:04 PM", FormatEventDate(d, "fr"))
 }

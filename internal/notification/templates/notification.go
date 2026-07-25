@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"html/template"
 	"strings"
+	"time"
 )
 
 //go:embed defaults/*.json
@@ -142,6 +143,38 @@ func displayStatusLocalized(lang, status string) string {
 		return label
 	}
 	return status
+}
+
+// germanMonths maps time.Month to its German name, used by FormatEventDate.
+// Go's time.Format layouts (e.g. "January 2, 2006") always render English
+// month/weekday names -- the stdlib has no locale support -- so localized
+// date strings need to be built by hand.
+var germanMonths = map[time.Month]string{
+	time.January:   "Januar",
+	time.February:  "Februar",
+	time.March:     "März",
+	time.April:     "April",
+	time.May:       "Mai",
+	time.June:      "Juni",
+	time.July:      "Juli",
+	time.August:    "August",
+	time.September: "September",
+	time.October:   "Oktober",
+	time.November:  "November",
+	time.December:  "Dezember",
+}
+
+// FormatEventDate formats a time for display inside a guest notification, in
+// the given language. Times are expected to already be in the event's
+// display timezone (callers pass ev.EventDate as stored, which the rest of
+// the codebase treats as the display value).
+func FormatEventDate(t time.Time, lang string) string {
+	switch lang {
+	case "de":
+		return fmt.Sprintf("%d. %s %d um %02d:%02d Uhr", t.Day(), germanMonths[t.Month()], t.Year(), t.Hour(), t.Minute())
+	default:
+		return t.Format("January 2, 2006 at 3:04 PM")
+	}
 }
 
 // DisplayStatusLocalized is the exported form of displayStatusLocalized, used

@@ -355,7 +355,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				"eventId":      eventID,
 			})
 
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -481,7 +481,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -578,7 +578,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -705,7 +705,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 
 			inviteURL := cfg.BaseURL + "/i/" + ev.ShareToken
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -900,7 +900,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := e.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.FormatEventDate(e.EventDate, e.Language)
 			location := e.Location
 			if location == "" {
 				location = "TBD"

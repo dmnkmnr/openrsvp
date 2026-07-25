@@ -273,7 +273,7 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		subjectTpl, bodyTpl = def.Subject, def.Body
 	}
 
-	eventDate := ev.eventDate.Format("January 2, 2006 at 3:04 PM")
+	eventDate := templates.FormatEventDate(ev.eventDate, lang)
 	location := ev.location
 	if location == "" {
 		location = "TBD"
