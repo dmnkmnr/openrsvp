@@ -102,6 +102,8 @@
 
 	const fontOptions = $derived([
 		{ value: 'Inter', label: $_('events.invite.fontOptions.inter') },
+		{ value: 'Manrope', label: $_('events.invite.fontOptions.manrope') },
+		{ value: 'Space Grotesk', label: $_('events.invite.fontOptions.spaceGrotesk') },
 		{ value: 'Georgia', label: $_('events.invite.fontOptions.georgia') },
 		{ value: 'Courier New', label: $_('events.invite.fontOptions.courier') },
 		{ value: 'Comic Sans MS', label: $_('events.invite.fontOptions.comicSans') },

@@ -653,6 +653,8 @@
 			},
 			"fontOptions": {
 				"inter": "Inter (Modern)",
+				"manrope": "Manrope (Geometric)",
+				"spaceGrotesk": "Space Grotesk (Display)",
 				"georgia": "Georgia (Serif)",
 				"courier": "Courier New (Mono)",
 				"comicSans": "Comic Sans (Fun)",

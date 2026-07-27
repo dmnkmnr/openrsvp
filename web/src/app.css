@@ -117,6 +117,33 @@
   font-display: swap;
 }
 
+/* Invite-card designer font options — variable fonts, each file covers the
+   full weight range (matches how Google Fonts itself serves them: one file,
+   several @font-face declarations at different font-weight values). */
+@font-face {
+  font-family: 'Inter';
+  src: url('/fonts/inter-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/manrope-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Space Grotesk';
+  src: url('/fonts/space-grotesk-variable.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* ===== Tailwind v4 @theme ===== */
 @theme {
   /* Colors - Primary (warm rose) */
