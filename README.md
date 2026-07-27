@@ -123,6 +123,7 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 |----------|---------|-------------|
 | `PORT` | `8080` | Server port |
 | `ENV` | `development` | Environment (`development` or `production`) |
+| `LOG_FORMAT` | `console` | Log output format (`console` human-readable, or `json` structured — for log aggregation pipelines) |
 | `DB_DRIVER` | `sqlite` | Database driver (`sqlite` or `postgres`) |
 | `DB_DSN` | `/data/openrsvp.db` | Database connection string |
 | `UPLOADS_DIR` | `/data/uploads` | Directory for uploaded files |
