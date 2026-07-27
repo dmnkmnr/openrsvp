@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.2 (2026-07-28)
+
+**Fixes:**
+- The attendee CSV export was always in English (column headers and RSVP status values) regardless of the organizer's UI language — now follows the currently displayed UI language
+- The "RSVP Date" column in the CSV export showed the raw stored UTC timestamp instead of the event's timezone
+
 ### v1.21.1 (2026-07-28)
 
 **Fixes:**
