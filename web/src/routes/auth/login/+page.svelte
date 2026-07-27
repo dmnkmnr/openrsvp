@@ -2,14 +2,19 @@
 	import { api } from '$lib/api/client';
 	import { toast } from '$lib/stores/toast';
 	import { isValidEmail } from '$lib/utils/validation';
-	import { _ } from '$lib/i18n';
+	import { _, locale, SUPPORTED_LOCALES } from '$lib/i18n';
 	import Button from '$lib/components/ui/Button.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 
 	let email = $state('');
 	let loading = $state(false);
 	let sent = $state(false);
 	let emailError = $state('');
+	let language = $state($locale ?? 'en');
+
+	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageOptions = SUPPORTED_LOCALES.map((code) => ({ value: code, label: languageNames[code] ?? code }));
 
 	async function handleSubmit(e: SubmitEvent) {
 		e.preventDefault();
@@ -27,7 +32,7 @@
 
 		loading = true;
 		try {
-			await api.post('/auth/magic-link', { email });
+			await api.post('/auth/magic-link', { email, language });
 			sent = true;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
@@ -100,6 +105,16 @@
 						error={emailError}
 						required
 					/>
+
+					<div>
+						<Select
+							label={$_('auth.login.languageLabel')}
+							name="language"
+							bind:value={language}
+							options={languageOptions}
+						/>
+						<p class="mt-1.5 text-xs text-neutral-400">{$_('auth.login.languageHelper')}</p>
+					</div>
 
 					<Button type="submit" {loading} class="w-full">
 						{loading ? $_('auth.login.sending') : $_('auth.login.sendMagicLink')}

@@ -35,6 +35,12 @@ func init() {
 type magicLinkData struct {
 	URL           string
 	ExpiryMinutes int
+	Heading       string
+	Intro         string
+	ButtonLabel   string
+	HelperText    string
+	ExpiryNote    string
+	FooterText    string
 	Colors        EmailColors
 }
 
@@ -50,66 +56,75 @@ type eventReminderData struct {
 
 // retentionWarningData holds the template data for a retention warning email.
 type retentionWarningData struct {
-	EventTitle   string
-	ExpiresAt    string
-	DashboardURL string
-	Colors       EmailColors
+	EventTitle        string
+	ExpiresAt         string
+	DashboardURL      string
+	Heading           string
+	Intro             string
+	LabelEvent        string
+	LabelDeletionDate string
+	Warning           string
+	ButtonLabel       string
+	FooterLine1       string
+	FooterLine2       string
+	Colors            EmailColors
 }
 
 // organizerRSVPNotificationData holds the template data for notifying an
 // organizer about a new or updated RSVP.
 type organizerRSVPNotificationData struct {
-	EventTitle       string
-	GuestName        string
-	RSVPStatus       string
-	GuestEmail       string
-	GuestPhone       string
-	PlusOnes         int
-	PlusOnesChildren int
-	DashboardURL     string
-	Colors           EmailColors
+	EventTitle            string
+	GuestName             string
+	RSVPStatus            string
+	GuestEmail            string
+	GuestPhone            string
+	PlusOnes              int
+	PlusOnesChildren      int
+	DashboardURL          string
+	Heading               string
+	IntroHTML             template.HTML
+	LabelGuest            string
+	LabelResponse         string
+	LabelEmail            string
+	LabelPhone            string
+	LabelAdditionalGuests string
+	ChildrenSuffix        string
+	ButtonLabel           string
+	FooterText            string
+	Colors                EmailColors
 }
 
-// displayStatus returns a human-friendly label for an RSVP status value.
-func displayStatus(status string) string {
-	switch status {
-	case "attending":
-		return "Attending"
-	case "maybe":
-		return "Maybe"
-	case "declined":
-		return "Can't make it"
-	case "pending":
-		return "Pending"
-	case "waitlisted":
-		return "Waitlisted"
-	default:
-		return status
-	}
-}
-
-// RenderMagicLink renders the magic link email template and returns the HTML
-// body and a plain text fallback.
-func RenderMagicLink(baseURL, token string, expiryMinutes int) (html, plain string, err error) {
+// RenderMagicLink renders the magic link email template and returns the
+// localized subject, the HTML body, and a plain text fallback.
+func RenderMagicLink(lang, baseURL, token string, expiryMinutes int) (subject, html, plain string, err error) {
 	url := fmt.Sprintf("%s/auth/verify?token=%s", baseURL, token)
+	msgCopy := magicLinkCopyFor(lang)
+	chrome := envelopeChromeFor(lang)
+	expiryNote := fmt.Sprintf(msgCopy.ExpiryNote, expiryMinutes)
 
 	data := magicLinkData{
 		URL:           url,
 		ExpiryMinutes: expiryMinutes,
+		Heading:       msgCopy.Heading,
+		Intro:         msgCopy.Intro,
+		ButtonLabel:   msgCopy.ButtonLabel,
+		HelperText:    chrome.HelperText,
+		ExpiryNote:    expiryNote,
+		FooterText:    chrome.FooterText,
 		Colors:        DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := magicLinkTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render magic link template: %w", err)
+		return "", "", "", fmt.Errorf("render magic link template: %w", err)
 	}
 
 	plainText := fmt.Sprintf(
-		"Sign in to OpenRSVP\n\nClick the link below to sign in:\n%s\n\nThis link expires in %d minutes.\n\nIf you did not request this link, you can safely ignore this email.",
-		url, expiryMinutes,
+		"%s\n\n%s\n%s\n\n%s",
+		msgCopy.Heading, msgCopy.Intro, url, expiryNote,
 	)
 
-	return buf.String(), plainText, nil
+	return msgCopy.Subject, buf.String(), plainText, nil
 }
 
 // RenderEventReminder renders the event reminder email template and returns
@@ -143,73 +158,96 @@ func RenderEventReminder(eventTitle, eventDate, location, message, inviteURL str
 }
 
 // RenderRetentionWarning renders the retention warning email template and
-// returns the HTML body and a plain text fallback.
-func RenderRetentionWarning(eventTitle, expiresAt, dashboardURL string) (html, plain string, err error) {
+// returns the localized subject, the HTML body, and a plain text fallback.
+func RenderRetentionWarning(lang, eventTitle, expiresAt, dashboardURL string) (subject, html, plain string, err error) {
+	msgCopy := retentionWarningCopyFor(lang)
 	data := retentionWarningData{
-		EventTitle:   eventTitle,
-		ExpiresAt:    expiresAt,
-		DashboardURL: dashboardURL,
-		Colors:       DefaultEmailColors(),
+		EventTitle:        eventTitle,
+		ExpiresAt:         expiresAt,
+		DashboardURL:      dashboardURL,
+		Heading:           msgCopy.Heading,
+		Intro:             msgCopy.Intro,
+		LabelEvent:        msgCopy.LabelEvent,
+		LabelDeletionDate: msgCopy.LabelDeletionDate,
+		Warning:           msgCopy.Warning,
+		ButtonLabel:       msgCopy.ButtonLabel,
+		FooterLine1:       msgCopy.FooterLine1,
+		FooterLine2:       msgCopy.FooterLine2,
+		Colors:            DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := retentionWarningTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render retention warning template: %w", err)
+		return "", "", "", fmt.Errorf("render retention warning template: %w", err)
 	}
 
 	var sb strings.Builder
-	sb.WriteString("Data Retention Notice\n\n")
-	sb.WriteString(fmt.Sprintf("Your event \"%s\" is scheduled for automatic deletion on %s.\n\n", eventTitle, expiresAt))
-	sb.WriteString("After this date, all event data including attendee RSVPs, messages, and invite cards will be permanently deleted.\n\n")
+	sb.WriteString(msgCopy.PlainHeading + "\n\n")
+	sb.WriteString(fmt.Sprintf(msgCopy.PlainIntroFormat, eventTitle, expiresAt) + "\n\n")
+	sb.WriteString(msgCopy.PlainWarning + "\n\n")
 	if dashboardURL != "" {
-		sb.WriteString(fmt.Sprintf("To extend the retention period, visit:\n%s\n", dashboardURL))
+		sb.WriteString(fmt.Sprintf("%s\n%s\n", msgCopy.PlainFooterCTA, dashboardURL))
 	}
 
-	return buf.String(), sb.String(), nil
+	return msgCopy.Subject, buf.String(), sb.String(), nil
 }
 
-// RenderOrganizerRSVPNotification renders the organizer RSVP notification email
-// and returns the HTML body and a plain text fallback.
-func RenderOrganizerRSVPNotification(eventTitle, guestName, rsvpStatus, guestEmail, guestPhone string, plusOnes, plusOnesChildren int, dashboardURL string) (html, plain string, err error) {
-	label := displayStatus(rsvpStatus)
+// RenderOrganizerRSVPNotification renders the organizer RSVP notification
+// email and returns the localized subject, the HTML body, and a plain text
+// fallback.
+func RenderOrganizerRSVPNotification(lang, eventTitle, guestName, rsvpStatus, guestEmail, guestPhone string, plusOnes, plusOnesChildren int, dashboardURL string) (subject, html, plain string, err error) {
+	msgCopy := organizerRSVPNotificationCopyFor(lang)
+	chrome := envelopeChromeFor(lang)
+	label := displayStatusAdmin(lang, rsvpStatus)
+
 	data := organizerRSVPNotificationData{
-		EventTitle:       eventTitle,
-		GuestName:        guestName,
-		RSVPStatus:       label,
-		GuestEmail:       guestEmail,
-		GuestPhone:       guestPhone,
-		PlusOnes:         plusOnes,
-		PlusOnesChildren: plusOnesChildren,
-		DashboardURL:     dashboardURL,
-		Colors:           DefaultEmailColors(),
+		EventTitle:            eventTitle,
+		GuestName:             guestName,
+		RSVPStatus:            label,
+		GuestEmail:            guestEmail,
+		GuestPhone:            guestPhone,
+		PlusOnes:              plusOnes,
+		PlusOnesChildren:      plusOnesChildren,
+		DashboardURL:          dashboardURL,
+		Heading:               msgCopy.Heading,
+		IntroHTML:             template.HTML(fmt.Sprintf(msgCopy.IntroFormat, template.HTMLEscapeString(eventTitle))), //nolint:gosec // eventTitle is HTML-escaped above
+		LabelGuest:            msgCopy.LabelGuest,
+		LabelResponse:         msgCopy.LabelResponse,
+		LabelEmail:            msgCopy.LabelEmail,
+		LabelPhone:            msgCopy.LabelPhone,
+		LabelAdditionalGuests: msgCopy.LabelAdditionalGuests,
+		ChildrenSuffix:        msgCopy.ChildrenSuffix,
+		ButtonLabel:           msgCopy.ButtonLabel,
+		FooterText:            chrome.FooterText,
+		Colors:                DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := organizerRSVPNotifyTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render organizer rsvp notification template: %w", err)
+		return "", "", "", fmt.Errorf("render organizer rsvp notification template: %w", err)
 	}
 
 	var sb strings.Builder
-	sb.WriteString("New RSVP Received\n\n")
-	sb.WriteString(fmt.Sprintf("Event: %s\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Guest: %s\n", guestName))
-	sb.WriteString(fmt.Sprintf("Response: %s\n", rsvpStatus))
+	sb.WriteString(msgCopy.PlainHeading + "\n\n")
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelEvent, eventTitle))
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelGuest, guestName))
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelResponse, label))
 	if guestEmail != "" {
-		sb.WriteString(fmt.Sprintf("Email: %s\n", guestEmail))
+		sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelEmail, guestEmail))
 	}
 	if guestPhone != "" {
-		sb.WriteString(fmt.Sprintf("Phone: %s\n", guestPhone))
+		sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelPhone, guestPhone))
 	}
 	if plusOnes > 0 {
 		if plusOnesChildren > 0 {
-			sb.WriteString(fmt.Sprintf("Additional Guests: +%d (%d child(ren) under 12)\n", plusOnes, plusOnesChildren))
+			sb.WriteString(fmt.Sprintf("%s: +%d (%s)\n", msgCopy.PlainLabelAdditional, plusOnes, fmt.Sprintf(msgCopy.ChildrenPlainFormat, plusOnesChildren)))
 		} else {
-			sb.WriteString(fmt.Sprintf("Additional Guests: +%d\n", plusOnes))
+			sb.WriteString(fmt.Sprintf("%s: +%d\n", msgCopy.PlainLabelAdditional, plusOnes))
 		}
 	}
-	sb.WriteString(fmt.Sprintf("\nView your event dashboard:\n%s\n", dashboardURL))
+	sb.WriteString(fmt.Sprintf("\n%s\n%s\n", msgCopy.PlainFooterCTA, dashboardURL))
 
-	return buf.String(), sb.String(), nil
+	return msgCopy.SubjectPrefix, buf.String(), sb.String(), nil
 }
 
 // rsvpLookupData holds the template data for an RSVP lookup email.
@@ -245,69 +283,103 @@ func RenderRSVPLookup(eventTitle, modifyURL string) (html, plain string, err err
 type feedbackConfirmationData struct {
 	FeedbackType  string
 	AllowFollowUp bool
+	Heading       string
+	IntroHTML     template.HTML
+	FollowUpNote  string
+	Closing       string
+	FooterText    string
 	Colors        EmailColors
 }
 
 // RenderFeedbackConfirmation renders the feedback confirmation email template
-// and returns the HTML body and a plain text fallback.
-func RenderFeedbackConfirmation(feedbackType string, allowFollowUp bool) (htmlBody, plain string, err error) {
+// and returns the localized subject, the HTML body, and a plain text fallback.
+func RenderFeedbackConfirmation(feedbackType string, allowFollowUp bool, lang string) (subject, htmlBody, plain string, err error) {
+	msgCopy := feedbackConfirmationCopyFor(lang)
+	chrome := envelopeChromeFor(lang)
+
 	data := feedbackConfirmationData{
 		FeedbackType:  feedbackType,
 		AllowFollowUp: allowFollowUp,
+		Heading:       msgCopy.Heading,
+		IntroHTML:     template.HTML(fmt.Sprintf(msgCopy.IntroFormat, template.HTMLEscapeString(feedbackType))), //nolint:gosec // feedbackType is HTML-escaped above
+		FollowUpNote:  msgCopy.FollowUpNote,
+		Closing:       msgCopy.Closing,
+		FooterText:    chrome.FooterText,
 		Colors:        DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := feedbackConfirmationTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render feedback confirmation template: %w", err)
+		return "", "", "", fmt.Errorf("render feedback confirmation template: %w", err)
 	}
 
 	var sb strings.Builder
-	sb.WriteString("Thanks for your feedback!\n\n")
-	sb.WriteString(fmt.Sprintf("We received your %s submission and appreciate you taking the time to share it with us.\n\n", feedbackType))
+	sb.WriteString(msgCopy.PlainHeading + "\n\n")
+	sb.WriteString(fmt.Sprintf(msgCopy.PlainIntroFormat, feedbackType) + "\n\n")
 	if allowFollowUp {
-		sb.WriteString("Since you opted in to follow-up contact, we may reach out to you if we have questions or updates related to your feedback.\n\n")
+		sb.WriteString(msgCopy.PlainFollowUp + "\n\n")
 	}
-	sb.WriteString("Your feedback helps make OpenRSVP better for everyone.\n")
+	sb.WriteString(msgCopy.PlainClosing + "\n")
 
-	return buf.String(), sb.String(), nil
+	return msgCopy.Subject, buf.String(), sb.String(), nil
 }
 
 // cohostInvitationData holds the template data for a co-host invitation email.
 type cohostInvitationData struct {
-	EventTitle   string
-	EventDate    string
-	Location     string
-	AddedByName  string
-	DashboardURL string
-	Colors       EmailColors
+	EventTitle    string
+	EventDate     string
+	Location      string
+	AddedByName   string
+	DashboardURL  string
+	Heading       string
+	IntroHTML     template.HTML
+	LabelEvent    string
+	LabelDate     string
+	LabelLocation string
+	ButtonLabel   string
+	HelperText    string
+	FooterText    string
+	Colors        EmailColors
 }
 
 // RenderCoHostInvitation renders the co-host invitation email template and
-// returns the HTML body and a plain text fallback.
-func RenderCoHostInvitation(eventTitle, eventDate, location, addedByName, dashboardURL string) (html, plain string, err error) {
+// returns the localized subject, the HTML body, and a plain text fallback.
+// lang is the invited co-host's (the recipient's) language, not the inviting
+// organizer's.
+func RenderCoHostInvitation(lang, eventTitle, eventDate, location, addedByName, dashboardURL string) (subject, html, plain string, err error) {
+	msgCopy := cohostInvitationCopyFor(lang)
+	chrome := envelopeChromeFor(lang)
+
 	data := cohostInvitationData{
-		EventTitle:   eventTitle,
-		EventDate:    eventDate,
-		Location:     location,
-		AddedByName:  addedByName,
-		DashboardURL: dashboardURL,
-		Colors:       DefaultEmailColors(),
+		EventTitle:    eventTitle,
+		EventDate:     eventDate,
+		Location:      location,
+		AddedByName:   addedByName,
+		DashboardURL:  dashboardURL,
+		Heading:       msgCopy.Heading,
+		IntroHTML:     template.HTML(fmt.Sprintf(msgCopy.IntroFormat, template.HTMLEscapeString(addedByName), template.HTMLEscapeString(eventTitle))), //nolint:gosec // both values are HTML-escaped above
+		LabelEvent:    msgCopy.LabelEvent,
+		LabelDate:     msgCopy.LabelDate,
+		LabelLocation: msgCopy.LabelLocation,
+		ButtonLabel:   msgCopy.ButtonLabel,
+		HelperText:    chrome.HelperText,
+		FooterText:    chrome.FooterText,
+		Colors:        DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := cohostInvitationTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render cohost invitation template: %w", err)
+		return "", "", "", fmt.Errorf("render cohost invitation template: %w", err)
 	}
 
 	var sb strings.Builder
-	sb.WriteString("You've Been Added as a Co-Host\n\n")
-	sb.WriteString(fmt.Sprintf("%s has added you as a co-host for %s.\n\n", addedByName, eventTitle))
-	sb.WriteString(fmt.Sprintf("Event: %s\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Date: %s\n", eventDate))
-	sb.WriteString(fmt.Sprintf("Location: %s\n\n", location))
-	sb.WriteString(fmt.Sprintf("View the event dashboard:\n%s\n", dashboardURL))
+	sb.WriteString(msgCopy.Heading + "\n\n")
+	sb.WriteString(fmt.Sprintf(msgCopy.PlainIntroFormat, addedByName, eventTitle) + "\n\n")
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelEvent, eventTitle))
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.PlainLabelDate, eventDate))
+	sb.WriteString(fmt.Sprintf("%s: %s\n\n", msgCopy.PlainLabelLoc, location))
+	sb.WriteString(fmt.Sprintf("%s\n%s\n", msgCopy.PlainFooterCTA, dashboardURL))
 
-	return buf.String(), sb.String(), nil
+	return msgCopy.Subject, buf.String(), sb.String(), nil
 }
 

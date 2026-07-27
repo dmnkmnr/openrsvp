@@ -19,20 +19,20 @@
           <!-- Body -->
           <tr>
             <td style="padding:32px 40px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:{{.Colors.Warning}};">&#9888; Data Retention Notice</h2>
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:{{.Colors.Warning}};">&#9888; {{.Heading}}</h2>
               <p style="margin:0 0 24px;font-size:16px;line-height:24px;color:{{.Colors.TextSecondary}};">
-                Your event data is scheduled for automatic deletion soon. This is a courtesy reminder so you can take action if needed.
+                {{.Intro}}
               </p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background-color:{{.Colors.WarningLight}};border-radius:6px;border:1px solid {{.Colors.Warning}};">
                 <tr>
                   <td style="padding:20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.WarningDark}};">Event</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.WarningDark}};">{{.LabelEvent}}</td>
                         <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.WarningDark}};text-align:right;">{{.EventTitle}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.WarningDark}};">Deletion Date</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.WarningDark}};">{{.LabelDeletionDate}}</td>
                         <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.WarningDark}};text-align:right;">{{.ExpiresAt}}</td>
                       </tr>
                     </table>
@@ -40,14 +40,14 @@
                 </tr>
               </table>
               <p style="margin:0 0 24px;font-size:14px;line-height:22px;color:{{.Colors.TextSecondary}};">
-                After this date, all event data including attendee RSVPs, messages, and invite cards will be permanently deleted. If you would like to keep this data, please log in and extend the retention period.
+                {{.Warning}}
               </p>
               {{if .DashboardURL}}
               <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 auto 24px;">
                 <tr>
                   <td style="border-radius:6px;background-color:{{.Colors.Warning}};">
                     <a href="{{.DashboardURL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:600;color:{{.Colors.CardBg}};text-decoration:none;border-radius:6px;">
-                      View Event
+                      {{.ButtonLabel}}
                     </a>
                   </td>
                 </tr>
@@ -59,8 +59,8 @@
           <tr>
             <td style="padding:0 40px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:{{.Colors.TextMuted}};line-height:20px;">
-                This is an automated notice from OpenRSVP.<br>
-                You received this because you are the organizer of this event.
+                {{.FooterLine1}}<br>
+                {{.FooterLine2}}
               </p>
             </td>
           </tr>

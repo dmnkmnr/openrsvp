@@ -15,12 +15,12 @@ import (
 )
 
 func feedbackOrgFromCtx() OrganizerFromCtx {
-	return func(ctx context.Context) (string, bool) {
+	return func(ctx context.Context) (string, string, bool) {
 		org := auth.OrganizerFromContext(ctx)
 		if org == nil {
-			return "", false
+			return "", "", false
 		}
-		return org.Email, true
+		return org.Email, org.Language, true
 	}
 }
 
@@ -170,7 +170,7 @@ func TestSubmitEmail_Fallback(t *testing.T) {
 		return nil
 	})
 
-	err := svc.Submit(context.Background(), "user@test.com", "feature", "Add dark mode", false)
+	err := svc.Submit(context.Background(), "user@test.com", "en", "feature", "Add dark mode", false)
 	assert.NoError(t, err)
 	assert.Equal(t, "feedback@example.com", sentTo)
 	assert.Contains(t, sentSubject, "feature")
@@ -183,13 +183,13 @@ func TestSubmitEmail_Error(t *testing.T) {
 		return fmt.Errorf("smtp error")
 	})
 
-	err := svc.Submit(context.Background(), "user@test.com", "bug", "broken", false)
+	err := svc.Submit(context.Background(), "user@test.com", "en", "bug", "broken", false)
 	assert.Error(t, err)
 }
 
 func TestSubmit_NoChannel(t *testing.T) {
 	svc := NewService("", "", "")
-	err := svc.Submit(context.Background(), "user@test.com", "bug", "broken", false)
+	err := svc.Submit(context.Background(), "user@test.com", "en", "bug", "broken", false)
 	assert.NoError(t, err)
 }
 
@@ -201,7 +201,7 @@ func TestSubmit_AllowFollowUp_SendsConfirmation(t *testing.T) {
 		return nil
 	})
 
-	err := svc.Submit(context.Background(), "user@test.com", "feature", "Add dark mode", true)
+	err := svc.Submit(context.Background(), "user@test.com", "en", "feature", "Add dark mode", true)
 	assert.NoError(t, err)
 	// Two emails: one to the feedback address, one confirmation to the submitter.
 	assert.Len(t, emails, 2)

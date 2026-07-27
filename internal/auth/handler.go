@@ -73,7 +73,7 @@ func (h *Handler) handleMagicLink(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Always return a generic message to avoid leaking whether an email exists.
-	if err := h.service.RequestMagicLink(r.Context(), req.Email); err != nil {
+	if err := h.service.RequestMagicLink(r.Context(), req.Email, req.Language); err != nil {
 		if err == ErrInvalidEmail {
 			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid email address"})
 			return
@@ -206,6 +206,13 @@ func (h *Handler) handleUpdateMe(w http.ResponseWriter, r *http.Request) {
 	}
 	if req.Timezone != nil {
 		organizer.Timezone = *req.Timezone
+	}
+	if req.Language != nil {
+		if !isValidLanguage(*req.Language) {
+			writeJSON(w, http.StatusBadRequest, map[string]string{"error": "invalid language: must be one of " + strings.Join(SupportedLanguages, ", ")})
+			return
+		}
+		organizer.Language = *req.Language
 	}
 
 	if err := h.service.UpdateProfile(r.Context(), organizer); err != nil {

@@ -52,7 +52,7 @@ func (s *Service) SetEmailSender(fn EmailSender) {
 // RequestMagicLink validates the email, finds or creates the organizer,
 // generates a magic link token, and stores its hash in the database.
 // In development mode the raw token is logged to the console.
-func (s *Service) RequestMagicLink(ctx context.Context, email string) error {
+func (s *Service) RequestMagicLink(ctx context.Context, email, language string) error {
 	// Validate email format.
 	if _, err := mail.ParseAddress(email); err != nil {
 		return ErrInvalidEmail
@@ -68,6 +68,16 @@ func (s *Service) RequestMagicLink(ctx context.Context, email string) error {
 		organizer, err = s.store.CreateOrganizer(ctx, email)
 		if err != nil {
 			return fmt.Errorf("create organizer: %w", err)
+		}
+
+		// A brand-new organizer may choose their notification/UI language at
+		// this first login. Existing organizers keep their saved preference
+		// regardless of what a later login request happens to send.
+		if isValidLanguage(language) {
+			organizer.Language = language
+			if err := s.store.UpdateOrganizer(ctx, organizer); err != nil {
+				return fmt.Errorf("set organizer language: %w", err)
+			}
 		}
 	}
 
@@ -101,13 +111,13 @@ func (s *Service) RequestMagicLink(ctx context.Context, email string) error {
 	// Send the magic link email if an email sender is configured.
 	if s.sendEmail != nil {
 		expiryMinutes := int(s.cfg.MagicLinkExpiry.Minutes())
-		htmlBody, plainBody, err := templates.RenderMagicLink(s.cfg.BaseURL, tokenHex, expiryMinutes)
+		subject, htmlBody, plainBody, err := templates.RenderMagicLink(organizer.Language, s.cfg.BaseURL, tokenHex, expiryMinutes)
 		if err != nil {
 			s.logger.Error().Err(err).Msg("failed to render magic link email template")
 			return nil
 		}
 
-		if err := s.sendEmail(ctx, email, "Sign in to OpenRSVP", htmlBody, plainBody); err != nil {
+		if err := s.sendEmail(ctx, email, subject, htmlBody, plainBody); err != nil {
 			s.logger.Error().Err(err).Str("email", email).Msg("failed to send magic link email")
 			// Don't return error to caller — we don't want to leak whether the email was valid
 		}

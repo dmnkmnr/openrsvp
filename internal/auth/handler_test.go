@@ -415,6 +415,31 @@ func TestHandleUpdateMe_Success(t *testing.T) {
 	assert.Equal(t, "America/Chicago", body["timezone"])
 }
 
+func TestHandleUpdateMe_Language(t *testing.T) {
+	env := setupAuthHandler(t)
+	ctx := context.Background()
+
+	org, err := env.store.CreateOrganizer(ctx, "lang-update@example.com")
+	require.NoError(t, err)
+
+	rawToken := "3333333333333333333333333333333333333333333333333333333333333334"
+	createSession(t, env.store, org.ID, rawToken)
+
+	lang := "de"
+	rr := testutil.DoAuthRequest(t, env.handler.Routes(), "PATCH", "/me", rawToken, map[string]*string{
+		"language": &lang,
+	})
+	assert.Equal(t, http.StatusOK, rr.Code)
+	body := testutil.ParseJSON(t, rr)
+	assert.Equal(t, "de", body["language"])
+
+	invalid := "fr"
+	rr = testutil.DoAuthRequest(t, env.handler.Routes(), "PATCH", "/me", rawToken, map[string]*string{
+		"language": &invalid,
+	})
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+}
+
 func TestHandleUpdateMe_Unauthorized(t *testing.T) {
 	env := setupAuthHandler(t)
 	rr := testutil.DoRequest(t, env.handler.Routes(), "PATCH", "/me", map[string]string{"name": "Test"})

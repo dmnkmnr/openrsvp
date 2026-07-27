@@ -452,8 +452,8 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			dashboardURL := cfg.BaseURL + "/events/" + eventID
 
-			htmlBody, plainBody, err := templates.RenderOrganizerRSVPNotification(
-				ev.Title, attendee.Name, attendee.RSVPStatus,
+			subjectPrefix, htmlBody, plainBody, err := templates.RenderOrganizerRSVPNotification(
+				organizer.Language, ev.Title, attendee.Name, attendee.RSVPStatus,
 				guestEmail, guestPhone, attendee.PlusOnes, attendee.PlusOnesChildren, dashboardURL,
 			)
 			if err != nil {
@@ -463,9 +463,10 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
 				To:      organizer.Email,
-				Subject: "New RSVP — " + attendee.Name + " — " + ev.Title + " (" + ev.EventDate.Format("Jan 2") + ")",
+				Subject: subjectPrefix + " — " + attendee.Name + " — " + ev.Title + " (" + ev.EventDate.Format("Jan 2") + ")",
 				Body:    htmlBody,
 				Plain:   plainBody,
+				Lang:    organizer.Language,
 			}); err != nil {
 				logger.Error().Err(err).Str("organizer_email", organizer.Email).Msg("rsvp notify: failed to send organizer email")
 			}
@@ -552,7 +553,16 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 			dashboardURL := cfg.BaseURL + "/events/" + eventID
 
-			htmlBody, plainBody, err := templates.RenderCoHostInvitation(ev.Title, eventDate, location, organizer.Name, dashboardURL)
+			// The email's recipient is the invited co-host, not the inviting
+			// organizer -- look up their own saved language preference if
+			// they're already a registered organizer; default to English if
+			// they aren't (first-time invitees have no account yet).
+			recipientLang := "en"
+			if recipient, err := authStore.FindOrganizerByEmail(ctx, coHostEmail); err == nil && recipient != nil {
+				recipientLang = recipient.Language
+			}
+
+			subject, htmlBody, plainBody, err := templates.RenderCoHostInvitation(recipientLang, ev.Title, eventDate, location, organizer.Name, dashboardURL)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("cohost notify: failed to render template")
 				return
@@ -560,9 +570,10 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			if err := notifService.Send(ctx, eventID, addedByOrganizerID, notification.ChannelEmail, &notification.Message{
 				To:      coHostEmail,
-				Subject: "You've been added as a co-host — " + ev.Title,
+				Subject: subject + " — " + ev.Title,
 				Body:    htmlBody,
 				Plain:   plainBody,
+				Lang:    recipientLang,
 			}); err != nil {
 				logger.Error().Err(err).Str("cohost_email", coHostEmail).Msg("cohost notify: failed to send email")
 			}
@@ -646,12 +657,12 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			return sendErr
 		})
 	}
-	organizerEmailFromCtx := func(ctx context.Context) (string, bool) {
+	organizerEmailFromCtx := func(ctx context.Context) (string, string, bool) {
 		org := auth.OrganizerFromContext(ctx)
 		if org == nil {
-			return "", false
+			return "", "", false
 		}
-		return org.Email, true
+		return org.Email, org.Language, true
 	}
 	feedbackHandler := feedback.NewHandler(feedbackSvc, authMiddleware, feedback.OrganizerFromCtx(organizerEmailFromCtx), logger)
 
@@ -971,10 +982,14 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 	// Wire retention warning notifications into the cleanup job.
 	if notifRegistry.Has(notification.ChannelEmail) {
 		cleanupJob.SetRetentionNotify(func(ctx context.Context, organizerEmail, eventTitle string, expiresAt time.Time) {
-			expiresStr := expiresAt.Format("January 2, 2006")
+			lang := "en"
+			if organizer, err := authStore.FindOrganizerByEmail(ctx, organizerEmail); err == nil && organizer != nil {
+				lang = organizer.Language
+			}
+			expiresStr := templates.FormatEventDate(expiresAt, lang)
 			dashboardURL := cfg.BaseURL + "/events"
 
-			htmlBody, plainBody, err := templates.RenderRetentionWarning(eventTitle, expiresStr, dashboardURL)
+			subject, htmlBody, plainBody, err := templates.RenderRetentionWarning(lang, eventTitle, expiresStr, dashboardURL)
 			if err != nil {
 				logger.Error().Err(err).Str("event_title", eventTitle).Msg("retention warning: failed to render template")
 				return
@@ -988,9 +1003,10 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			if _, sendErr := provider.Send(ctx, &notification.Message{
 				To:      organizerEmail,
-				Subject: "Data Retention Notice — " + eventTitle,
+				Subject: subject + " — " + eventTitle,
 				Body:    htmlBody,
 				Plain:   plainBody,
+				Lang:    lang,
 			}); sendErr != nil {
 				logger.Error().Err(sendErr).Str("email", organizerEmail).Msg("retention warning: failed to send email")
 			}

@@ -9,9 +9,10 @@ import (
 )
 
 func TestRenderRetentionWarning(t *testing.T) {
-	html, plain, err := RenderRetentionWarning("Birthday Party", "March 15, 2026", "http://localhost:8080/events")
+	subject, html, plain, err := RenderRetentionWarning("en", "Birthday Party", "March 15, 2026", "http://localhost:8080/events")
 	require.NoError(t, err)
 
+	assert.Equal(t, "Data Retention Notice", subject)
 	assert.Contains(t, html, "Birthday Party")
 	assert.Contains(t, html, "March 15, 2026")
 	assert.Contains(t, html, "http://localhost:8080/events")
@@ -24,7 +25,7 @@ func TestRenderRetentionWarning(t *testing.T) {
 }
 
 func TestRenderRetentionWarningNoDashboardURL(t *testing.T) {
-	html, plain, err := RenderRetentionWarning("Garden Party", "April 20, 2026", "")
+	_, html, plain, err := RenderRetentionWarning("en", "Garden Party", "April 20, 2026", "")
 	require.NoError(t, err)
 
 	assert.Contains(t, html, "Garden Party")
@@ -35,13 +36,91 @@ func TestRenderRetentionWarningNoDashboardURL(t *testing.T) {
 	assert.NotContains(t, plain, "visit:")
 }
 
-func TestRenderMagicLink(t *testing.T) {
-	html, plain, err := RenderMagicLink("http://localhost:8080", "abc123token", 15)
+func TestRenderRetentionWarningGerman(t *testing.T) {
+	subject, html, plain, err := RenderRetentionWarning("de", "Geburtstagsfeier", "15. März 2026", "http://localhost:8080/events")
 	require.NoError(t, err)
 
+	assert.Equal(t, "Hinweis zur Datenaufbewahrung", subject)
+	assert.Contains(t, html, "Geburtstagsfeier")
+	assert.Contains(t, html, "Hinweis zur Datenaufbewahrung")
+	assert.Contains(t, plain, "dauerhaft gelöscht")
+}
+
+func TestRenderMagicLink(t *testing.T) {
+	subject, html, plain, err := RenderMagicLink("en", "http://localhost:8080", "abc123token", 15)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Sign in to OpenRSVP", subject)
 	assert.Contains(t, html, "abc123token")
 	assert.Contains(t, html, "http://localhost:8080")
 	assert.Contains(t, plain, "15 minutes")
+}
+
+func TestRenderMagicLinkGerman(t *testing.T) {
+	subject, html, plain, err := RenderMagicLink("de", "http://localhost:8080", "abc123token", 15)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Anmeldung bei OpenRSVP", subject)
+	assert.Contains(t, html, "abc123token")
+	assert.Contains(t, plain, "15 Minuten")
+}
+
+func TestRenderOrganizerRSVPNotification(t *testing.T) {
+	subject, html, plain, err := RenderOrganizerRSVPNotification("en", "Pool Party", "Alice", "attending", "alice@example.com", "", 2, 1, "http://localhost/events/1")
+	require.NoError(t, err)
+
+	assert.Equal(t, "New RSVP", subject)
+	assert.Contains(t, html, "Pool Party")
+	assert.Contains(t, html, "Alice")
+	assert.Contains(t, html, "Attending")
+	assert.Contains(t, html, "under 12")
+	assert.Contains(t, plain, "Alice")
+}
+
+func TestRenderOrganizerRSVPNotificationGerman(t *testing.T) {
+	subject, html, plain, err := RenderOrganizerRSVPNotification("de", "Poolparty", "Alice", "attending", "", "", 0, 0, "http://localhost/events/1")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Neue RSVP", subject)
+	assert.Contains(t, html, "Zusage")
+	assert.Contains(t, plain, "Zusage")
+}
+
+func TestRenderCoHostInvitation(t *testing.T) {
+	subject, html, plain, err := RenderCoHostInvitation("en", "Pool Party", "June 5, 2026", "Backyard", "Bob", "http://localhost/events/1")
+	require.NoError(t, err)
+
+	assert.Equal(t, "You've been added as a co-host", subject)
+	assert.Contains(t, html, "Bob")
+	assert.Contains(t, html, "Pool Party")
+	assert.Contains(t, plain, "Bob")
+}
+
+func TestRenderCoHostInvitationGerman(t *testing.T) {
+	subject, html, plain, err := RenderCoHostInvitation("de", "Poolparty", "5. Juni 2026", "Garten", "Bob", "http://localhost/events/1")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Du wurdest als Co-Host hinzugefügt", subject)
+	assert.Contains(t, html, "Co-Host")
+	assert.Contains(t, plain, "Co-Host")
+}
+
+func TestRenderFeedbackConfirmation(t *testing.T) {
+	subject, html, plain, err := RenderFeedbackConfirmation("bug", true, "en")
+	require.NoError(t, err)
+
+	assert.Equal(t, "We received your feedback — OpenRSVP", subject)
+	assert.Contains(t, html, "bug")
+	assert.Contains(t, plain, "bug")
+}
+
+func TestRenderFeedbackConfirmationGerman(t *testing.T) {
+	subject, html, plain, err := RenderFeedbackConfirmation("bug", false, "de")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Wir haben dein Feedback erhalten — OpenRSVP", subject)
+	assert.Contains(t, html, "Danke für dein Feedback")
+	assert.Contains(t, plain, "Danke für dein Feedback")
 }
 
 func TestRenderEventReminder(t *testing.T) {

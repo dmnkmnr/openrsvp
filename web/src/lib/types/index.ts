@@ -3,6 +3,7 @@ export interface Organizer {
 	email: string;
 	name: string;
 	timezone: string;
+	language: string;
 	isAdmin: boolean;
 	createdAt: string;
 	updatedAt: string;

@@ -36,7 +36,7 @@ func (s *Store) BeginTx(ctx context.Context) (database.Tx, error) {
 // FindOrganizerByEmail retrieves an organizer by their email address.
 func (s *Store) FindOrganizerByEmail(ctx context.Context, email string) (*Organizer, error) {
 	row := s.db.QueryRowContext(ctx,
-		"SELECT id, email, name, timezone, is_admin, created_at, updated_at FROM organizers WHERE email = ?",
+		"SELECT id, email, name, timezone, language, is_admin, created_at, updated_at FROM organizers WHERE email = ?",
 		email,
 	)
 
@@ -55,7 +55,7 @@ func (s *Store) FindOrganizerByIDTx(ctx context.Context, tx database.Tx, id stri
 
 func findOrganizerByID(ctx context.Context, exec executor, id string) (*Organizer, error) {
 	row := exec.QueryRowContext(ctx,
-		"SELECT id, email, name, timezone, is_admin, created_at, updated_at FROM organizers WHERE id = ?",
+		"SELECT id, email, name, timezone, language, is_admin, created_at, updated_at FROM organizers WHERE id = ?",
 		id,
 	)
 
@@ -63,7 +63,9 @@ func findOrganizerByID(ctx context.Context, exec executor, id string) (*Organize
 }
 
 // CreateOrganizer creates a new organizer with the given email. The ID is
-// generated as a UUIDv7.
+// generated as a UUIDv7. Language defaults to "en" (the column default);
+// callers that need to set an initial language (e.g. a first-time magic-link
+// request with a chosen language) should follow up with UpdateOrganizer.
 func (s *Store) CreateOrganizer(ctx context.Context, email string) (*Organizer, error) {
 	id := uuid.Must(uuid.NewV7()).String()
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -79,13 +81,14 @@ func (s *Store) CreateOrganizer(ctx context.Context, email string) (*Organizer, 
 	return s.FindOrganizerByID(ctx, id)
 }
 
-// UpdateOrganizer updates the name, timezone, and updated_at timestamp for an organizer.
+// UpdateOrganizer updates the name, timezone, language, and updated_at
+// timestamp for an organizer.
 func (s *Store) UpdateOrganizer(ctx context.Context, organizer *Organizer) error {
 	now := time.Now().UTC().Format(time.RFC3339)
 
 	_, err := s.db.ExecContext(ctx,
-		"UPDATE organizers SET name = ?, timezone = ?, updated_at = ? WHERE id = ?",
-		organizer.Name, organizer.Timezone, now, organizer.ID,
+		"UPDATE organizers SET name = ?, timezone = ?, language = ?, updated_at = ? WHERE id = ?",
+		organizer.Name, organizer.Timezone, organizer.Language, now, organizer.ID,
 	)
 	if err != nil {
 		return fmt.Errorf("update organizer: %w", err)
@@ -503,7 +506,7 @@ func scanOrganizer(row *sql.Row) (*Organizer, error) {
 	var o Organizer
 	var createdAt, updatedAt string
 
-	err := row.Scan(&o.ID, &o.Email, &o.Name, &o.Timezone, &o.IsAdmin, &createdAt, &updatedAt)
+	err := row.Scan(&o.ID, &o.Email, &o.Name, &o.Timezone, &o.Language, &o.IsAdmin, &createdAt, &updatedAt)
 	if err != nil {
 		if err == sql.ErrNoRows {
 			return nil, nil

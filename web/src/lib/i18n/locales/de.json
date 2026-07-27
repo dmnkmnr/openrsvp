@@ -124,6 +124,12 @@
 	"account": {
 		"pageTitle": "Kontoeinstellungen -- OpenRSVP",
 		"heading": "Kontoeinstellungen",
+		"preferencesTitle": "Einstellungen",
+		"preferencesBody": "Wähle die Sprache für deine Konto-E-Mails (Magic Link, Neue-RSVP-Benachrichtigungen, Co-Host-Einladungen) und für die App selbst.",
+		"languageLabel": "Sprache",
+		"savePreferences": "Speichern",
+		"preferencesSaved": "Einstellungen gespeichert",
+		"preferencesError": "Einstellungen konnten nicht gespeichert werden",
 		"dataTitle": "Deine Daten",
 		"dataBody": "Lade eine vollständige Kopie deiner Daten als JSON-Datei herunter. Das umfasst alle deine Events, Gäste, RSVPs und Nachrichten.",
 		"exportData": "Meine Daten exportieren",
@@ -1092,7 +1098,9 @@
 			"emailPlaceholder": "du@beispiel.de",
 			"sending": "Wird gesendet...",
 			"sendMagicLink": "Magic Link senden",
-			"backToHome": "Zurück zur Startseite"
+			"backToHome": "Zurück zur Startseite",
+			"languageLabel": "Benachrichtigungs- & UI-Sprache",
+			"languageHelper": "Legt die Sprache für deine Konto-E-Mails (Magic Link, Neue-RSVP-Benachrichtigungen etc.) und die App selbst fest. Du kannst dies später in den Kontoeinstellungen ändern."
 		}
 	}
 }

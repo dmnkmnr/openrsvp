@@ -8,8 +8,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Input from '$lib/components/ui/Input.svelte';
 	import Modal from '$lib/components/ui/Modal.svelte';
+	import Select from '$lib/components/ui/Select.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
-	import { _ } from '$lib/i18n';
+	import { _, locale, SUPPORTED_LOCALES } from '$lib/i18n';
+	import type { Organizer } from '$lib/types';
 
 	// Mirror the events layout guard: redirect to login once auth has loaded
 	// and there's no current user.
@@ -20,6 +22,30 @@
 	});
 
 	let exporting = $state(false);
+
+	let language = $state('en');
+	let savingLanguage = $state(false);
+	$effect(() => {
+		if ($currentUser) language = $currentUser.language || 'en';
+	});
+
+	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageOptions = SUPPORTED_LOCALES.map((code) => ({ value: code, label: languageNames[code] ?? code }));
+
+	async function handleSaveLanguage() {
+		savingLanguage = true;
+		try {
+			const updated = await api.patch<Organizer>('/auth/me', { language });
+			$currentUser = updated;
+			$locale = language;
+			toast.success($_('account.preferencesSaved'));
+		} catch (err: unknown) {
+			const apiErr = err as { message?: string };
+			toast.error(apiErr.message || $_('account.preferencesError'));
+		} finally {
+			savingLanguage = false;
+		}
+	}
 
 	let deleteModalOpen = $state(false);
 	let deleteConfirmText = $state('');
@@ -79,8 +105,27 @@
 				<p class="mt-1 text-sm text-neutral-500">{$currentUser.email}</p>
 			</div>
 
-			<!-- Section 1: Your data -->
+			<!-- Section 0: Preferences -->
 			<Card>
+				<h2 class="text-lg font-display font-semibold text-neutral-900 mb-1">{$_('account.preferencesTitle')}</h2>
+				<p class="text-sm text-neutral-600 mb-4">{$_('account.preferencesBody')}</p>
+				<div class="flex flex-col sm:flex-row sm:items-end gap-4">
+					<div class="flex-1 max-w-xs">
+						<Select
+							label={$_('account.languageLabel')}
+							name="language"
+							bind:value={language}
+							options={languageOptions}
+						/>
+					</div>
+					<Button loading={savingLanguage} onclick={handleSaveLanguage}>
+						{$_('account.savePreferences')}
+					</Button>
+				</div>
+			</Card>
+
+			<!-- Section 1: Your data -->
+			<Card class="mt-6">
 				<div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
 					<div class="sm:pr-8">
 						<h2 class="text-lg font-display font-semibold text-neutral-900">{$_('account.dataTitle')}</h2>

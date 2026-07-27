@@ -35,7 +35,7 @@ func (s *Service) SetEmailSender(fn func(ctx context.Context, to, subject, body,
 // Submit sends feedback via GitHub Issues (preferred) or email (fallback).
 // If allowFollowUp is true and sendEmail is configured, a confirmation is sent
 // to organizerEmail.
-func (s *Service) Submit(ctx context.Context, organizerEmail, feedbackType, message string, allowFollowUp bool) error {
+func (s *Service) Submit(ctx context.Context, organizerEmail, language, feedbackType, message string, allowFollowUp bool) error {
 	var submitErr error
 	if s.githubToken != "" && s.githubRepo != "" {
 		submitErr = s.submitGitHub(ctx, organizerEmail, feedbackType, message)
@@ -55,12 +55,12 @@ func (s *Service) Submit(ctx context.Context, organizerEmail, feedbackType, mess
 
 	// Send confirmation to the submitter if they opted in and email is available.
 	if allowFollowUp && s.sendEmail != nil && organizerEmail != "" {
-		htmlBody, plain, err := templates.RenderFeedbackConfirmation(feedbackType, true)
+		subject, htmlBody, plain, err := templates.RenderFeedbackConfirmation(feedbackType, true, language)
 		if err != nil {
 			log.Error().Err(err).Msg("failed to render feedback confirmation template")
 			return nil
 		}
-		if err := s.sendEmail(ctx, organizerEmail, "We received your feedback — OpenRSVP", htmlBody, plain); err != nil {
+		if err := s.sendEmail(ctx, organizerEmail, subject, htmlBody, plain); err != nil {
 			log.Error().Err(err).Str("email", organizerEmail).Msg("failed to send feedback confirmation email")
 		}
 	}

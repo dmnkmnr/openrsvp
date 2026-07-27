@@ -19,38 +19,38 @@
           <!-- Body -->
           <tr>
             <td style="padding:32px 40px;">
-              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:{{.Colors.Text}};">New RSVP Received</h2>
+              <h2 style="margin:0 0 16px;font-size:20px;font-weight:600;color:{{.Colors.Text}};">{{.Heading}}</h2>
               <p style="margin:0 0 24px;font-size:16px;line-height:24px;color:{{.Colors.TextSecondary}};">
-                Someone has responded to your event <strong>{{.EventTitle}}</strong>.
+                {{.IntroHTML}}
               </p>
               <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin:0 0 24px;background-color:{{.Colors.InfoBg}};border-radius:6px;">
                 <tr>
                   <td style="padding:20px;">
                     <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">Guest</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">{{.LabelGuest}}</td>
                         <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.Text}};text-align:right;">{{.GuestName}}</td>
                       </tr>
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">Response</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">{{.LabelResponse}}</td>
                         <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.Primary}};text-align:right;">{{.RSVPStatus}}</td>
                       </tr>
                       {{if .GuestEmail}}
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">Email</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">{{.LabelEmail}}</td>
                         <td style="padding:4px 0;font-size:14px;color:{{.Colors.Text}};text-align:right;">{{.GuestEmail}}</td>
                       </tr>
                       {{end}}
                       {{if .GuestPhone}}
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">Phone</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">{{.LabelPhone}}</td>
                         <td style="padding:4px 0;font-size:14px;color:{{.Colors.Text}};text-align:right;">{{.GuestPhone}}</td>
                       </tr>
                       {{end}}
                       {{if gt .PlusOnes 0}}
                       <tr>
-                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">Additional Guests</td>
-                        <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.Text}};text-align:right;">+{{.PlusOnes}}{{if gt .PlusOnesChildren 0}} ({{.PlusOnesChildren}} under 12){{end}}</td>
+                        <td style="padding:4px 0;font-size:14px;color:{{.Colors.TextSecondary}};">{{.LabelAdditionalGuests}}</td>
+                        <td style="padding:4px 0;font-size:14px;font-weight:600;color:{{.Colors.Text}};text-align:right;">+{{.PlusOnes}}{{if gt .PlusOnesChildren 0}} ({{.PlusOnesChildren}} {{.ChildrenSuffix}}){{end}}</td>
                       </tr>
                       {{end}}
                     </table>
@@ -61,7 +61,7 @@
                 <tr>
                   <td style="border-radius:6px;background-color:{{.Colors.Primary}};">
                     <a href="{{.DashboardURL}}" target="_blank" style="display:inline-block;padding:14px 32px;font-size:16px;font-weight:600;color:{{.Colors.CardBg}};text-decoration:none;border-radius:6px;">
-                      View Event Dashboard
+                      {{.ButtonLabel}}
                     </a>
                   </td>
                 </tr>
@@ -72,7 +72,7 @@
           <tr>
             <td style="padding:0 40px 32px;text-align:center;">
               <p style="margin:0;font-size:12px;color:{{.Colors.TextMuted}};">
-                &copy; OpenRSVP &mdash; Simple event RSVPs
+                {{.FooterText}}
               </p>
             </td>
           </tr>

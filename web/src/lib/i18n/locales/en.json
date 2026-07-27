@@ -124,6 +124,12 @@
 	"account": {
 		"pageTitle": "Account Settings -- OpenRSVP",
 		"heading": "Account Settings",
+		"preferencesTitle": "Preferences",
+		"preferencesBody": "Choose the language for your account emails (magic link, new RSVP alerts, co-host invites) and the app itself.",
+		"languageLabel": "Language",
+		"savePreferences": "Save",
+		"preferencesSaved": "Preferences saved",
+		"preferencesError": "Failed to save preferences",
 		"dataTitle": "Your data",
 		"dataBody": "Download a complete copy of your data as a JSON file. This includes all of your events, guests, RSVPs, and messages.",
 		"exportData": "Export my data",
@@ -1092,7 +1098,9 @@
 			"emailPlaceholder": "you@example.com",
 			"sending": "Sending...",
 			"sendMagicLink": "Send Magic Link",
-			"backToHome": "Back to home"
+			"backToHome": "Back to home",
+			"languageLabel": "Notification & UI language",
+			"languageHelper": "Sets the language for your account emails (magic link, new RSVP alerts, etc.) and the app itself. You can change this later in account settings."
 		}
 	}
 }

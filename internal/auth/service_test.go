@@ -35,7 +35,7 @@ func TestRequestMagicLink(t *testing.T) {
 	svc, store := setupAuth(t)
 	ctx := context.Background()
 
-	err := svc.RequestMagicLink(ctx, "test@example.com")
+	err := svc.RequestMagicLink(ctx, "test@example.com", "")
 	require.NoError(t, err)
 
 	org, err := store.FindOrganizerByEmail(ctx, "test@example.com")
@@ -51,7 +51,7 @@ func TestRequestMagicLinkExistingUser(t *testing.T) {
 	org, err := store.CreateOrganizer(ctx, "existing@example.com")
 	require.NoError(t, err)
 
-	err = svc.RequestMagicLink(ctx, "existing@example.com")
+	err = svc.RequestMagicLink(ctx, "existing@example.com", "")
 	require.NoError(t, err)
 
 	// Should still be the same organizer (not duplicated).
@@ -60,11 +60,54 @@ func TestRequestMagicLinkExistingUser(t *testing.T) {
 	assert.Equal(t, org.ID, found.ID)
 }
 
+func TestRequestMagicLinkSetsLanguageOnCreate(t *testing.T) {
+	svc, store := setupAuth(t)
+	ctx := context.Background()
+
+	err := svc.RequestMagicLink(ctx, "newuser@example.com", "de")
+	require.NoError(t, err)
+
+	org, err := store.FindOrganizerByEmail(ctx, "newuser@example.com")
+	require.NoError(t, err)
+	assert.Equal(t, "de", org.Language)
+}
+
+func TestRequestMagicLinkInvalidLanguageFallsBackToDefault(t *testing.T) {
+	svc, store := setupAuth(t)
+	ctx := context.Background()
+
+	err := svc.RequestMagicLink(ctx, "newuser2@example.com", "fr")
+	require.NoError(t, err)
+
+	org, err := store.FindOrganizerByEmail(ctx, "newuser2@example.com")
+	require.NoError(t, err)
+	assert.Equal(t, "en", org.Language)
+}
+
+func TestRequestMagicLinkIgnoresLanguageForExistingUser(t *testing.T) {
+	svc, store := setupAuth(t)
+	ctx := context.Background()
+
+	org, err := store.CreateOrganizer(ctx, "existing-lang@example.com")
+	require.NoError(t, err)
+	org.Language = "de"
+	require.NoError(t, store.UpdateOrganizer(ctx, org))
+
+	// A later login request with a different language must not overwrite
+	// the organizer's already-saved preference.
+	err = svc.RequestMagicLink(ctx, "existing-lang@example.com", "en")
+	require.NoError(t, err)
+
+	found, err := store.FindOrganizerByEmail(ctx, "existing-lang@example.com")
+	require.NoError(t, err)
+	assert.Equal(t, "de", found.Language)
+}
+
 func TestRequestMagicLinkInvalidEmail(t *testing.T) {
 	svc, _ := setupAuth(t)
 	ctx := context.Background()
 
-	err := svc.RequestMagicLink(ctx, "not-an-email")
+	err := svc.RequestMagicLink(ctx, "not-an-email", "")
 	assert.ErrorIs(t, err, ErrInvalidEmail)
 }
 

@@ -8,6 +8,7 @@ type Organizer struct {
 	Email     string    `json:"email"`
 	Name      string    `json:"name"`
 	Timezone  string    `json:"timezone"`
+	Language  string    `json:"language"`
 	IsAdmin   bool      `json:"isAdmin"`
 	CreatedAt time.Time `json:"createdAt"`
 	UpdatedAt time.Time `json:"updatedAt"`
@@ -17,6 +18,22 @@ type Organizer struct {
 type UpdateProfileRequest struct {
 	Name     *string `json:"name,omitempty"`
 	Timezone *string `json:"timezone,omitempty"`
+	Language *string `json:"language,omitempty"`
+}
+
+// SupportedLanguages lists the languages an organizer can choose for their
+// own notification emails and UI. Kept local to this package (a 2-element
+// list isn't worth importing internal/event's guest-facing equivalent for).
+var SupportedLanguages = []string{"en", "de"}
+
+// isValidLanguage reports whether s is a supported language code.
+func isValidLanguage(s string) bool {
+	for _, lang := range SupportedLanguages {
+		if s == lang {
+			return true
+		}
+	}
+	return false
 }
 
 // MagicLink is a one-time-use token sent via email for passwordless login.
@@ -40,7 +57,8 @@ type Session struct {
 
 // MagicLinkRequest is the request body for requesting a magic link.
 type MagicLinkRequest struct {
-	Email string `json:"email"`
+	Email    string `json:"email"`
+	Language string `json:"language,omitempty"`
 }
 
 // MagicLinkResponse is the response body after requesting a magic link.

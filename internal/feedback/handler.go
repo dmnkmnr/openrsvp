@@ -11,8 +11,9 @@ import (
 	"github.com/yannkr/openrsvp/internal/errcode"
 )
 
-// OrganizerFromCtx extracts the organizer email from the request context.
-type OrganizerFromCtx func(ctx context.Context) (email string, ok bool)
+// OrganizerFromCtx extracts the organizer's email and language from the
+// request context.
+type OrganizerFromCtx func(ctx context.Context) (email, language string, ok bool)
 
 // Handler holds HTTP handlers for feedback endpoints.
 type Handler struct {
@@ -63,7 +64,7 @@ type publicSubmitRequest struct {
 }
 
 func (h *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {
-	email, ok := h.organizerFrom(r.Context())
+	email, language, ok := h.organizerFrom(r.Context())
 	if !ok {
 		writeError(w, http.StatusUnauthorized, "unauthorized", "authentication required")
 		return
@@ -94,7 +95,7 @@ func (h *Handler) handleSubmit(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	if err := h.service.Submit(r.Context(), email, req.Type, req.Message, req.AllowFollowUp); err != nil {
+	if err := h.service.Submit(r.Context(), email, language, req.Type, req.Message, req.AllowFollowUp); err != nil {
 		ref := errcode.Ref()
 		h.logger.Error().Err(err).Str("error_code", ref).Msg("failed to submit feedback")
 		writeError(w, http.StatusInternalServerError, "internal_error", "an internal error occurred (ref: "+ref+")")
