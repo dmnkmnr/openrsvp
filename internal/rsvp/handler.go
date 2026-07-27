@@ -515,6 +515,7 @@ func isRSVPValidationError(err error) bool {
 		"email is required",
 		"phone is required",
 		"email or phone is required",
+		"invalid phone format:",
 		"Event is at capacity",
 	}
 	for _, safe := range safeMessages {

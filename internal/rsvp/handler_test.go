@@ -333,6 +333,22 @@ func TestHandleSubmitRSVP_MissingName(t *testing.T) {
 	assert.Contains(t, body["message"], "name is required")
 }
 
+func TestHandleSubmitRSVP_InvalidPhoneFormat(t *testing.T) {
+	h, _, eventSvc, org := setupRSVPHandler(t)
+	shareToken, _ := publishEvent(t, eventSvc, org.ID)
+
+	rr := testutil.DoRequest(t, h, "POST", "/public/"+shareToken, map[string]any{
+		"name":          "Alice",
+		"phone":         "0151 1234567",
+		"rsvpStatus":    "attending",
+		"contactMethod": "sms",
+	})
+
+	assert.Equal(t, http.StatusBadRequest, rr.Code)
+	body := testutil.ParseJSON(t, rr)
+	assert.Contains(t, body["message"], "invalid phone format")
+}
+
 func TestHandleSubmitRSVP_InvalidStatus(t *testing.T) {
 	h, _, eventSvc, org := setupRSVPHandler(t)
 	shareToken, _ := publishEvent(t, eventSvc, org.ID)

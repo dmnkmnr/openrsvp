@@ -5,6 +5,7 @@
 	import { toast } from '$lib/stores/toast';
 	import { currentEvent } from '$lib/stores/events';
 	import { formatDateTime, toISOLocal } from '$lib/utils/dates';
+	import { isValidPhone } from '$lib/utils/validation';
 	import { currentUser } from '$lib/stores/auth';
 	import type { Event, Attendee, RSVPStats, Reminder, CoHost, EventComment, EmailStats } from '$lib/types';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
@@ -283,6 +284,10 @@
 
 	async function saveAttendee() {
 		if (!editingAttendeeId) return;
+		if (editAttendee.phone.trim() && !isValidPhone(editAttendee.phone.trim())) {
+			toast.error($_('events.detail.phoneInvalid'));
+			return;
+		}
 		savingAttendee = true;
 		try {
 			const result = await api.patch<{ data: Attendee }>(`/rsvp/event/${eventId}/${editingAttendeeId}`, {

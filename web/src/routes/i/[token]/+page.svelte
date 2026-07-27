@@ -4,6 +4,7 @@
 	import { api } from '$lib/api/client';
 	import { smsEnabled, loadAppConfig } from '$lib/stores/config';
 	import { formatDateTime } from '$lib/utils/dates';
+	import { isValidPhone } from '$lib/utils/validation';
 	import type { PublicEvent, InviteCard, PublicAttendance, EventQuestion, ApiError, PublicComment, PaginatedComments } from '$lib/types';
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
@@ -202,6 +203,11 @@
 
 		const hasEmail = !!email.trim();
 		const hasPhone = !!phone.trim();
+
+		if (hasPhone && !isValidPhone(phone.trim())) {
+			submitError = $_('guestInvite.phoneInvalid');
+			return;
+		}
 
 		// When SMS is disabled, email is always required.
 		if (!$smsEnabled && !hasEmail) {

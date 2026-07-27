@@ -2,8 +2,10 @@ export function isValidEmail(email: string): boolean {
 	return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
+// Matches the backend's E.164 requirement (internal/security.ValidatePhone):
+// a leading "+" followed by 2-15 digits, no leading zero after the "+".
 export function isValidPhone(phone: string): boolean {
-	return /^\+?[1-9]\d{1,14}$/.test(phone.replace(/[\s\-()]/g, ''));
+	return /^\+[1-9]\d{1,14}$/.test(phone.replace(/[\s\-()]/g, ''));
 }
 
 export function isRequired(value: string): boolean {
