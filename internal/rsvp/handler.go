@@ -517,6 +517,8 @@ func isRSVPValidationError(err error) bool {
 		"email or phone is required",
 		"invalid phone format:",
 		"Event is at capacity",
+		"email is already used by another attendee",
+		"phone is already used by another attendee",
 	}
 	for _, safe := range safeMessages {
 		if strings.HasPrefix(msg, safe) {

@@ -972,6 +972,28 @@ func (s *Service) UpdateAttendeeAsOrganizer(ctx context.Context, eventID, attend
 		}
 	}
 
+	// Check for a duplicate email/phone on another attendee of this event
+	// before writing, so the organizer gets a clear error instead of a raw
+	// database constraint violation.
+	if req.Email != nil && *req.Email != "" && (a.Email == nil || *a.Email != *req.Email) {
+		existing, err := s.store.FindByEventAndEmail(ctx, eventID, *req.Email)
+		if err != nil {
+			return nil, fmt.Errorf("check duplicate email: %w", err)
+		}
+		if existing != nil && existing.ID != attendeeID {
+			return nil, fmt.Errorf("email is already used by another attendee")
+		}
+	}
+	if req.Phone != nil && *req.Phone != "" && (a.Phone == nil || *a.Phone != *req.Phone) {
+		existing, err := s.store.FindByEventAndPhone(ctx, eventID, *req.Phone)
+		if err != nil {
+			return nil, fmt.Errorf("check duplicate phone: %w", err)
+		}
+		if existing != nil && existing.ID != attendeeID {
+			return nil, fmt.Errorf("phone is already used by another attendee")
+		}
+	}
+
 	if req.Name != nil {
 		a.Name = *req.Name
 	}

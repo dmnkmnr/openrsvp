@@ -567,6 +567,79 @@ func TestUpdateAttendeeAsOrganizer(t *testing.T) {
 	assert.Equal(t, 3, updated.PlusOnes)
 }
 
+func TestUpdateAttendeeAsOrganizerDuplicateEmail(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
+	})
+	require.NoError(t, err)
+	bob, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Bob", Email: strPtr("bob@example.com"), RSVPStatus: "attending",
+	})
+	require.NoError(t, err)
+
+	_, err = svc.UpdateAttendeeAsOrganizer(ctx, ev.ID, bob.ID, OrganizerUpdateAttendeeRequest{
+		Email: strPtr("alice@example.com"),
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "email is already used by another attendee")
+}
+
+func TestUpdateAttendeeAsOrganizerDuplicatePhone(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	svc.SetSMSEnabled(true)
+	eventSvc.SetSMSEnabled(true)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEventWithContactReq(t, eventSvc, org.ID, "phone")
+
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Phone: strPtr("+15551234567"), RSVPStatus: "attending", ContactMethod: "sms",
+	})
+	require.NoError(t, err)
+	bob, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Bob", Phone: strPtr("+15557654321"), RSVPStatus: "attending", ContactMethod: "sms",
+	})
+	require.NoError(t, err)
+
+	_, err = svc.UpdateAttendeeAsOrganizer(ctx, ev.ID, bob.ID, OrganizerUpdateAttendeeRequest{
+		Phone: strPtr("+15551234567"),
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "phone is already used by another attendee")
+}
+
+func TestUpdateAttendeeAsOrganizerSameEmailNoError(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	attendee, err := svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Email: strPtr("alice@example.com"), RSVPStatus: "attending",
+	})
+	require.NoError(t, err)
+
+	// Re-submitting the attendee's own current email must not be flagged
+	// as a duplicate of themselves.
+	updated, err := svc.UpdateAttendeeAsOrganizer(ctx, ev.ID, attendee.ID, OrganizerUpdateAttendeeRequest{
+		Email: strPtr("alice@example.com"),
+		Name:  strPtr("Alice Updated"),
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "Alice Updated", updated.Name)
+}
+
 func TestUpdateAttendeeAsOrganizerWrongEvent(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	ctx := context.Background()
