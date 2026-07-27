@@ -677,7 +677,7 @@
 							<!-- Plus Ones -->
 							<div>
 								<label for="rsvp-plusones" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									{$_('guestInvite.additionalGuestsLabel')}
+									{$_('guestInvite.additionalGuestsLabel')} <span class="text-neutral-400 font-normal">{$_('guestInvite.additionalGuestsHint')}</span>
 								</label>
 								<div class="flex items-center gap-3">
 									<input

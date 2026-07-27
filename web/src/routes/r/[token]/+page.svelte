@@ -466,7 +466,7 @@
 						<!-- Plus Ones -->
 						<div>
 							<label for="edit-plusones" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								{$_('guestManage.additionalGuestsLabel')}
+								{$_('guestManage.additionalGuestsLabel')} <span class="text-neutral-400 font-normal">{$_('guestManage.additionalGuestsHint')}</span>
 							</label>
 							<div class="flex items-center gap-3">
 								<input
