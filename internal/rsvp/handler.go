@@ -15,6 +15,7 @@ import (
 
 	"github.com/yannkr/openrsvp/internal/calendar"
 	"github.com/yannkr/openrsvp/internal/errcode"
+	"github.com/yannkr/openrsvp/internal/notification/templates"
 )
 
 // OrganizerFromCtx extracts the organizer ID from the request context.
@@ -226,6 +227,10 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 	}
 
 	eventID := chi.URLParam(r, "eventId")
+	lang := r.URL.Query().Get("lang")
+	if lang != "de" {
+		lang = "en"
+	}
 
 	if err := h.checkEventOwner(r.Context(), eventID, organizerID); err != nil {
 		writeError(w, http.StatusNotFound, "not_found", "event not found")
@@ -291,7 +296,7 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 	writer := csv.NewWriter(w)
 
 	// Build header with optional question columns.
-	header := []string{"Name", "Email", "Phone", "RSVP Status", "Dietary Notes", "Plus Ones", "Children Under 12", "RSVP Date"}
+	header := append([]string{}, csvExportHeader(lang)...)
 	if exportData != nil {
 		header = append(header, exportData.Labels...)
 	}
@@ -314,11 +319,11 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 			DefangCSVCell(a.Name),
 			DefangCSVCell(email),
 			DefangCSVCell(phone),
-			DefangCSVCell(a.RSVPStatus),
+			DefangCSVCell(templates.DisplayStatusLocalized(lang, a.RSVPStatus)),
 			DefangCSVCell(a.DietaryNotes),
 			strconv.Itoa(a.PlusOnes),
 			strconv.Itoa(a.PlusOnesChildren),
-			a.CreatedAt.Format("2006-01-02 15:04:05"),
+			templates.InTimezone(a.CreatedAt, ev.Timezone).Format("2006-01-02 15:04:05"),
 		}
 
 		// Append question answer columns.
@@ -337,6 +342,16 @@ func (h *Handler) handleExportCSV(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writer.Flush()
+}
+
+// csvExportHeader returns the localized CSV column headers for the attendee
+// export, in the organizer's currently displayed UI language (not the
+// event's guest language -- this export is organizer-only).
+func csvExportHeader(lang string) []string {
+	if lang == "de" {
+		return []string{"Name", "E-Mail", "Telefon", "RSVP-Status", "Ernährungshinweise", "Weitere Gäste", "Kinder unter 12", "RSVP-Datum"}
+	}
+	return []string{"Name", "Email", "Phone", "RSVP Status", "Dietary Notes", "Plus Ones", "Children Under 12", "RSVP Date"}
 }
 
 func (h *Handler) handleUpdateAttendee(w http.ResponseWriter, r *http.Request) {

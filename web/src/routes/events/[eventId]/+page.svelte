@@ -20,7 +20,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import { onMount } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _, locale } from '$lib/i18n';
 
 	let showCancelModal = $state(false);
 	let notifyOnCancel = $state(true);
@@ -245,7 +245,7 @@
 
 	function exportCSV(status: string) {
 		const a = document.createElement('a');
-		a.href = `/api/v1/rsvp/event/${eventId}/export?status=${status}`;
+		a.href = `/api/v1/rsvp/event/${eventId}/export?status=${status}&lang=${$locale ?? 'en'}`;
 		a.download = '';
 		a.click();
 		exportMenuOpen = false;

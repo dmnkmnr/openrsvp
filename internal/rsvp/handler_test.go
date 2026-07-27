@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"testing"
+	"time"
 
 	"github.com/rs/zerolog"
 	"github.com/stretchr/testify/assert"
@@ -583,6 +584,44 @@ func TestHandleExportCSV_Success(t *testing.T) {
 	assert.Contains(t, body, "Bob")
 }
 
+func TestHandleExportCSV_German(t *testing.T) {
+	h, svc, eventSvc, org := setupRSVPHandler(t)
+	shareToken, eventID := publishEvent(t, eventSvc, org.ID)
+
+	doRSVP(t, svc, shareToken, "Alice", "alice@example.com")
+
+	rr := testutil.DoRequest(t, h, "GET", "/event/"+eventID+"/export?lang=de", nil)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	assert.Contains(t, body, "Name,E-Mail,Telefon,RSVP-Status,Ernährungshinweise,Weitere Gäste,Kinder unter 12,RSVP-Datum")
+	assert.Contains(t, body, "Zusage") // localized "attending" status
+	assert.NotContains(t, body, "Dietary Notes")
+}
+
+func TestHandleExportCSV_RSVPDateInEventTimezone(t *testing.T) {
+	h, svc, eventSvc, org := setupRSVPHandler(t)
+	// publishEvent leaves Timezone unset, which event.Service.Create
+	// defaults to "America/New_York" -- distinct from UTC year-round.
+	shareToken, eventID := publishEvent(t, eventSvc, org.ID)
+
+	attendee := doRSVP(t, svc, shareToken, "Alice", "alice@example.com")
+
+	rr := testutil.DoRequest(t, h, "GET", "/event/"+eventID+"/export", nil)
+	assert.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+
+	loc, err := time.LoadLocation("America/New_York")
+	require.NoError(t, err)
+	wantDate := attendee.CreatedAt.In(loc).Format("2006-01-02 15:04:05")
+	rawUTCDate := attendee.CreatedAt.UTC().Format("2006-01-02 15:04:05")
+
+	assert.Contains(t, body, wantDate, "RSVP Date must reflect the event's timezone")
+	if wantDate != rawUTCDate {
+		assert.NotContains(t, body, rawUTCDate, "RSVP Date must not be the raw UTC value")
+	}
+}
+
 func TestHandleExportCSV_FilterByStatus(t *testing.T) {
 	h, svc, eventSvc, org := setupRSVPHandler(t)
 	shareToken, eventID := publishEvent(t, eventSvc, org.ID)
@@ -700,5 +739,5 @@ func TestExportCSV_NullEmailPhone(t *testing.T) {
 	lines := strings.Split(strings.TrimSpace(body), "\n")
 	require.GreaterOrEqual(t, len(lines), 2)
 	// The data row should contain the attendee with empty phone field.
-	assert.Contains(t, lines[1], "nophone@example.com,,attending")
+	assert.Contains(t, lines[1], "nophone@example.com,,Attending")
 }
