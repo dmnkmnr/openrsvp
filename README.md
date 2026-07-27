@@ -451,6 +451,18 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.20.5 (2026-07-27)
+
+**Fixes:**
+- "Find your RSVP" email/SMS was entirely hardcoded in English (heading, button, footer, even the HTML title) with no language support at all — now localized to the event's guest language
+- The German custom-question-type names ("Multiple Choice", "Checkboxen") were untranslated/anglicized and didn't match how each type actually behaves — renamed to "Einfachauswahl" (single choice / radio buttons) and "Mehrfachauswahl" (multiple choice / checkboxes)
+- Added a muted "(partner, kids)" hint next to the Additional Guests label, matching the existing "(optional)" style used for Dietary Notes
+
+### v1.20.4 (2026-07-27)
+
+**Fixes:**
+- A brand-new invite card always pre-filled the heading/body/footer with hardcoded English suggestions ("You're Invited!" etc.), even when the event's guest language was German — the suggested starting text now matches the event's guest language
+
 ### v1.20.3 (2026-07-27)
 
 **Fixes:**
