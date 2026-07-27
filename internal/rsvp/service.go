@@ -36,6 +36,9 @@ type NotifyRSVPFunc func(ctx context.Context, eventID string, attendee *Attendee
 // EmailSender is a function that sends an email.
 type EmailSender func(ctx context.Context, to, subject, htmlBody, plainBody string) error
 
+// SMSSender is a function that sends an SMS.
+type SMSSender func(ctx context.Context, to, body string) error
+
 // capacityMutexPool provides per-event locking for capacity checks to prevent
 // race conditions in the check-then-insert pattern. Uses a fixed-size pool
 // of mutexes indexed by FNV hash of the event ID. Two different event IDs may
@@ -85,6 +88,7 @@ type Service struct {
 	notifyRSVP                NotifyRSVPFunc
 	notifyWaitlistPromotion   NotifyWaitlistPromotionFunc
 	sendEmail                 EmailSender
+	sendSMS                   SMSSender
 	smsEnabled                bool
 	baseURL                   string
 	validateAnswers           ValidateAndSaveAnswersFunc
@@ -121,6 +125,12 @@ func (s *Service) SetNotifyRSVP(fn NotifyRSVPFunc) {
 // wiring is complete to break the circular dependency.
 func (s *Service) SetEmailSender(fn EmailSender) {
 	s.sendEmail = fn
+}
+
+// SetSMSSender sets the SMS sending function. Called after notification
+// wiring is complete to break the circular dependency.
+func (s *Service) SetSMSSender(fn SMSSender) {
+	s.sendSMS = fn
 }
 
 // SetSMSEnabled sets whether SMS notifications are available. When disabled,
@@ -1088,11 +1098,12 @@ func (s *Service) promoteWaitlistLoop(ctx context.Context, eventID string) {
 	}
 }
 
-// SendRSVPLookupEmail sends a magic link email to the attendee so they can
-// access their RSVP. It always returns nil to prevent email enumeration —
-// callers cannot distinguish "email found" from "email not found".
+// SendRSVPLookup sends a magic link to the attendee, by email or SMS, so
+// they can access their RSVP. Guests who registered phone-only (no email on
+// file) can look themselves up by phone instead. It always returns nil to
+// prevent enumeration — callers cannot distinguish "found" from "not found".
 // Returns an error only for invalid share tokens (unpublished/missing events).
-func (s *Service) SendRSVPLookupEmail(ctx context.Context, shareToken, email string) error {
+func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone string) error {
 	ev, err := s.eventService.GetByShareToken(ctx, shareToken)
 	if err != nil {
 		return fmt.Errorf("event not found")
@@ -1101,18 +1112,32 @@ func (s *Service) SendRSVPLookupEmail(ctx context.Context, shareToken, email str
 		return fmt.Errorf("event not found")
 	}
 
-	a, err := s.store.FindByEventAndEmail(ctx, ev.ID, email)
-	if err != nil || a == nil {
-		// Silently succeed to prevent email enumeration.
+	var a *Attendee
+	if email != "" {
+		a, err = s.store.FindByEventAndEmail(ctx, ev.ID, email)
+		if err != nil {
+			a = nil
+		}
+	}
+	if a == nil && phone != "" {
+		a, err = s.store.FindByEventAndPhone(ctx, ev.ID, phone)
+		if err != nil {
+			a = nil
+		}
+	}
+	if a == nil {
+		// Silently succeed to prevent enumeration.
 		return nil
 	}
 
-	// Send the lookup email asynchronously.
-	if s.sendEmail != nil {
+	rsvpToken := a.RSVPToken
+	evTitle := ev.Title
+	baseURL := s.baseURL
+
+	// Prefer email when the attendee has one and it's the one they looked up
+	// with; otherwise fall back to SMS if they have a phone on file.
+	if email != "" && a.Email != nil && *a.Email == email && s.sendEmail != nil {
 		sendFn := s.sendEmail
-		rsvpToken := a.RSVPToken
-		evTitle := ev.Title
-		baseURL := s.baseURL
 		s.asyncNotify(func() {
 			modifyURL := baseURL + "/r/" + rsvpToken
 			htmlBody, plainBody, err := templates.RenderRSVPLookup(evTitle, modifyURL)
@@ -1124,6 +1149,20 @@ func (s *Service) SendRSVPLookupEmail(ctx context.Context, shareToken, email str
 				s.logger.Error().Err(err).Str("to", email).Msg("rsvp lookup: failed to send email")
 			}
 		})
+		return nil
+	}
+
+	if a.Phone != nil && *a.Phone != "" && s.sendSMS != nil {
+		sendFn := s.sendSMS
+		to := *a.Phone
+		s.asyncNotify(func() {
+			modifyURL := baseURL + "/r/" + rsvpToken
+			smsBody := templates.SMSFrom(fmt.Sprintf("Your RSVP link for %s: %s", evTitle, modifyURL), 300)
+			if err := sendFn(context.Background(), to, smsBody); err != nil {
+				s.logger.Error().Err(err).Str("to", to).Msg("rsvp lookup: failed to send sms")
+			}
+		})
+		return nil
 	}
 
 	return nil

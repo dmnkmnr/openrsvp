@@ -337,6 +337,8 @@
 		"lookupPrompt": "Schon zugesagt? Finde deine Antwort",
 		"checkEmailTitle": "Prüfe deine E-Mails",
 		"checkEmailBody": "Falls du bereits ein RSVP hast, erhältst du in Kürze eine E-Mail mit einem Link zur Verwaltung.",
+		"checkPhoneTitle": "Prüfe dein Handy",
+		"checkPhoneBody": "Falls du bereits ein RSVP hast, erhältst du in Kürze eine SMS mit einem Link zur Verwaltung.",
 		"findRsvpTitle": "Deine RSVP finden",
 		"cancel": "Abbrechen",
 		"sendMeLink": "Link zusenden",
@@ -357,6 +359,7 @@
 		"emailOrPhoneRequired": "Bitte gib eine E-Mail-Adresse oder Telefonnummer an.",
 		"submitError": "RSVP konnte nicht gesendet werden. Bitte versuche es erneut.",
 		"lookupEmailRequired": "Bitte gib deine E-Mail-Adresse ein.",
+		"lookupEmailOrPhoneRequired": "Bitte gib deine E-Mail-Adresse oder Telefonnummer ein.",
 		"lookupError": "Etwas ist schiefgelaufen. Bitte versuche es erneut.",
 		"deleteCommentError": "Kommentar konnte nicht gelöscht werden.",
 		"postCommentError": "Kommentar konnte nicht gepostet werden"

@@ -69,7 +69,9 @@ type OrganizerUpdateAttendeeRequest struct {
 	PlusOnesChildren *int    `json:"plusOnesChildren,omitempty"`
 }
 
-// LookupRSVPRequest is the request body for looking up an RSVP by email.
+// LookupRSVPRequest is the request body for looking up an RSVP by email or
+// phone (guests who registered phone-only have no email to look up with).
 type LookupRSVPRequest struct {
-	Email string `json:"email"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
 }

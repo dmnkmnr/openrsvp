@@ -337,6 +337,8 @@
 		"lookupPrompt": "Already RSVP'd? Look up your response",
 		"checkEmailTitle": "Check Your Email",
 		"checkEmailBody": "If you have an RSVP, you'll receive an email shortly with a link to manage it.",
+		"checkPhoneTitle": "Check Your Phone",
+		"checkPhoneBody": "If you have an RSVP, you'll receive a text message shortly with a link to manage it.",
 		"findRsvpTitle": "Find Your RSVP",
 		"cancel": "Cancel",
 		"sendMeLink": "Send me a link",
@@ -357,6 +359,7 @@
 		"emailOrPhoneRequired": "Please provide an email or phone number.",
 		"submitError": "Failed to submit RSVP. Please try again.",
 		"lookupEmailRequired": "Please enter your email address.",
+		"lookupEmailOrPhoneRequired": "Please enter your email address or phone number.",
 		"lookupError": "Something went wrong. Please try again.",
 		"deleteCommentError": "Failed to delete comment.",
 		"postCommentError": "Failed to post comment"

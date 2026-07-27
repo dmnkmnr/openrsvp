@@ -282,21 +282,31 @@
 	// RSVP Lookup state
 	let showLookup = $state(false);
 	let lookupEmail = $state('');
+	let lookupPhone = $state('');
 	let lookupLoading = $state(false);
 	let lookupError = $state('');
 	let lookupSuccess = $state(false);
 
+	// Guests who registered phone-only (contactReq === 'phone') have no email
+	// to look their RSVP up with, so show a phone field whenever phone is a
+	// valid contact option for this event.
+	const showLookupPhone = $derived($smsEnabled && contactReq !== 'email');
+	const showLookupEmail = $derived(contactReq !== 'phone' || !$smsEnabled);
+
 	async function handleLookup(e: SubmitEvent) {
 		e.preventDefault();
-		if (!lookupEmail.trim()) {
-			lookupError = $_('guestInvite.lookupEmailRequired');
+		if (!lookupEmail.trim() && !lookupPhone.trim()) {
+			lookupError = showLookupPhone
+				? $_('guestInvite.lookupEmailOrPhoneRequired')
+				: $_('guestInvite.lookupEmailRequired');
 			return;
 		}
 		lookupLoading = true;
 		lookupError = '';
 		try {
 			await api.post(`/rsvp/public/${token}/lookup`, {
-				email: lookupEmail.trim()
+				email: lookupEmail.trim(),
+				phone: lookupPhone.trim()
 			});
 			lookupSuccess = true;
 		} catch (err) {
@@ -749,28 +759,47 @@
 								<path stroke-linecap="round" stroke-linejoin="round" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
 							</svg>
 						</div>
-						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-2">{$_('guestInvite.checkEmailTitle')}</h3>
+						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-2">
+							{lookupEmail.trim() ? $_('guestInvite.checkEmailTitle') : $_('guestInvite.checkPhoneTitle')}
+						</h3>
 						<p class="text-sm text-neutral-600">
-							{$_('guestInvite.checkEmailBody')}
+							{lookupEmail.trim() ? $_('guestInvite.checkEmailBody') : $_('guestInvite.checkPhoneBody')}
 						</p>
 					</div>
 				{:else}
 					<div class="bg-surface rounded-xl shadow-lg border border-neutral-200 p-6">
 						<h3 class="font-display text-lg font-semibold text-neutral-900 mb-4">{$_('guestInvite.findRsvpTitle')}</h3>
 						<form onsubmit={handleLookup} class="space-y-4">
-							<div>
-								<label for="lookup-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
-									{$_('guestInvite.emailLabel')}
-								</label>
-								<input
-									id="lookup-email"
-									type="email"
-									required
-									bind:value={lookupEmail}
-									placeholder={$_('guestInvite.emailPlaceholder')}
-									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-								/>
-							</div>
+							{#if showLookupEmail}
+								<div>
+									<label for="lookup-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
+										{$_('guestInvite.emailLabel')}
+									</label>
+									<input
+										id="lookup-email"
+										type="email"
+										required={!showLookupPhone}
+										bind:value={lookupEmail}
+										placeholder={$_('guestInvite.emailPlaceholder')}
+										class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+									/>
+								</div>
+							{/if}
+							{#if showLookupPhone}
+								<div>
+									<label for="lookup-phone" class="block text-sm font-medium text-neutral-700 mb-1.5">
+										{$_('guestInvite.phoneLabel')}
+									</label>
+									<input
+										id="lookup-phone"
+										type="tel"
+										required={!showLookupEmail}
+										bind:value={lookupPhone}
+										placeholder={$_('guestInvite.phonePlaceholder')}
+										class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+									/>
+								</div>
+							{/if}
 							{#if lookupError}
 								<div class="rounded-md bg-error-light border border-error/20 px-4 py-3 text-sm text-error">
 									{lookupError}

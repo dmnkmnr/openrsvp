@@ -338,6 +338,22 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 		})
 	}
 
+	// Wire SMS sending into RSVP service (for RSVP lookup magic links, so
+	// phone-only guests can find their RSVP too).
+	if notifRegistry.Has(notification.ChannelSMS) {
+		rsvpService.SetSMSSender(func(ctx context.Context, to, body string) error {
+			provider, err := notifRegistry.Get(notification.ChannelSMS)
+			if err != nil {
+				return err
+			}
+			_, sendErr := provider.Send(ctx, &notification.Message{
+				To:   to,
+				Body: body,
+			})
+			return sendErr
+		})
+	}
+
 	// Wire RSVP confirmation notifications into the RSVP service.
 	if notifRegistry.Has(notification.ChannelEmail) || notifRegistry.Has(notification.ChannelSMS) {
 		rsvpService.SetNotifyRSVP(func(ctx context.Context, eventID string, attendee *rsvp.Attendee) {

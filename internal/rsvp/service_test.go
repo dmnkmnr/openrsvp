@@ -633,7 +633,7 @@ func TestSendRSVPLookupEmailSendsEmail(t *testing.T) {
 		return nil
 	})
 
-	err = svc.SendRSVPLookupEmail(ctx, ev.ShareToken, "alice@example.com")
+	err = svc.SendRSVPLookup(ctx, ev.ShareToken, "alice@example.com", "")
 	require.NoError(t, err)
 
 	// Wait for async email send.
@@ -654,7 +654,7 @@ func TestSendRSVPLookupEmailNotFoundNoError(t *testing.T) {
 	ev := createPublishedEvent(t, eventSvc, org.ID)
 
 	// Looking up a non-existent email should return nil (no enumeration).
-	err = svc.SendRSVPLookupEmail(ctx, ev.ShareToken, "nobody@example.com")
+	err = svc.SendRSVPLookup(ctx, ev.ShareToken, "nobody@example.com", "")
 	assert.NoError(t, err)
 }
 
@@ -669,9 +669,42 @@ func TestSendRSVPLookupEmailUnpublished(t *testing.T) {
 	})
 	require.NoError(t, err)
 
-	err = svc.SendRSVPLookupEmail(ctx, ev.ShareToken, "alice@example.com")
+	err = svc.SendRSVPLookup(ctx, ev.ShareToken, "alice@example.com", "")
 	assert.Error(t, err)
 	assert.Contains(t, err.Error(), "event not found")
+}
+
+func TestSendRSVPLookupSendsSMSForPhoneOnlyGuest(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	svc.SetSMSEnabled(true)
+	eventSvc.SetSMSEnabled(true)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEventWithContactReq(t, eventSvc, org.ID, "phone")
+	svc.SetBaseURL("https://example.com")
+
+	_, err = svc.SubmitRSVP(ctx, ev.ShareToken, RSVPRequest{
+		Name: "Alice", Phone: strPtr("+15551234567"), RSVPStatus: "attending", ContactMethod: "sms",
+	})
+	require.NoError(t, err)
+
+	smsSent := make(chan string, 1)
+	svc.SetSMSSender(func(ctx context.Context, to, body string) error {
+		smsSent <- to
+		return nil
+	})
+
+	err = svc.SendRSVPLookup(ctx, ev.ShareToken, "", "+15551234567")
+	require.NoError(t, err)
+
+	select {
+	case to := <-smsSent:
+		assert.Equal(t, "+15551234567", to)
+	case <-time.After(2 * time.Second):
+		t.Fatal("expected sms to be sent")
+	}
 }
 
 func boolPtr(b bool) *bool { return &b }

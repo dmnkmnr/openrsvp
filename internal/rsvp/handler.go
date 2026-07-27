@@ -176,26 +176,26 @@ func (h *Handler) handleLookupRSVP(w http.ResponseWriter, r *http.Request) {
 		writeError(w, http.StatusBadRequest, "bad_request", "invalid JSON body")
 		return
 	}
-	if req.Email == "" {
-		writeError(w, http.StatusBadRequest, "bad_request", "email is required")
+	if req.Email == "" && req.Phone == "" {
+		writeError(w, http.StatusBadRequest, "bad_request", "email or phone is required")
 		return
 	}
 
-	err := h.service.SendRSVPLookupEmail(r.Context(), shareToken, req.Email)
+	err := h.service.SendRSVPLookup(r.Context(), shareToken, req.Email, req.Phone)
 	if err != nil {
 		if err.Error() == "event not found" {
 			writeError(w, http.StatusNotFound, "not_found", "event not found")
 			return
 		}
 		ref := errcode.Ref()
-		h.logger.Error().Err(err).Str("error_ref", ref).Str("share_token", shareToken).Msg("failed to send RSVP lookup email")
+		h.logger.Error().Err(err).Str("error_ref", ref).Str("share_token", shareToken).Msg("failed to send RSVP lookup")
 		writeError(w, http.StatusInternalServerError, "internal_error", "an internal error occurred (ref: "+ref+")")
 		return
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
 		"data": map[string]string{
-			"message": "If you have an RSVP, you'll receive an email shortly with a link to manage it.",
+			"message": "If you have an RSVP, you'll receive a message shortly with a link to manage it.",
 		},
 	})
 }
