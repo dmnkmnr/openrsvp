@@ -451,6 +451,14 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.20.2 (2026-07-27)
+
+**Features:**
+- Organizers can now paste a custom map URL (e.g. a venue's own location page) as the map link behind the event address, in addition to Google Maps and OpenStreetMap
+
+**Fixes:**
+- Removed the "for catering" hint text next to the children-under-12 field on the guest RSVP and self-manage forms
+
 ### v1.20.1 (2026-07-27)
 
 **Features:**
