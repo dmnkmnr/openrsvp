@@ -338,9 +338,7 @@
 	<title>{eventData ? `${eventData.title} — ${$_('guestInvite.pageTitle')}` : $_('guestInvite.pageTitle')} — OpenRSVP</title>
 </svelte:head>
 
-<div class="invite-page min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12"
-	style="background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);"
->
+<div class="invite-page min-h-screen flex flex-col items-center justify-start px-4 py-8 sm:py-12">
 	{#if loading}
 		<div class="flex items-center justify-center min-h-[60vh]">
 			<div class="flex flex-col items-center gap-4">
@@ -918,6 +916,20 @@
 </div>
 
 <style>
+	/* Decorative page background. The invite card at the top keeps its own
+	   organizer-chosen design regardless of theme (see InviteCardPreview);
+	   this only styles the surrounding page. Dark mode reuses the same
+	   neutral-50/100 tokens the admin dashboard uses for its background vs.
+	   card contrast, so the highlight cards below the invite (capacity,
+	   attendance, guestbook, etc. -- already on bg-surface) read as a bit
+	   lighter than the page background, same relationship as the admin UI. */
+	.invite-page {
+		background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);
+	}
+	:global([data-theme='dark']) .invite-page {
+		background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 60%, var(--color-neutral-50) 100%);
+	}
+
 	.rsvp-option {
 		display: flex;
 		flex-direction: column;
