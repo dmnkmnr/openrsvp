@@ -451,6 +451,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.19.2 (2026-07-27)
+
+**Fixes:**
+- Submitting an invalid phone number (missing the international "+" prefix) showed a generic "an internal error occurred" message instead of a proper validation error — the guest RSVP form and organizer attendee-edit form now validate the phone format client-side with a clear, localized message
+- SMS notifications (RSVP confirmations, import invites, waitlist promotions, cancellations, and scheduled reminders) never actually included the RSVP link, even though the message text referred to it — the link is now appended to every SMS
+
 ### v1.19.1 (2026-07-27)
 
 **Fixes:**
