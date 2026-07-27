@@ -338,7 +338,14 @@
 						</svg>
 						GitHub
 					</a>
-					<span class="text-sm">&copy; {new Date().getFullYear()} OpenRSVP</span>
+					<a
+						href="https://github.com/dmnkmnr/openrsvp"
+						target="_blank"
+						rel="noopener noreferrer"
+						class="hover:text-neutral-50 transition-colors text-sm"
+					>
+						&copy; {new Date().getFullYear()} OpenRSVP
+					</a>
 				</div>
 			</div>
 		</div>
