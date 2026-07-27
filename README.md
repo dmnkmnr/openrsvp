@@ -451,6 +451,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.20.3 (2026-07-27)
+
+**Fixes:**
+- The "a guest sent you a message" organizer notification reused the organizer-to-guest reminder email template, producing a nonsensical "Event Reminder" email that ignored the organizer's account language — it now has its own template with correct wording, always in the organizer's saved language
+- Refreshed the default guest email texts (RSVP confirmation, cancellation, reminder, waitlist promotion, invite) with quotes around the event title and warmer wording, in both English and German
+
 ### v1.20.2 (2026-07-27)
 
 **Features:**
