@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.0 (2026-07-27)
+
+**Features:**
+- Added `MAIL_FROM_NAME`, an optional display name shown alongside the sender address on all outgoing email (SMTP, SendGrid, and SES), e.g. `OpenRSVP <noreply@yourdomain.com>` instead of just the bare address
+
 ### v1.20.5 (2026-07-27)
 
 **Fixes:**
