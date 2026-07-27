@@ -450,6 +450,82 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.17.0 (2026-07-25)
+
+**Housekeeping:**
+- Landing page GitHub link (hero + footer) and README docker run/clone/compose instructions now point at `dmnkmnr/openrsvp` instead of upstream `yannkr/openrsvp` (license/copyright notice and the internal Go module path are unaffected)
+
+### v1.16.0 (2026-07-25)
+
+**Features:**
+- Ask how many plus-ones are children under 12, for catering headcounts — new `plusOnesChildren` count (0 ≤ children ≤ plusOnes) on the guest invite form, guest self-service RSVP management, organizer attendee edit, CSV import/export, and the organizer's "new RSVP" notification email. A new `attendingChildren` stat surfaces as a sub-line under the event dashboard's "Attending" card
+
+**Fixes:**
+- Invite card (`InviteCardPreview`) text was invisible for guests viewing an invite on a dark-mode device — the card's organizer-chosen fixed design didn't account for `[data-theme="dark"]` flipping shared neutral-color tokens to near-white; card text colors are now pinned to their light-mode values regardless of site theme
+- CSV export column-header test fixed after the new "Children Under 12" column was added
+
+### v1.15.0 (2026-07-25)
+
+**Features:**
+- Guests who provide both an email and a phone number can now check both boxes on the invite form (was a radio: pick exactly one) and get notified via both channels for every guest notification; a guest who only provides one channel is unaffected
+
+**Fixes:**
+- Event dates in guest-facing emails were always formatted in English regardless of the event's guest language (Go's `time.Format` has no locale support) — added a hand-built German date formatter
+- Scheduled-reminders list showed the raw `all`/`attending`/etc. value next to "Zielgruppe:" instead of the translated recipient label
+
+### v1.14.0 (2026-07-24)
+
+**Fixes:**
+- Default event reminders (auto-created 1 week / 3 days before publish) always sent in English regardless of the event's guest language — they set a hardcoded English message that unintentionally took precedence over the language-aware template
+
+### v1.13.0 (2026-07-24)
+
+**Fixes:**
+- Language switcher's dropdown box still appeared light in dark mode (`bg-transparent` didn't survive some browsers' native control chrome without `appearance-none`)
+- Added the guest-language field to the new-event creation wizard (previously only on the edit-event page)
+
+### v1.12.0 (2026-07-24)
+
+**Features:**
+- Frontend UI for the per-event guest language picker and the message-template customization editor (`/events/{id}/message-templates`)
+
+**Fixes:**
+- Dark-mode contrast on Select/Input/Textarea form fields (missing explicit background color meant light-on-light text under `[data-theme="dark"]`)
+
+### v1.11.0 (2026-07-24)
+
+**Features:**
+- Per-event guest language (extensible beyond en/de) drives every guest-facing notification (RSVP confirmation, cancellation, reminders, waitlist promotion, CSV import invites), plus per-event customizable notification templates with variable interpolation (`{guestName}`, `{eventTitle}`, etc.) and translated defaults — new `internal/messagetemplate` package, `event_message_templates` table, and a generic HTML envelope replacing the old per-type templates
+- Landing page gains a language switcher and dark/light toggle; footer contrast fix for dark mode
+
+**Fixes:**
+- `LOG_FORMAT` env var (console/json, default console) replaces the old `ENV=production`-triggers-JSON-logging behavior, so `docker logs` stays human-readable in production without a log aggregator
+- Added `recover()` to 4 previously-unprotected goroutines (webhook dispatch/delivery, email open-tracking, co-host notification throttle cleanup, co-host notify) — an unrecovered panic in any one of these could otherwise crash the entire process silently
+
+### v1.10.0 (2026-07-24)
+
+**Fixes:**
+- SMS notifications now go out for event cancellation, RSVP confirmation, CSV-import invites, and waitlist promotion when the attendee has no email on file (previously several of these callbacks were email-only with no SMS fallback)
+- `smsEnabled` now reflects actual SMS provider registration instead of just whether `NOTIFICATION_SMS_PROVIDER` env var is set
+- Fixed "email or phone" contact-requirement mode incorrectly forcing email as required
+- Wired up the previously-dead `ContactMethod` (email/SMS preference) field end-to-end: validation, CSV-import inference, reminder job, and all notification callbacks now respect the attendee's chosen contact method, falling back to whichever channel actually has data
+- CI: restored `GOTOOLCHAIN=auto` after `actions/setup-go@v6+` changed its default, which had broken the Go 1.24 matrix job
+
+### v1.9.0 (2026-07-24)
+
+**i18n:**
+- Full German + English coverage across the entire web app — every remaining page and component (create-event wizard, event detail, edit event, series, CSV import, invite designer, webhooks, guest RSVP pages, account/setup/admin pages, Modal/Toast/AddToCalendar, question builder) is now translated, plus localized date/time formatting and status labels
+
+### v1.8.1 (2026-07-23)
+
+**Fixes:**
+- Magic-link verify no longer hangs when the router is uninitialized
+
+### v1.8.0 (2026-07-23)
+
+**Features:**
+- i18n infrastructure added via `svelte-i18n`, with German as the first additional locale (landing page and core navigation translated first; full app coverage followed in v1.9.0)
+
 ### v1.7.0 (2026-06-10)
 
 **Database:**
