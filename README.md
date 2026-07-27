@@ -451,6 +451,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.20.1 (2026-07-27)
+
+**Features:**
+- The map link provider (Google Maps, OpenStreetMap, or off) is now editable per event and per event series, instead of always showing both. On the guest invite page, clicking the event address itself now opens the configured map — the separate "open in maps" link row was removed there; the guest self-manage page and organizer dashboard got the same clickable-address treatment
+
 ### v1.20.0 (2026-07-27)
 
 **Features:**
