@@ -451,6 +451,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.19.1 (2026-07-27)
+
+**Fixes:**
+- "Find your RSVP" now works for guests who registered with phone-only contact info — the lookup form shows a phone field whenever phone is a valid contact option for the event, and falls back to sending the RSVP link by SMS when the matched guest has no email on file
+
 ### v1.19.0 (2026-07-27)
 
 **Features:**
