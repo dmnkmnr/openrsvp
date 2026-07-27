@@ -38,6 +38,7 @@
 	let editEventTime = $state('');
 	let editDurationMinutes = $state('');
 	let editContactRequirement = $state('email');
+	let editMapProvider = $state('google');
 	let editShowHeadcount = $state(false);
 	let editShowGuestList = $state(false);
 	let editRsvpDeadlineOffsetHours = $state('');
@@ -69,6 +70,12 @@
 			? contactRequirementOptions
 			: contactRequirementOptions.filter(o => o.value !== 'phone')
 	);
+
+	const mapProviderOptions = $derived([
+		{ value: 'google', label: $_('events.new.mapProviderOptions.google') },
+		{ value: 'osm', label: $_('events.new.mapProviderOptions.osm') },
+		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
+	]);
 
 	onMount(async () => {
 		loadAppConfig();
@@ -109,6 +116,7 @@
 		editEventTime = series.eventTime;
 		editDurationMinutes = series.durationMinutes != null ? String(series.durationMinutes) : '';
 		editContactRequirement = series.contactRequirement;
+		editMapProvider = series.mapProvider || 'google';
 		editShowHeadcount = series.showHeadcount;
 		editShowGuestList = series.showGuestList;
 		editRsvpDeadlineOffsetHours = series.rsvpDeadlineOffsetHours != null ? String(series.rsvpDeadlineOffsetHours) : '';
@@ -149,6 +157,7 @@
 				timezone: editTimezone,
 				eventTime: editEventTime,
 				contactRequirement: editContactRequirement,
+				mapProvider: editMapProvider,
 				showHeadcount: editShowHeadcount,
 				showGuestList: editShowGuestList
 			};
@@ -293,6 +302,16 @@
 						bind:value={editContactRequirement}
 						options={filteredContactOptions}
 					/>
+
+					<div>
+						<Select
+							label={$_('events.new.mapProviderLabel')}
+							name="editMapProvider"
+							bind:value={editMapProvider}
+							options={mapProviderOptions}
+						/>
+						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.mapProviderHelper')}</p>
+					</div>
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.seriesDetail.guestVisibilityLegend')}</legend>

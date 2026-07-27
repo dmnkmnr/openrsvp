@@ -20,6 +20,7 @@ type EventSeries struct {
 	RetentionDays           int        `json:"retentionDays"`
 	Language                string     `json:"language"`
 	ContactRequirement      string     `json:"contactRequirement"`
+	MapProvider             string     `json:"mapProvider"`
 	ShowHeadcount           bool       `json:"showHeadcount"`
 	ShowGuestList           bool       `json:"showGuestList"`
 	RSVPDeadlineOffsetHours *int       `json:"rsvpDeadlineOffsetHours,omitempty"`
@@ -43,6 +44,7 @@ type CreateSeriesRequest struct {
 	RetentionDays           *int    `json:"retentionDays,omitempty"`
 	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
+	MapProvider             *string `json:"mapProvider,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadlineOffsetHours *int    `json:"rsvpDeadlineOffsetHours,omitempty"`
@@ -62,6 +64,7 @@ type UpdateSeriesRequest struct {
 	RetentionDays           *int    `json:"retentionDays,omitempty"`
 	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
+	MapProvider             *string `json:"mapProvider,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadlineOffsetHours *int    `json:"rsvpDeadlineOffsetHours,omitempty"`

@@ -302,6 +302,91 @@ func TestUpdateEventInvalidContactRequirement(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid contactRequirement")
 }
 
+func TestCreateEventDefaultMapProvider(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "google", ev.MapProvider)
+}
+
+func TestCreateEventCustomMapProvider(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	mp := "osm"
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:       "Party",
+		EventDate:   "2026-06-15T14:00",
+		MapProvider: &mp,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "osm", ev.MapProvider)
+
+	found, err := svc.GetByID(ctx, ev.ID)
+	require.NoError(t, err)
+	assert.Equal(t, "osm", found.MapProvider)
+}
+
+func TestCreateEventInvalidMapProvider(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	mp := "bing"
+	_, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:       "Party",
+		EventDate:   "2026-06-15T14:00",
+		MapProvider: &mp,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid mapProvider")
+}
+
+func TestUpdateEventMapProvider(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+
+	mp := "none"
+	updated, err := svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{
+		MapProvider: &mp,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "none", updated.MapProvider)
+}
+
+func TestUpdateEventInvalidMapProvider(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+
+	mp := "bing"
+	_, err = svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{
+		MapProvider: &mp,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "invalid mapProvider")
+}
+
 func TestReopenEvent(t *testing.T) {
 	svc, authStore := setupEvent(t)
 	org := createOrganizer(t, authStore)

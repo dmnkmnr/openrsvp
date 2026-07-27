@@ -31,6 +31,7 @@
 	let timezone = $state('');
 	let description = $state('');
 	let contactRequirement = $state('email_or_phone');
+	let mapProvider = $state('google');
 	let language = $state('en');
 	let showHeadcount = $state(false);
 	let showGuestList = $state(false);
@@ -57,6 +58,12 @@
 			? contactRequirementOptions
 			: contactRequirementOptions.filter(o => o.value !== 'phone')
 	);
+
+	const mapProviderOptions = $derived([
+		{ value: 'google', label: $_('events.new.mapProviderOptions.google') },
+		{ value: 'osm', label: $_('events.new.mapProviderOptions.osm') },
+		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
+	]);
 
 	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
 	const languageOptions = $derived(
@@ -85,6 +92,7 @@
 			tzOptions = getTimezoneOptions(e.timezone);
 			description = e.description;
 			contactRequirement = e.contactRequirement || 'email_or_phone';
+			mapProvider = e.mapProvider || 'google';
 			language = e.language || 'en';
 			showHeadcount = e.showHeadcount ?? false;
 			showGuestList = e.showGuestList ?? false;
@@ -135,6 +143,7 @@
 				description: description.trim(),
 				language,
 				contactRequirement,
+				mapProvider,
 				showHeadcount,
 				showGuestList,
 				retentionDays: parseInt(retentionDays)
@@ -251,6 +260,16 @@
 						bind:value={contactRequirement}
 						options={filteredContactOptions}
 					/>
+
+					<div>
+						<Select
+							label={$_('events.new.mapProviderLabel')}
+							name="mapProvider"
+							bind:value={mapProvider}
+							options={mapProviderOptions}
+						/>
+						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.mapProviderHelper')}</p>
+					</div>
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.new.guestVisibilityLegend')}</legend>

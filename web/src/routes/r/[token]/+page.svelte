@@ -5,7 +5,7 @@
 	import type { PublicEvent, Attendee, Message, PublicAttendance, EventQuestion, QuestionAnswer, ApiError } from '$lib/types';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
-	import MapLinks from '$lib/components/ui/MapLinks.svelte';
+	import { getMapUrl as mapUrl } from '$lib/utils/maps';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 	import { _ } from '$lib/i18n';
 	import { intlLocale } from '$lib/utils/dates';
@@ -304,10 +304,21 @@
 				<h1 class="font-display text-2xl sm:text-3xl font-bold text-neutral-900 mb-1">{eventData.title}</h1>
 				<p class="text-neutral-500 text-sm">{formatDate(eventData.eventDate, eventData.timezone)}</p>
 				{#if eventData.location}
-					<p class="text-neutral-500 text-sm">{eventData.location}</p>
-					<div class="mt-1 flex justify-center">
-						<MapLinks location={eventData.location} />
-					</div>
+					<p class="text-neutral-500 text-sm">
+						{#if mapUrl(eventData.location, eventData.mapProvider)}
+							<a
+								href={mapUrl(eventData.location, eventData.mapProvider) ?? undefined}
+								target="_blank"
+								rel="noopener noreferrer"
+								class="hover:text-primary hover:underline underline-offset-2 transition-colors"
+								title={$_('common.openInMaps')}
+							>
+								{eventData.location}
+							</a>
+						{:else}
+							{eventData.location}
+						{/if}
+					</p>
 				{/if}
 			</div>
 

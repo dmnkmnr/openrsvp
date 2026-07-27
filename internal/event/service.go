@@ -161,6 +161,14 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		language = *req.Language
 	}
 
+	mapProvider := "google"
+	if req.MapProvider != nil && *req.MapProvider != "" {
+		if !isValidMapProvider(*req.MapProvider) {
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+		}
+		mapProvider = *req.MapProvider
+	}
+
 	shareToken, err := generateBase62Token(8)
 	if err != nil {
 		return nil, fmt.Errorf("generate share token: %w", err)
@@ -217,6 +225,7 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		RetentionDays:      retentionDays,
 		Language:           language,
 		ContactRequirement: contactRequirement,
+		MapProvider:        mapProvider,
 		ShowHeadcount:      showHeadcount,
 		ShowGuestList:      showGuestList,
 		RSVPDeadline:       rsvpDeadline,
@@ -390,6 +399,12 @@ func (s *Service) Update(ctx context.Context, eventID, organizerID string, req U
 			return nil, fmt.Errorf("invalid contactRequirement: must be email, phone, email_or_phone, or email_and_phone")
 		}
 		e.ContactRequirement = *req.ContactRequirement
+	}
+	if req.MapProvider != nil {
+		if !isValidMapProvider(*req.MapProvider) {
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+		}
+		e.MapProvider = *req.MapProvider
 	}
 	if req.ShowHeadcount != nil {
 		e.ShowHeadcount = *req.ShowHeadcount
@@ -657,6 +672,17 @@ func isValidLanguage(s string) bool {
 func isValidContactRequirement(s string) bool {
 	switch s {
 	case "email", "phone", "email_or_phone", "email_and_phone":
+		return true
+	default:
+		return false
+	}
+}
+
+// isValidMapProvider checks whether the given value is one of the allowed
+// map link providers shown next to the event address.
+func isValidMapProvider(s string) bool {
+	switch s {
+	case "none", "google", "osm":
 		return true
 	default:
 		return false

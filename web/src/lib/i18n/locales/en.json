@@ -1,8 +1,7 @@
 {
 	"common": {
 		"save": "Save",
-		"openInGoogleMaps": "Google Maps",
-		"openInOpenStreetMap": "OpenStreetMap",
+		"openInMaps": "Open in maps",
 		"saving": "Saving...",
 		"cancel": "Cancel",
 		"delete": "Delete",
@@ -940,6 +939,13 @@
 				"emailOnly": "Email only",
 				"phoneOnly": "Phone only",
 				"emailAndPhone": "Email and Phone (both required)"
+			},
+			"mapProviderLabel": "Map Link",
+			"mapProviderHelper": "Clicking the event address opens this map. Choose \"Off\" to leave it as plain text.",
+			"mapProviderOptions": {
+				"google": "Google Maps",
+				"osm": "OpenStreetMap",
+				"none": "Off"
 			},
 			"guestVisibilityLegend": "Guest Visibility",
 			"guestVisibilityHelper": "Control what attendance info is shown on the public invite page.",

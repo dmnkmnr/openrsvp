@@ -79,6 +79,14 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 		language = *req.Language
 	}
 
+	mapProvider := "google"
+	if req.MapProvider != nil && *req.MapProvider != "" {
+		if !isValidMapProvider(*req.MapProvider) {
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+		}
+		mapProvider = *req.MapProvider
+	}
+
 	showHeadcount := false
 	if req.ShowHeadcount != nil {
 		showHeadcount = *req.ShowHeadcount
@@ -117,6 +125,7 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 		RetentionDays:           retentionDays,
 		Language:                language,
 		ContactRequirement:      contactRequirement,
+		MapProvider:             mapProvider,
 		ShowHeadcount:           showHeadcount,
 		ShowGuestList:           showGuestList,
 		RSVPDeadlineOffsetHours: req.RSVPDeadlineOffsetHours,
@@ -324,6 +333,12 @@ func (s *SeriesService) UpdateSeries(ctx context.Context, seriesID, organizerID 
 		}
 		series.ContactRequirement = *req.ContactRequirement
 	}
+	if req.MapProvider != nil {
+		if !isValidMapProvider(*req.MapProvider) {
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+		}
+		series.MapProvider = *req.MapProvider
+	}
 	if req.ShowHeadcount != nil {
 		series.ShowHeadcount = *req.ShowHeadcount
 	}
@@ -375,6 +390,7 @@ func (s *SeriesService) updateFutureOccurrences(ctx context.Context, series *Eve
 		ev.RetentionDays = series.RetentionDays
 		ev.Language = series.Language
 		ev.ContactRequirement = series.ContactRequirement
+		ev.MapProvider = series.MapProvider
 		ev.ShowHeadcount = series.ShowHeadcount
 		ev.ShowGuestList = series.ShowGuestList
 		ev.MaxCapacity = series.MaxCapacity
@@ -529,6 +545,7 @@ func (s *SeriesService) buildOccurrenceFromSeries(series *EventSeries, eventDate
 		ShareToken:         shareToken,
 		Language:           series.Language,
 		ContactRequirement: series.ContactRequirement,
+		MapProvider:        series.MapProvider,
 		ShowHeadcount:      series.ShowHeadcount,
 		ShowGuestList:      series.ShowGuestList,
 		RSVPDeadline:       rsvpDeadline,

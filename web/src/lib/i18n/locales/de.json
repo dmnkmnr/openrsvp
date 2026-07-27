@@ -1,8 +1,7 @@
 {
 	"common": {
 		"save": "Speichern",
-		"openInGoogleMaps": "Google Maps",
-		"openInOpenStreetMap": "OpenStreetMap",
+		"openInMaps": "In Karte öffnen",
 		"saving": "Wird gespeichert...",
 		"cancel": "Abbrechen",
 		"delete": "Löschen",
@@ -940,6 +939,13 @@
 				"emailOnly": "Nur E-Mail",
 				"phoneOnly": "Nur Telefon",
 				"emailAndPhone": "E-Mail und Telefon (beides erforderlich)"
+			},
+			"mapProviderLabel": "Karten-Link",
+			"mapProviderHelper": "Ein Klick auf die Adresse öffnet diese Karte. Wähle \"Aus\", um sie als reinen Text zu belassen.",
+			"mapProviderOptions": {
+				"google": "Google Maps",
+				"osm": "OpenStreetMap",
+				"none": "Aus"
 			},
 			"guestVisibilityLegend": "Gäste-Sichtbarkeit",
 			"guestVisibilityHelper": "Steuere, welche Teilnahmeinfos auf der öffentlichen Einladungsseite angezeigt werden.",

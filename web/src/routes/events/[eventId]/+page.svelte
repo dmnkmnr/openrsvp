@@ -6,6 +6,7 @@
 	import { currentEvent } from '$lib/stores/events';
 	import { formatDateTime, toISOLocal } from '$lib/utils/dates';
 	import { isValidPhone } from '$lib/utils/validation';
+	import { getMapUrl as mapUrl } from '$lib/utils/maps';
 	import { currentUser } from '$lib/stores/auth';
 	import type { Event, Attendee, RSVPStats, Reminder, CoHost, EventComment, EmailStats } from '$lib/types';
 	import AppShell from '$lib/components/layout/AppShell.svelte';
@@ -18,7 +19,6 @@
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
-	import MapLinks from '$lib/components/ui/MapLinks.svelte';
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 
@@ -488,15 +488,24 @@
 					{/if}
 					{#if event.location}
 						<p class="mt-1 text-sm text-neutral-500 flex items-center gap-1">
-							<svg class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+							<svg class="h-4 w-4 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
 								<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
 							</svg>
-							{event.location}
+							{#if mapUrl(event.location, event.mapProvider)}
+								<a
+									href={mapUrl(event.location, event.mapProvider) ?? undefined}
+									target="_blank"
+									rel="noopener noreferrer"
+									class="hover:text-primary hover:underline underline-offset-2 transition-colors"
+									title={$_('common.openInMaps')}
+								>
+									{event.location}
+								</a>
+							{:else}
+								{event.location}
+							{/if}
 						</p>
-						<div class="mt-1 ml-5">
-							<MapLinks location={event.location} />
-						</div>
 					{/if}
 					{#if event.description}
 						<p class="mt-3 text-sm text-neutral-700 whitespace-pre-wrap">{event.description}</p>
