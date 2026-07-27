@@ -83,6 +83,68 @@ func TestFormatFromHeaderStripsCRLFInjection(t *testing.T) {
 	}
 }
 
+// --- senderHeaderValue: Sender header for alias-vs-authenticated mismatch --
+
+func TestSenderHeaderValue(t *testing.T) {
+	cases := []struct {
+		name     string
+		username string
+		from     string
+		want     string
+	}{
+		{"empty username", "", "alias@meiner.tech", ""},
+		{"username equals from", "alias@meiner.tech", "alias@meiner.tech", ""},
+		{"non-email username (service account)", "AKIAABCDEFGHIJKLMNOP", "alias@meiner.tech", ""},
+		{"email username differs from alias", "me@icloud.com", "alias@meiner.tech", "me@icloud.com"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := senderHeaderValue(tc.username, tc.from)
+			if got != tc.want {
+				t.Fatalf("senderHeaderValue(%q, %q) = %q, want %q", tc.username, tc.from, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestSMTPProvider_Send_IncludesSenderHeaderForAlias(t *testing.T) {
+	srv := newCaptureSMTP(t)
+	defer srv.Close()
+	host, port, _ := net.SplitHostPort(srv.addr)
+
+	p := NewSMTPProvider(host, port, "me@icloud.com", "", "alias@meiner.tech", "")
+	if _, err := p.Send(context.Background(), &notification.Message{
+		To:   "to@example.com",
+		Body: "x",
+	}); err != nil {
+		t.Fatalf("Send: %v", err)
+	}
+
+	data := srv.Data()
+	if !strings.Contains(data, "Sender: me@icloud.com\r\n") {
+		t.Fatalf("expected Sender header for alias mismatch, got:\n%s", data)
+	}
+}
+
+func TestSMTPProvider_Send_OmitsSenderHeaderWhenSameAsFrom(t *testing.T) {
+	srv := newCaptureSMTP(t)
+	defer srv.Close()
+	host, port, _ := net.SplitHostPort(srv.addr)
+
+	p := NewSMTPProvider(host, port, "from@example.com", "", "from@example.com", "")
+	if _, err := p.Send(context.Background(), &notification.Message{
+		To:   "to@example.com",
+		Body: "x",
+	}); err != nil {
+		t.Fatalf("Send: %v", err)
+	}
+
+	data := srv.Data()
+	if strings.Contains(data, "Sender:") {
+		t.Fatalf("expected no Sender header when username matches From, got:\n%s", data)
+	}
+}
+
 // --- MIME assembly ----------------------------------------------------------
 
 func TestWriteAlternativeParts_TextAndHTML(t *testing.T) {

@@ -67,6 +67,14 @@ func (p *SMTPProvider) Send(ctx context.Context, msg *notification.Message) (*no
 	// even if upstream validation is bypassed. mime.QEncoding handles the
 	// Subject separately by encoding non-printable bytes.
 	buf.WriteString(fmt.Sprintf("From: %s\r\n", formatFromHeader(p.fromName, p.from)))
+	if sender := senderHeaderValue(p.username, p.from); sender != "" {
+		// Some providers (notably iCloud, when the authenticated account
+		// differs from a custom-domain alias set as From) treat mail sent
+		// without a Sender header as unverified and rewrite the visible
+		// sender for the recipient. Adding it mirrors what a native mail
+		// client does automatically when sending "on behalf of" an alias.
+		buf.WriteString(fmt.Sprintf("Sender: %s\r\n", sender))
+	}
 	buf.WriteString(fmt.Sprintf("To: %s\r\n", stripCRLF(msg.To)))
 	buf.WriteString(fmt.Sprintf("Subject: %s\r\n", mime.QEncoding.Encode("utf-8", stripCRLF(msg.Subject))))
 	buf.WriteString("MIME-Version: 1.0\r\n")
@@ -190,6 +198,20 @@ func formatFromHeader(name, email string) string {
 	}
 	escaped := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(name)
 	return fmt.Sprintf("\"%s\" <%s>", escaped, email)
+}
+
+// senderHeaderValue returns the SMTP-authenticated account to use as the
+// Sender header, or "" if none is needed. Only applies when the username
+// looks like an email address (service-account SMTP credentials, e.g. AWS
+// SES's generated usernames, are not email addresses and don't need this)
+// and differs from the From address (identical values would make the header
+// redundant).
+func senderHeaderValue(username, from string) string {
+	username = strings.TrimSpace(username)
+	if username == "" || username == from || !strings.Contains(username, "@") {
+		return ""
+	}
+	return stripCRLF(username)
 }
 
 // stripCRLF removes carriage returns and line feeds from a header value to
