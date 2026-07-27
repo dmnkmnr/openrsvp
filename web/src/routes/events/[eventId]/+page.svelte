@@ -875,8 +875,11 @@
 										<span class="text-xs text-neutral-500" title={$_('events.detail.dietaryNotesLabel')}>{attendee.dietaryNotes}</span>
 									{/if}
 									{#if attendee.plusOnes > 0}
-										<span class="text-xs text-neutral-500">
-											+{attendee.plusOnes}{#if attendee.plusOnesChildren > 0} ({attendee.plusOnesChildren} {$_('events.detail.childrenSuffix')}){/if}
+										<span class="text-xs text-neutral-500 flex items-center gap-1">
+											<span>+{attendee.plusOnes}</span>
+											{#if attendee.plusOnesChildren > 0}
+												<span>({attendee.plusOnesChildren} {$_('events.detail.childrenSuffix')})</span>
+											{/if}
 										</span>
 									{/if}
 									<Badge variant={statusVariant(attendee.rsvpStatus)}>
