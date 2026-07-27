@@ -44,6 +44,45 @@ func TestStripCRLF(t *testing.T) {
 	}
 }
 
+// --- formatFromHeader: display-name formatting ------------------------------
+
+func TestFormatFromHeader(t *testing.T) {
+	cases := []struct {
+		name  string
+		email string
+		want  string
+	}{
+		{"", "noreply@example.com", "noreply@example.com"},
+		{"Jane's Birthday", "noreply@example.com", `"Jane's Birthday" <noreply@example.com>`},
+		{`Say "Hi"`, "noreply@example.com", `"Say \"Hi\"" <noreply@example.com>`},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			got := formatFromHeader(tc.name, tc.email)
+			if got != tc.want {
+				t.Fatalf("formatFromHeader(%q, %q) = %q, want %q", tc.name, tc.email, got, tc.want)
+			}
+		})
+	}
+}
+
+func TestFormatFromHeaderEncodesNonASCII(t *testing.T) {
+	got := formatFromHeader("Jörg's Party", "noreply@example.com")
+	if !strings.Contains(got, "<noreply@example.com>") {
+		t.Fatalf("expected address preserved, got %q", got)
+	}
+	if !strings.Contains(got, "=?utf-8?") {
+		t.Fatalf("expected MIME-encoded display name, got %q", got)
+	}
+}
+
+func TestFormatFromHeaderStripsCRLFInjection(t *testing.T) {
+	got := formatFromHeader("Evil\r\nBcc: x@evil.com", "noreply@example.com")
+	if strings.ContainsAny(got, "\r\n") {
+		t.Fatalf("expected CRLF stripped from display name, got %q", got)
+	}
+}
+
 // --- MIME assembly ----------------------------------------------------------
 
 func TestWriteAlternativeParts_TextAndHTML(t *testing.T) {
@@ -105,7 +144,7 @@ func TestSMTPProvider_Send_MIMEAndHeaderInjection(t *testing.T) {
 		t.Fatal(err)
 	}
 
-	p := NewSMTPProvider(host, port, "", "", "from@example.com")
+	p := NewSMTPProvider(host, port, "", "", "from@example.com", "")
 	msg := &notification.Message{
 		// Clean envelope recipient (the raw envelope value is validated by
 		// net/smtp itself — see TestSMTPProvider_Send_RejectsCRLFRecipient).
@@ -158,6 +197,25 @@ func TestSMTPProvider_Send_MIMEAndHeaderInjection(t *testing.T) {
 	}
 }
 
+func TestSMTPProvider_Send_IncludesFromDisplayName(t *testing.T) {
+	srv := newCaptureSMTP(t)
+	defer srv.Close()
+	host, port, _ := net.SplitHostPort(srv.addr)
+
+	p := NewSMTPProvider(host, port, "", "", "from@example.com", "Jane's Birthday")
+	if _, err := p.Send(context.Background(), &notification.Message{
+		To:   "to@example.com",
+		Body: "x",
+	}); err != nil {
+		t.Fatalf("Send: %v", err)
+	}
+
+	data := srv.Data()
+	if !strings.Contains(data, `From: "Jane's Birthday" <from@example.com>`) {
+		t.Fatalf("expected From header with display name, got:\n%s", data)
+	}
+}
+
 // A CR/LF in the envelope recipient must be rejected outright (net/smtp
 // refuses to transmit it), not smuggled onto the wire.
 func TestSMTPProvider_Send_RejectsCRLFRecipient(t *testing.T) {
@@ -165,7 +223,7 @@ func TestSMTPProvider_Send_RejectsCRLFRecipient(t *testing.T) {
 	defer srv.Close()
 	host, port, _ := net.SplitHostPort(srv.addr)
 
-	p := NewSMTPProvider(host, port, "", "", "from@example.com")
+	p := NewSMTPProvider(host, port, "", "", "from@example.com", "")
 	_, err := p.Send(context.Background(), &notification.Message{
 		To:   "victim@example.com\r\nRCPT TO:<evil@x.com>",
 		Body: "x",
@@ -183,7 +241,7 @@ func TestSMTPProvider_Send_WithAttachment(t *testing.T) {
 	defer srv.Close()
 
 	host, port, _ := net.SplitHostPort(srv.addr)
-	p := NewSMTPProvider(host, port, "", "", "from@example.com")
+	p := NewSMTPProvider(host, port, "", "", "from@example.com", "")
 	msg := &notification.Message{
 		To:      "to@example.com",
 		Subject: "Subj",
@@ -209,7 +267,7 @@ func TestSMTPProvider_Send_WithAttachment(t *testing.T) {
 }
 
 func TestSMTPProvider_NameChannel(t *testing.T) {
-	p := NewSMTPProvider("h", "25", "", "", "f@x")
+	p := NewSMTPProvider("h", "25", "", "", "f@x", "")
 	if p.Name() != "smtp" {
 		t.Fatalf("Name = %q", p.Name())
 	}
@@ -223,14 +281,14 @@ func TestSMTPProvider_HealthCheck(t *testing.T) {
 	defer srv.Close()
 	host, port, _ := net.SplitHostPort(srv.addr)
 
-	p := NewSMTPProvider(host, port, "", "", "f@x")
+	p := NewSMTPProvider(host, port, "", "", "f@x", "")
 	if err := p.HealthCheck(context.Background()); err != nil {
 		t.Fatalf("HealthCheck: %v", err)
 	}
 }
 
 func TestSMTPProvider_HealthCheck_DialError(t *testing.T) {
-	p := NewSMTPProvider("127.0.0.1", "1", "", "", "f@x")
+	p := NewSMTPProvider("127.0.0.1", "1", "", "", "f@x", "")
 	if err := p.HealthCheck(context.Background()); err == nil {
 		t.Fatal("expected health check dial error")
 	}
@@ -238,7 +296,7 @@ func TestSMTPProvider_HealthCheck_DialError(t *testing.T) {
 
 func TestSMTPProvider_Send_DialError(t *testing.T) {
 	// Nothing listening on this port.
-	p := NewSMTPProvider("127.0.0.1", "1", "", "", "f@x")
+	p := NewSMTPProvider("127.0.0.1", "1", "", "", "f@x", "")
 	_, err := p.Send(context.Background(), &notification.Message{To: "a@b", Body: "x"})
 	if err == nil {
 		t.Fatal("expected error dialing dead SMTP port")

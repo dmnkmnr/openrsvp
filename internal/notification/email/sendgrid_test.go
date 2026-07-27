@@ -11,6 +11,31 @@ import (
 	"github.com/yannkr/openrsvp/internal/notification"
 )
 
+func TestSendGridProvider_Send_IncludesFromDisplayName(t *testing.T) {
+	var gotBody sendGridRequest
+
+	srv := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		b, _ := io.ReadAll(r.Body)
+		_ = json.Unmarshal(b, &gotBody)
+		w.WriteHeader(http.StatusAccepted)
+	}))
+	defer srv.Close()
+
+	p := NewSendGridProvider("SG.testkey.value", "sender@example.com", "Jane's Birthday")
+	p.baseURL = srv.URL + "/v3/mail/send"
+
+	if _, err := p.Send(context.Background(), &notification.Message{
+		To:   "rcpt@example.com",
+		Body: "x",
+	}); err != nil {
+		t.Fatalf("Send: %v", err)
+	}
+
+	if gotBody.From.Email != "sender@example.com" || gotBody.From.Name != "Jane's Birthday" {
+		t.Fatalf("from = %+v", gotBody.From)
+	}
+}
+
 func TestSendGridProvider_Send_RequestConstruction(t *testing.T) {
 	var (
 		gotPath   string
@@ -32,7 +57,7 @@ func TestSendGridProvider_Send_RequestConstruction(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	p := NewSendGridProvider("SG.testkey.value", "sender@example.com")
+	p := NewSendGridProvider("SG.testkey.value", "sender@example.com", "")
 	p.baseURL = srv.URL + "/v3/mail/send"
 
 	res, err := p.Send(context.Background(), &notification.Message{
@@ -95,7 +120,7 @@ func TestSendGridProvider_Send_WithAttachment(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	p := NewSendGridProvider("SG.key.value", "s@x.com")
+	p := NewSendGridProvider("SG.key.value", "s@x.com", "")
 	p.baseURL = srv.URL
 
 	_, err := p.Send(context.Background(), &notification.Message{
@@ -127,7 +152,7 @@ func TestSendGridProvider_Send_Non2xxError(t *testing.T) {
 	}))
 	defer srv.Close()
 
-	p := NewSendGridProvider("SG.key.value", "s@x.com")
+	p := NewSendGridProvider("SG.key.value", "s@x.com", "")
 	p.baseURL = srv.URL
 	_, err := p.Send(context.Background(), &notification.Message{To: "r@x", Body: "x"})
 	if err == nil {
@@ -136,7 +161,7 @@ func TestSendGridProvider_Send_Non2xxError(t *testing.T) {
 }
 
 func TestSendGridProvider_NameChannel(t *testing.T) {
-	p := NewSendGridProvider("SG.key.value", "s@x")
+	p := NewSendGridProvider("SG.key.value", "s@x", "")
 	if p.Name() != "sendgrid" {
 		t.Fatalf("Name = %q", p.Name())
 	}
@@ -146,16 +171,16 @@ func TestSendGridProvider_NameChannel(t *testing.T) {
 }
 
 func TestSendGridProvider_HealthCheck(t *testing.T) {
-	if err := NewSendGridProvider("", "s@x").HealthCheck(context.Background()); err == nil {
+	if err := NewSendGridProvider("", "s@x", "").HealthCheck(context.Background()); err == nil {
 		t.Fatal("empty key should fail")
 	}
-	if err := NewSendGridProvider("bad", "s@x").HealthCheck(context.Background()); err == nil {
+	if err := NewSendGridProvider("bad", "s@x", "").HealthCheck(context.Background()); err == nil {
 		t.Fatal("non-SG prefix should fail")
 	}
-	if err := NewSendGridProvider("SG.short", "s@x").HealthCheck(context.Background()); err == nil {
+	if err := NewSendGridProvider("SG.short", "s@x", "").HealthCheck(context.Background()); err == nil {
 		t.Fatal("short key should fail")
 	}
-	if err := NewSendGridProvider("SG.aaaaaaaaaaaaaaaaaaaa", "s@x").HealthCheck(context.Background()); err != nil {
+	if err := NewSendGridProvider("SG.aaaaaaaaaaaaaaaaaaaa", "s@x", "").HealthCheck(context.Background()); err != nil {
 		t.Fatalf("valid key should pass: %v", err)
 	}
 }
@@ -165,7 +190,7 @@ func TestSendGridProvider_SendBatch(t *testing.T) {
 		w.WriteHeader(http.StatusAccepted)
 	}))
 	defer srv.Close()
-	p := NewSendGridProvider("SG.key.value", "s@x")
+	p := NewSendGridProvider("SG.key.value", "s@x", "")
 	p.baseURL = srv.URL
 	results, errs := p.SendBatch(context.Background(), []*notification.Message{
 		{To: "a@x", Body: "1"},

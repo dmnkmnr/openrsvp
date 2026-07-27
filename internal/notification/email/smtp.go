@@ -22,16 +22,20 @@ type SMTPProvider struct {
 	username string
 	password string
 	from     string
+	fromName string
 }
 
 // NewSMTPProvider creates a new SMTPProvider with the given SMTP configuration.
-func NewSMTPProvider(host, port, username, password, from string) *SMTPProvider {
+// fromName is the display name shown alongside the sender address (e.g.
+// "Jane's Birthday"); pass "" to show just the bare address.
+func NewSMTPProvider(host, port, username, password, from, fromName string) *SMTPProvider {
 	return &SMTPProvider{
 		host:     host,
 		port:     port,
 		username: username,
 		password: password,
 		from:     from,
+		fromName: fromName,
 	}
 }
 
@@ -62,7 +66,7 @@ func (p *SMTPProvider) Send(ctx context.Context, msg *notification.Message) (*no
 	// Defensive: strip CR/LF from header values to defeat header injection
 	// even if upstream validation is bypassed. mime.QEncoding handles the
 	// Subject separately by encoding non-printable bytes.
-	buf.WriteString(fmt.Sprintf("From: %s\r\n", stripCRLF(p.from)))
+	buf.WriteString(fmt.Sprintf("From: %s\r\n", formatFromHeader(p.fromName, p.from)))
 	buf.WriteString(fmt.Sprintf("To: %s\r\n", stripCRLF(msg.To)))
 	buf.WriteString(fmt.Sprintf("Subject: %s\r\n", mime.QEncoding.Encode("utf-8", stripCRLF(msg.Subject))))
 	buf.WriteString("MIME-Version: 1.0\r\n")
@@ -167,6 +171,25 @@ func (p *SMTPProvider) SendBatch(ctx context.Context, msgs []*notification.Messa
 		results[i], errs[i] = p.Send(ctx, msg)
 	}
 	return results, errs
+}
+
+// formatFromHeader builds an RFC 5322 "From" header value, e.g.
+// `"Jane's Birthday" <noreply@example.com>`. Returns just the bare address
+// when name is empty. The display name is CRLF-stripped (header-injection
+// defense) and, if it contains non-ASCII characters, MIME-encoded; a plain
+// ASCII name is quoted so characters like commas can't be misread as
+// additional addresses.
+func formatFromHeader(name, email string) string {
+	name = stripCRLF(strings.TrimSpace(name))
+	if name == "" {
+		return email
+	}
+	encoded := mime.QEncoding.Encode("utf-8", name)
+	if encoded != name {
+		return fmt.Sprintf("%s <%s>", encoded, email)
+	}
+	escaped := strings.NewReplacer(`\`, `\\`, `"`, `\"`).Replace(name)
+	return fmt.Sprintf("\"%s\" <%s>", escaped, email)
 }
 
 // stripCRLF removes carriage returns and line feeds from a header value to

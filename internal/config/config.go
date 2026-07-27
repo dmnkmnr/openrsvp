@@ -40,6 +40,7 @@ type Config struct {
 	SESUsername               string
 	SESPassword               string
 	SESFrom                   string
+	MailFromName              string
 	TwilioAccountSID          string
 	TwilioAuthToken           string
 	TwilioFromNumber          string
@@ -180,6 +181,7 @@ func Load() (*Config, error) {
 		SESUsername:               getEnv("SES_USERNAME", ""),
 		SESPassword:               getEnv("SES_PASSWORD", ""),
 		SESFrom:                   getEnv("SES_FROM", ""),
+		MailFromName:              getEnv("MAIL_FROM_NAME", ""),
 		TwilioAccountSID:          getEnv("TWILIO_ACCOUNT_SID", ""),
 		TwilioAuthToken:           getEnv("TWILIO_AUTH_TOKEN", ""),
 		TwilioFromNumber:          getEnv("TWILIO_FROM_NUMBER", ""),

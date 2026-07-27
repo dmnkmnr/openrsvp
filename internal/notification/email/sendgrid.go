@@ -16,23 +16,26 @@ import (
 
 // SendGridProvider sends emails via the SendGrid v3 API using raw HTTP.
 type SendGridProvider struct {
-	apiKey  string
-	from    string
-	client  *http.Client
-	baseURL string
+	apiKey   string
+	from     string
+	fromName string
+	client   *http.Client
+	baseURL  string
 }
 
 // sendGridDefaultURL is the production SendGrid v3 send endpoint.
 const sendGridDefaultURL = "https://api.sendgrid.com/v3/mail/send"
 
-// NewSendGridProvider creates a new SendGridProvider with the given API key and
-// sender address.
-func NewSendGridProvider(apiKey, from string) *SendGridProvider {
+// NewSendGridProvider creates a new SendGridProvider with the given API key
+// and sender address. fromName is the display name shown alongside the
+// sender address; pass "" to show just the bare address.
+func NewSendGridProvider(apiKey, from, fromName string) *SendGridProvider {
 	return &SendGridProvider{
-		apiKey:  apiKey,
-		from:    from,
-		client:  &http.Client{Timeout: 30 * time.Second},
-		baseURL: sendGridDefaultURL,
+		apiKey:   apiKey,
+		from:     from,
+		fromName: fromName,
+		client:   &http.Client{Timeout: 30 * time.Second},
+		baseURL:  sendGridDefaultURL,
 	}
 }
 
@@ -120,7 +123,7 @@ func (p *SendGridProvider) Send(ctx context.Context, msg *notification.Message) 
 				},
 			},
 		},
-		From:    sendGridAddress{Email: p.from},
+		From:    sendGridAddress{Email: p.from, Name: p.fromName},
 		Subject: msg.Subject,
 		Content: content,
 	}

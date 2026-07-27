@@ -18,7 +18,7 @@ func buildNotificationRegistry(cfg *config.Config, logger zerolog.Logger) *notif
 	switch strings.ToLower(strings.TrimSpace(cfg.NotificationEmailProvider)) {
 	case "", "smtp":
 		if cfg.SMTPHost != "" {
-			registry.Register(email.NewSMTPProvider(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort), cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom))
+			registry.Register(email.NewSMTPProvider(cfg.SMTPHost, strconv.Itoa(cfg.SMTPPort), cfg.SMTPUsername, cfg.SMTPPassword, cfg.SMTPFrom, cfg.MailFromName))
 		} else {
 			logger.Warn().Msg("email provider smtp selected but SMTP_HOST is empty")
 		}
@@ -31,7 +31,7 @@ func buildNotificationRegistry(cfg *config.Config, logger zerolog.Logger) *notif
 			logger.Warn().Msg("email provider sendgrid selected but SENDGRID_API_KEY or sender address is missing")
 			break
 		}
-		registry.Register(email.NewSendGridProvider(cfg.SendGridAPIKey, from))
+		registry.Register(email.NewSendGridProvider(cfg.SendGridAPIKey, from, cfg.MailFromName))
 	case "ses":
 		from := cfg.SESFrom
 		if from == "" {
@@ -41,7 +41,7 @@ func buildNotificationRegistry(cfg *config.Config, logger zerolog.Logger) *notif
 			logger.Warn().Msg("email provider ses selected but SES_REGION/SES_USERNAME/SES_PASSWORD/sender is missing")
 			break
 		}
-		registry.Register(email.NewSESProvider(cfg.SESRegion, cfg.SESUsername, cfg.SESPassword, from))
+		registry.Register(email.NewSESProvider(cfg.SESRegion, cfg.SESUsername, cfg.SESPassword, from, cfg.MailFromName))
 	default:
 		logger.Warn().Str("provider", cfg.NotificationEmailProvider).Msg("unknown email provider; no email provider registered")
 	}

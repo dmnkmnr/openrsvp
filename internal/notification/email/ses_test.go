@@ -10,7 +10,7 @@ import (
 )
 
 func TestSESProvider_NameChannelAndHost(t *testing.T) {
-	p := NewSESProvider("us-east-1", "user", "pass", "from@example.com")
+	p := NewSESProvider("us-east-1", "user", "pass", "from@example.com", "")
 	if p.Name() != "ses" {
 		t.Fatalf("Name = %q", p.Name())
 	}
@@ -30,7 +30,7 @@ func TestSESProvider_Send_ReachesSMTP(t *testing.T) {
 	defer srv.Close()
 	host, port, _ := net.SplitHostPort(srv.addr)
 
-	p := NewSESProvider("us-east-1", "", "", "from@example.com")
+	p := NewSESProvider("us-east-1", "", "", "from@example.com", "")
 	// Redirect the wrapped SMTP provider at the capture server.
 	p.smtp.host = host
 	p.smtp.port = port
@@ -54,7 +54,7 @@ func TestSESProvider_HealthCheck(t *testing.T) {
 	defer srv.Close()
 	host, port, _ := net.SplitHostPort(srv.addr)
 
-	p := NewSESProvider("us-east-1", "", "", "from@example.com")
+	p := NewSESProvider("us-east-1", "", "", "from@example.com", "")
 	p.smtp.host = host
 	p.smtp.port = port
 	if err := p.HealthCheck(context.Background()); err != nil {
@@ -67,7 +67,7 @@ func TestSESProvider_SendBatch(t *testing.T) {
 	defer srv.Close()
 	host, port, _ := net.SplitHostPort(srv.addr)
 
-	p := NewSESProvider("eu-west-1", "", "", "from@example.com")
+	p := NewSESProvider("eu-west-1", "", "", "from@example.com", "")
 	p.smtp.host = host
 	p.smtp.port = port
 

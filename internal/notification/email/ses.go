@@ -15,11 +15,12 @@ type SESProvider struct {
 
 // NewSESProvider creates a new SESProvider that connects to the SES SMTP
 // endpoint in the given AWS region. The username and password are the SES
-// SMTP credentials (not IAM access keys).
-func NewSESProvider(region, username, password, from string) *SESProvider {
+// SMTP credentials (not IAM access keys). fromName is the display name shown
+// alongside the sender address; pass "" to show just the bare address.
+func NewSESProvider(region, username, password, from, fromName string) *SESProvider {
 	host := fmt.Sprintf("email-smtp.%s.amazonaws.com", region)
 	return &SESProvider{
-		smtp: NewSMTPProvider(host, "587", username, password, from),
+		smtp: NewSMTPProvider(host, "587", username, password, from, fromName),
 	}
 }
 

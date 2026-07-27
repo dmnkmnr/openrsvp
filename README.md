@@ -165,6 +165,12 @@ All configuration is via environment variables. See [`.env.example`](.env.exampl
 | `SES_PASSWORD` | SES SMTP password |
 | `SES_FROM` | Sender email address |
 
+**All providers** — optional display name shown alongside the sender address:
+
+| Variable | Description |
+|----------|-------------|
+| `MAIL_FROM_NAME` | Display name for the From address, e.g. `OpenRSVP` (shows as `OpenRSVP <noreply@yourdomain.com>`). Leave unset to show just the bare address. |
+
 ### 📱 SMS Providers (Optional)
 
 Set `NOTIFICATION_SMS_PROVIDER` to enable SMS notifications for reminders.
