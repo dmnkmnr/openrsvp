@@ -72,9 +72,9 @@ type GetAnswersFunc func(ctx context.Context, attendeeID string) (any, error)
 
 // ExportQuestionsData holds structured data for CSV export of custom questions.
 type ExportQuestionsData struct {
-	Labels           []string                       // Question labels (for CSV header columns)
-	QuestionIDs      []string                       // Question IDs in order
-	AnswersByAttendee map[string]map[string]string   // attendeeID -> questionID -> answer
+	Labels            []string                     // Question labels (for CSV header columns)
+	QuestionIDs       []string                     // Question IDs in order
+	AnswersByAttendee map[string]map[string]string // attendeeID -> questionID -> answer
 }
 
 // GetExportQuestionsFunc returns question labels and answers for CSV export.
@@ -82,22 +82,22 @@ type GetExportQuestionsFunc func(ctx context.Context, eventID string) (*ExportQu
 
 // Service contains the business logic for the RSVP system.
 type Service struct {
-	store                     *Store
-	eventService              *event.Service
-	inviteService             *invite.Service
-	notifyRSVP                NotifyRSVPFunc
-	notifyWaitlistPromotion   NotifyWaitlistPromotionFunc
-	sendEmail                 EmailSender
-	sendSMS                   SMSSender
-	smsEnabled                bool
-	baseURL                   string
-	validateAnswers           ValidateAndSaveAnswersFunc
-	listQuestions             ListQuestionsFunc
-	getAnswers                GetAnswersFunc
-	getExportQuestions        GetExportQuestionsFunc
-	onImportInvite            ImportInviteFunc
-	logger                    zerolog.Logger
-	notifSem                  chan struct{} // bounds concurrent notification goroutines
+	store                   *Store
+	eventService            *event.Service
+	inviteService           *invite.Service
+	notifyRSVP              NotifyRSVPFunc
+	notifyWaitlistPromotion NotifyWaitlistPromotionFunc
+	sendEmail               EmailSender
+	sendSMS                 SMSSender
+	smsEnabled              bool
+	baseURL                 string
+	validateAnswers         ValidateAndSaveAnswersFunc
+	listQuestions           ListQuestionsFunc
+	getAnswers              GetAnswersFunc
+	getExportQuestions      GetExportQuestionsFunc
+	onImportInvite          ImportInviteFunc
+	logger                  zerolog.Logger
+	notifSem                chan struct{} // bounds concurrent notification goroutines
 }
 
 // NewService creates a new RSVP Service.
@@ -206,8 +206,8 @@ type PublicAttendance struct {
 type PublicInviteData struct {
 	Event      *event.PublicEvent `json:"event"`
 	Invite     *invite.InviteCard `json:"invite"`
-	Attendance *PublicAttendance   `json:"attendance,omitempty"`
-	Questions  any                 `json:"questions,omitempty"`
+	Attendance *PublicAttendance  `json:"attendance,omitempty"`
+	Questions  any                `json:"questions,omitempty"`
 }
 
 // GetPublicInvite retrieves event and invite card data by share token for the
@@ -1132,6 +1132,7 @@ func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone s
 
 	rsvpToken := a.RSVPToken
 	evTitle := ev.Title
+	evLang := ev.Language
 	baseURL := s.baseURL
 
 	// Prefer email when the attendee has one and it's the one they looked up
@@ -1140,12 +1141,12 @@ func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone s
 		sendFn := s.sendEmail
 		s.asyncNotify(func() {
 			modifyURL := baseURL + "/r/" + rsvpToken
-			htmlBody, plainBody, err := templates.RenderRSVPLookup(evTitle, modifyURL)
+			subject, htmlBody, plainBody, err := templates.RenderRSVPLookup(evLang, evTitle, modifyURL)
 			if err != nil {
 				s.logger.Error().Err(err).Msg("rsvp lookup: failed to render template")
 				return
 			}
-			if err := sendFn(context.Background(), email, "Your RSVP Link — "+evTitle, htmlBody, plainBody); err != nil {
+			if err := sendFn(context.Background(), email, subject, htmlBody, plainBody); err != nil {
 				s.logger.Error().Err(err).Str("to", email).Msg("rsvp lookup: failed to send email")
 			}
 		})
@@ -1157,7 +1158,11 @@ func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone s
 		to := *a.Phone
 		s.asyncNotify(func() {
 			modifyURL := baseURL + "/r/" + rsvpToken
-			smsBody := templates.SMSFrom(fmt.Sprintf("Your RSVP link for %s: %s", evTitle, modifyURL), 300)
+			plainText := fmt.Sprintf("Your RSVP link for %s: %s", evTitle, modifyURL)
+			if evLang == "de" {
+				plainText = fmt.Sprintf("Dein RSVP-Link für %s: %s", evTitle, modifyURL)
+			}
+			smsBody := templates.SMSFrom(plainText, 300)
 			if err := sendFn(context.Background(), to, smsBody); err != nil {
 				s.logger.Error().Err(err).Str("to", to).Msg("rsvp lookup: failed to send sms")
 			}

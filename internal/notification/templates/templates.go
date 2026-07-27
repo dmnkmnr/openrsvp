@@ -252,33 +252,104 @@ func RenderOrganizerRSVPNotification(lang, eventTitle, guestName, rsvpStatus, gu
 	return msgCopy.SubjectPrefix, buf.String(), sb.String(), nil
 }
 
+// rsvpLookupCopy holds the localized (guest-language) copy for the RSVP
+// lookup magic link email. Unlike the organizer-facing admin copy, this is
+// keyed by the event's guest language, not the organizer's account language.
+type rsvpLookupCopy struct {
+	SubjectPrefix string // e.g. "Your RSVP Link"
+	Heading       string
+	// IntroFormat has one %s verb for the event title.
+	IntroFormat  string
+	ButtonLabel  string
+	HelperText   string
+	PrivacyNote  string
+	FooterText   string
+	PlainHeading string
+	// PlainIntroFormat has two %s verbs: event title, then the link URL.
+	PlainIntroFormat string
+	PlainPrivacyNote string
+}
+
+var rsvpLookupCopyByLang = map[string]rsvpLookupCopy{
+	"en": {
+		SubjectPrefix:    "Your RSVP Link",
+		Heading:          "Find Your RSVP",
+		IntroFormat:      "Click the button below to view and manage your RSVP for <strong>%s</strong>.",
+		ButtonLabel:      "View My RSVP",
+		HelperText:       "If the button does not work, copy and paste this link into your browser:",
+		PrivacyNote:      "This link is personal — please don't share it.",
+		FooterText:       "© OpenRSVP — Simple event RSVPs",
+		PlainHeading:     "Find Your RSVP",
+		PlainIntroFormat: "Click the link below to view and manage your RSVP for %s:\n%s",
+		PlainPrivacyNote: "This link is personal — please don't share it.",
+	},
+	"de": {
+		SubjectPrefix:    "Dein RSVP-Link",
+		Heading:          "Deine RSVP finden",
+		IntroFormat:      "Klicke auf den Button unten, um deine Antwort für <strong>%s</strong> anzusehen und zu ändern.",
+		ButtonLabel:      "Meine RSVP ansehen",
+		HelperText:       "Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:",
+		PrivacyNote:      "Dieser Link ist persönlich — bitte teile ihn nicht mit anderen.",
+		FooterText:       "© OpenRSVP — Einfache Veranstaltungs-RSVPs",
+		PlainHeading:     "Deine RSVP finden",
+		PlainIntroFormat: "Klicke auf den Link unten, um deine Antwort für %s anzusehen und zu ändern:\n%s",
+		PlainPrivacyNote: "Dieser Link ist persönlich — bitte teile ihn nicht mit anderen.",
+	},
+}
+
+func rsvpLookupCopyFor(lang string) rsvpLookupCopy {
+	if c, ok := rsvpLookupCopyByLang[lang]; ok {
+		return c
+	}
+	return rsvpLookupCopyByLang[defaultLanguage]
+}
+
 // rsvpLookupData holds the template data for an RSVP lookup email.
 type rsvpLookupData struct {
-	EventTitle string
-	ModifyURL  string
-	Colors     EmailColors
+	EventTitle  string
+	ModifyURL   string
+	Heading     string
+	IntroHTML   template.HTML
+	ButtonLabel string
+	HelperText  string
+	PrivacyNote string
+	FooterText  string
+	Colors      EmailColors
 }
 
 // RenderRSVPLookup renders the RSVP lookup magic link email template and
-// returns the HTML body and a plain text fallback.
-func RenderRSVPLookup(eventTitle, modifyURL string) (html, plain string, err error) {
+// returns the localized subject, the HTML body, and a plain text fallback.
+// lang is the event's guest language, not the organizer's account language.
+func RenderRSVPLookup(lang, eventTitle, modifyURL string) (subject, html, plain string, err error) {
+	msgCopy := rsvpLookupCopyFor(lang)
+
 	data := rsvpLookupData{
-		EventTitle: eventTitle,
-		ModifyURL:  modifyURL,
-		Colors:     DefaultEmailColors(),
+		EventTitle:  eventTitle,
+		ModifyURL:   modifyURL,
+		Heading:     msgCopy.Heading,
+		IntroHTML:   template.HTML(fmt.Sprintf(msgCopy.IntroFormat, template.HTMLEscapeString(eventTitle))), //nolint:gosec // eventTitle is HTML-escaped above
+		ButtonLabel: msgCopy.ButtonLabel,
+		HelperText:  msgCopy.HelperText,
+		PrivacyNote: msgCopy.PrivacyNote,
+		FooterText:  msgCopy.FooterText,
+		Colors:      DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
 	if err := rsvpLookupTmpl.Execute(&buf, data); err != nil {
-		return "", "", fmt.Errorf("render rsvp lookup template: %w", err)
+		return "", "", "", fmt.Errorf("render rsvp lookup template: %w", err)
 	}
 
 	plainText := fmt.Sprintf(
-		"Find Your RSVP\n\nClick the link below to view and manage your RSVP for %s:\n%s\n\nThis link is personal — please don't share it.",
-		eventTitle, modifyURL,
+		"%s\n\n%s\n\n%s",
+		msgCopy.PlainHeading,
+		fmt.Sprintf(msgCopy.PlainIntroFormat, eventTitle, modifyURL),
+		msgCopy.PlainPrivacyNote,
 	)
 
-	return buf.String(), plainText, nil
+	subject = msgCopy.SubjectPrefix + " — " + eventTitle
+
+	return subject, buf.String(), plainText, nil
 }
 
 // feedbackConfirmationData holds the template data for a feedback confirmation email.

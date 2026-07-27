@@ -135,6 +135,29 @@ func TestRenderGuestMessageNotificationGerman(t *testing.T) {
 	assert.Contains(t, plain, "Gibt es Parkplätze in der Nähe?")
 }
 
+func TestRenderRSVPLookup(t *testing.T) {
+	subject, html, plain, err := RenderRSVPLookup("en", "Pool Party", "http://localhost/r/tok")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Your RSVP Link — Pool Party", subject)
+	assert.Contains(t, html, "Find Your RSVP")
+	assert.Contains(t, html, "Pool Party")
+	assert.Contains(t, html, "View My RSVP")
+	assert.Contains(t, plain, "Pool Party")
+}
+
+func TestRenderRSVPLookupGerman(t *testing.T) {
+	subject, html, plain, err := RenderRSVPLookup("de", "Poolparty", "http://localhost/r/tok")
+	require.NoError(t, err)
+
+	assert.Equal(t, "Dein RSVP-Link — Poolparty", subject)
+	assert.Contains(t, html, "Deine RSVP finden")
+	assert.Contains(t, html, "Poolparty")
+	assert.Contains(t, html, "Meine RSVP ansehen")
+	assert.NotContains(t, html, "Find Your RSVP")
+	assert.Contains(t, plain, "Poolparty")
+}
+
 func TestRenderFeedbackConfirmation(t *testing.T) {
 	subject, html, plain, err := RenderFeedbackConfirmation("bug", true, "en")
 	require.NoError(t, err)
