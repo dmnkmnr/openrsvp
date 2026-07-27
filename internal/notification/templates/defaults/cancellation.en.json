@@ -1,4 +1,4 @@
 {
   "subject": "Event Cancelled — {eventTitle}",
-  "body": "Hi {guestName},\n\nWe're sorry to let you know that {eventTitle} has been cancelled.\n\nOriginally scheduled: {eventDate}\nLocation: {location}\n\nIf you have any questions, please reach out to the organizer."
+  "body": "Hi {guestName},\n\nWe're sorry to let you know that \"{eventTitle}\" has been cancelled.\n\nOriginally scheduled: {eventDate}\nLocation: {location}\n\nIf you have any questions, feel free to reach out to us."
 }

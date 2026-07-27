@@ -1,4 +1,4 @@
 {
   "subject": "Du bist eingeladen! — {eventTitle}",
-  "body": "Hallo {guestName},\n\ndu wurdest zu {eventTitle} eingeladen.\n\nDatum: {eventDate}\nOrt: {location}\n\nGib uns gerne Bescheid, ob du dabei bist."
+  "body": "Hallo {guestName},\n\ndu wurdest zu \"{eventTitle}\" eingeladen.\n\nDatum: {eventDate}\nOrt: {location}\n\nGib uns gerne Bescheid, ob du dabei bist."
 }
