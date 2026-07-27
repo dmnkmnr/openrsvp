@@ -346,7 +346,7 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 	}
 
 	if wantSMS {
-		plain := templates.Interpolate(bodyTpl, vars)
+		plain := templates.Interpolate(bodyTpl, vars) + "\n\n" + rsvpLink
 		msg := &notification.Message{
 			To:   *attendee.phone,
 			Body: templates.SMSFrom(plain, 300),

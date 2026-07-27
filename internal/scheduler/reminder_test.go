@@ -67,6 +67,16 @@ func (p *fakeProvider) recipients() []string {
 	return out
 }
 
+func (p *fakeProvider) bodies() []string {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	out := make([]string, len(p.sent))
+	for i, m := range p.sent {
+		out[i] = m.Body
+	}
+	return out
+}
+
 // reminderTestEnv bundles everything a reminder job test needs.
 type reminderTestEnv struct {
 	db      database.DB
@@ -318,6 +328,7 @@ func TestProcessReminderSMSFallbackWhenNoEmail(t *testing.T) {
 	assert.Equal(t, 0, env.email.count(), "no email when attendee has no email")
 	assert.Equal(t, 1, env.sms.count(), "SMS fallback used for phone-only attendee")
 	assert.Equal(t, []string{"+15551234567"}, env.sms.recipients())
+	assert.Contains(t, env.sms.bodies()[0], "http://localhost:8080/", "SMS body must include the RSVP link")
 }
 
 func TestProcessReminderDeclinedAttendeeInAllGroupStillSent(t *testing.T) {
