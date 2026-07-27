@@ -451,6 +451,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.20.0 (2026-07-27)
+
+**Features:**
+- Added Google Maps / OpenStreetMap "open in maps" links next to the event address on the guest invite page, the guest self-manage page, and the organizer event dashboard
+- The footer copyright text on the landing page now links to the GitHub repository
+
 ### v1.19.2 (2026-07-27)
 
 **Fixes:**
