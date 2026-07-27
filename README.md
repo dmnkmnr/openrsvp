@@ -451,6 +451,19 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.19.0 (2026-07-27)
+
+**Features:**
+- Organizers can now choose a language (English or German) for their own account — set at first login (magic-link request) and changeable anytime from account settings. This controls both the language of admin-facing system emails (magic link, "new RSVP" notification, co-host invitation, retention warning, feedback confirmation) and the web app's own UI language on login
+
+### v1.18.0 (2026-07-27)
+
+**Features:**
+- Added Inter, Manrope, and Space Grotesk as new self-hosted font options in the invite-card designer (Google Fonts, SIL Open Font License)
+
+**Housekeeping:**
+- Added the `LOG_FORMAT` environment variable to the configuration table
+
 ### v1.17.0 (2026-07-25)
 
 **Housekeeping:**
