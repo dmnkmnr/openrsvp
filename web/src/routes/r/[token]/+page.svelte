@@ -499,7 +499,6 @@
 										}}
 										class="w-20 rounded-md border border-neutral-300 px-3 py-2.5 text-neutral-900 text-center focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
 									/>
-									<span class="text-sm text-neutral-500">{$_('guestManage.childrenHelper')}</span>
 								</div>
 							</div>
 						{/if}
