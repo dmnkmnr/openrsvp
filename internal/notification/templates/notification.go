@@ -164,10 +164,25 @@ var germanMonths = map[time.Month]string{
 	time.December:  "Dezember",
 }
 
+// InTimezone converts a stored (UTC) event time to the event's display
+// timezone, so notification bodies show the same local time the organizer
+// entered rather than the raw UTC hour. Falls back to UTC if tz is empty or
+// unrecognized, mirroring internal/calendar.GenerateICS's handling.
+func InTimezone(t time.Time, tz string) time.Time {
+	if tz == "" {
+		return t.UTC()
+	}
+	loc, err := time.LoadLocation(tz)
+	if err != nil {
+		return t.UTC()
+	}
+	return t.In(loc)
+}
+
 // FormatEventDate formats a time for display inside a guest notification, in
 // the given language. Times are expected to already be in the event's
-// display timezone (callers pass ev.EventDate as stored, which the rest of
-// the codebase treats as the display value).
+// display timezone -- pass the result of InTimezone, not the raw stored UTC
+// value.
 func FormatEventDate(t time.Time, lang string) string {
 	switch lang {
 	case "de":

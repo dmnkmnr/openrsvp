@@ -331,6 +331,33 @@ func TestProcessReminderSMSFallbackWhenNoEmail(t *testing.T) {
 	assert.Contains(t, env.sms.bodies()[0], "http://localhost:8080/", "SMS body must include the RSVP link")
 }
 
+func TestProcessReminderShowsEventDateInEventTimezoneNotUTC(t *testing.T) {
+	env := setupReminderJob(t)
+	ctx := context.Background()
+
+	// The event was created with EventDate "2026-06-15T14:00" and no
+	// explicit timezone, so it defaults to America/New_York and is stored
+	// as 14:00 UTC. In June, America/New_York is EDT (UTC-4), so guests
+	// should see 10:00 AM, not the raw stored 2:00 PM UTC.
+	addAttendee(t, env.db, env.eventID, "Dave", "dave@example.com", "", "attending")
+	r := &Reminder{
+		ID:          uuid.Must(uuid.NewV7()).String(),
+		EventID:     env.eventID,
+		RemindAt:    time.Now().UTC().Add(-time.Minute),
+		TargetGroup: "all",
+		Message:     "See you at {eventDate}!",
+		Status:      "scheduled",
+	}
+	require.NoError(t, env.store.Create(ctx, r))
+
+	require.NoError(t, env.job.Run(ctx))
+
+	require.Equal(t, 1, env.email.count())
+	body := env.email.bodies()[0]
+	assert.Contains(t, body, "10:00 AM", "email body must show the event's local time, not the raw UTC hour")
+	assert.NotContains(t, body, "2:00 PM", "email body must not show the raw stored UTC hour")
+}
+
 func TestProcessReminderDeclinedAttendeeInAllGroupStillSent(t *testing.T) {
 	env := setupReminderJob(t)
 	ctx := context.Background()

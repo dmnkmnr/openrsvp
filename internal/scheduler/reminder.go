@@ -273,7 +273,7 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		subjectTpl, bodyTpl = def.Subject, def.Body
 	}
 
-	eventDate := templates.FormatEventDate(ev.eventDate, lang)
+	eventDate := templates.FormatEventDate(templates.InTimezone(ev.eventDate, ev.timezone), lang)
 	location := ev.location
 	if location == "" {
 		location = "TBD"

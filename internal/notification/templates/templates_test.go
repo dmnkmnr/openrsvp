@@ -229,3 +229,19 @@ func TestFormatEventDateUnsupportedLanguageFallsBackToEnglish(t *testing.T) {
 	d := time.Date(2026, time.June, 5, 15, 4, 0, 0, time.UTC)
 	assert.Equal(t, "June 5, 2026 at 3:04 PM", FormatEventDate(d, "fr"))
 }
+
+func TestInTimezoneConvertsToLocalTime(t *testing.T) {
+	// 15:00 UTC is 17:00 in Europe/Berlin during summer (CEST, UTC+2) --
+	// notification bodies must show the organizer's entered local time, not
+	// the raw stored UTC hour.
+	d := time.Date(2026, time.June, 15, 15, 0, 0, 0, time.UTC)
+	converted := InTimezone(d, "Europe/Berlin")
+	assert.Equal(t, "17:00", converted.Format("15:04"))
+	assert.Equal(t, "15. Juni 2026 um 17:00 Uhr", FormatEventDate(converted, "de"))
+}
+
+func TestInTimezoneFallsBackToUTCForEmptyOrInvalidZone(t *testing.T) {
+	d := time.Date(2026, time.June, 15, 15, 0, 0, 0, time.UTC)
+	assert.Equal(t, "15:00", InTimezone(d, "").Format("15:04"))
+	assert.Equal(t, "15:00", InTimezone(d, "Not/AZone").Format("15:04"))
+}

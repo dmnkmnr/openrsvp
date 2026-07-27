@@ -371,7 +371,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				"eventId":      eventID,
 			})
 
-			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
+			eventDate := templates.FormatEventDate(templates.InTimezone(ev.EventDate, ev.Timezone), ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -479,7 +479,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelEmail, &notification.Message{
 				To:      organizer.Email,
-				Subject: subjectPrefix + " — " + attendee.Name + " — " + ev.Title + " (" + ev.EventDate.Format("Jan 2") + ")",
+				Subject: subjectPrefix + " — " + attendee.Name + " — " + ev.Title + " (" + templates.InTimezone(ev.EventDate, ev.Timezone).Format("Jan 2") + ")",
 				Body:    htmlBody,
 				Plain:   plainBody,
 				Lang:    organizer.Language,
@@ -498,7 +498,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
+			eventDate := templates.FormatEventDate(templates.InTimezone(ev.EventDate, ev.Timezone), ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -562,7 +562,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.InTimezone(ev.EventDate, ev.Timezone).Format("January 2, 2006 at 3:04 PM")
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -605,7 +605,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
+			eventDate := templates.FormatEventDate(templates.InTimezone(ev.EventDate, ev.Timezone), ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -732,7 +732,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 			}
 
 			inviteURL := cfg.BaseURL + "/i/" + ev.ShareToken
-			eventDate := templates.FormatEventDate(ev.EventDate, ev.Language)
+			eventDate := templates.FormatEventDate(templates.InTimezone(ev.EventDate, ev.Timezone), ev.Language)
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -810,7 +810,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				senderName = attendee.Name
 			}
 
-			eventDate := ev.EventDate.Format("January 2, 2006 at 3:04 PM")
+			eventDate := templates.InTimezone(ev.EventDate, ev.Timezone).Format("January 2, 2006 at 3:04 PM")
 			location := ev.Location
 			if location == "" {
 				location = "TBD"
@@ -927,7 +927,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				return
 			}
 
-			eventDate := templates.FormatEventDate(e.EventDate, e.Language)
+			eventDate := templates.FormatEventDate(templates.InTimezone(e.EventDate, e.Timezone), e.Language)
 			location := e.Location
 			if location == "" {
 				location = "TBD"
