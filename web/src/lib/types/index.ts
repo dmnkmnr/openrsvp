@@ -21,7 +21,8 @@ export interface Event {
 	retentionDays: number;
 	language: string;
 	contactRequirement: 'email' | 'phone' | 'email_or_phone' | 'email_and_phone';
-	mapProvider: 'none' | 'google' | 'osm';
+	mapProvider: 'none' | 'google' | 'osm' | 'custom';
+	mapCustomUrl?: string;
 	showHeadcount: boolean;
 	showGuestList: boolean;
 	status: 'draft' | 'published' | 'cancelled' | 'archived';
@@ -52,7 +53,8 @@ export interface EventSeries {
 	seriesStatus: 'active' | 'stopped';
 	retentionDays: number;
 	contactRequirement: 'email' | 'phone' | 'email_or_phone' | 'email_and_phone';
-	mapProvider: 'none' | 'google' | 'osm';
+	mapProvider: 'none' | 'google' | 'osm' | 'custom';
+	mapCustomUrl?: string;
 	showHeadcount: boolean;
 	showGuestList: boolean;
 	rsvpDeadlineOffsetHours?: number;
@@ -137,7 +139,8 @@ export interface PublicEvent {
 	location: string;
 	timezone: string;
 	contactRequirement: 'email' | 'phone' | 'email_or_phone' | 'email_and_phone';
-	mapProvider: 'none' | 'google' | 'osm';
+	mapProvider: 'none' | 'google' | 'osm' | 'custom';
+	mapCustomUrl?: string;
 	rsvpDeadline?: string;
 	rsvpsClosed: boolean;
 	maxCapacity?: number;

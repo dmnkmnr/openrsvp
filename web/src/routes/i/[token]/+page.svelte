@@ -374,7 +374,7 @@
 				eventTitle={eventData.title}
 				eventDate={eventData.eventDate}
 				eventLocation={eventData.location}
-				mapUrl={mapUrl(eventData.location, eventData.mapProvider) ?? undefined}
+				mapUrl={mapUrl(eventData.location, eventData.mapProvider, eventData.mapCustomUrl) ?? undefined}
 				customData={typeof inviteData.customData === 'string' ? inviteData.customData : JSON.stringify(inviteData.customData || {})}
 				timezone={eventData.timezone}
 			/>

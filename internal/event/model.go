@@ -18,6 +18,7 @@ type Event struct {
 	Language           string     `json:"language"`
 	ContactRequirement string     `json:"contactRequirement"`
 	MapProvider        string     `json:"mapProvider"`
+	MapCustomURL       string     `json:"mapCustomUrl"`
 	ShowHeadcount      bool       `json:"showHeadcount"`
 	ShowGuestList      bool       `json:"showGuestList"`
 	RSVPDeadline       *time.Time `json:"rsvpDeadline,omitempty"`
@@ -43,6 +44,7 @@ type CreateEventRequest struct {
 	Language           *string `json:"language,omitempty"`
 	ContactRequirement *string `json:"contactRequirement,omitempty"`
 	MapProvider        *string `json:"mapProvider,omitempty"`
+	MapCustomURL       *string `json:"mapCustomUrl,omitempty"`
 	ShowHeadcount      *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList      *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadline       *string `json:"rsvpDeadline,omitempty"`
@@ -65,6 +67,7 @@ type PublicEvent struct {
 	Language           string `json:"language"`
 	ContactRequirement string `json:"contactRequirement"`
 	MapProvider        string `json:"mapProvider"`
+	MapCustomURL       string `json:"mapCustomUrl,omitempty"`
 	RSVPDeadline       string `json:"rsvpDeadline,omitempty"`
 	RSVPsClosed        bool   `json:"rsvpsClosed"`
 	MaxCapacity        *int   `json:"maxCapacity,omitempty"`
@@ -85,6 +88,7 @@ func (e *Event) ToPublic() *PublicEvent {
 		Language:           e.Language,
 		ContactRequirement: e.ContactRequirement,
 		MapProvider:        e.MapProvider,
+		MapCustomURL:       e.MapCustomURL,
 		WaitlistEnabled:    e.WaitlistEnabled,
 		CommentsEnabled:    e.CommentsEnabled,
 	}
@@ -112,6 +116,7 @@ type UpdateEventRequest struct {
 	Language           *string `json:"language,omitempty"`
 	ContactRequirement *string `json:"contactRequirement,omitempty"`
 	MapProvider        *string `json:"mapProvider,omitempty"`
+	MapCustomURL       *string `json:"mapCustomUrl,omitempty"`
 	ShowHeadcount      *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList      *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadline       *string `json:"rsvpDeadline,omitempty"`

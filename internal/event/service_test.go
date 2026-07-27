@@ -387,6 +387,75 @@ func TestUpdateEventInvalidMapProvider(t *testing.T) {
 	assert.Contains(t, err.Error(), "invalid mapProvider")
 }
 
+func TestCreateEventCustomMapProviderRequiresValidURL(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	mp := "custom"
+	_, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:       "Party",
+		EventDate:   "2026-06-15T14:00",
+		MapProvider: &mp,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mapCustomUrl must be a valid http(s) URL")
+}
+
+func TestCreateEventCustomMapProviderRejectsUnsafeScheme(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	mp := "custom"
+	badURL := "javascript:alert(1)"
+	_, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:        "Party",
+		EventDate:    "2026-06-15T14:00",
+		MapProvider:  &mp,
+		MapCustomURL: &badURL,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mapCustomUrl must be a valid http(s) URL")
+}
+
+func TestCreateEventCustomMapProviderWithValidURL(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	mp := "custom"
+	url := "https://maps.example.com/my-venue"
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:        "Party",
+		EventDate:    "2026-06-15T14:00",
+		MapProvider:  &mp,
+		MapCustomURL: &url,
+	})
+	require.NoError(t, err)
+	assert.Equal(t, "custom", ev.MapProvider)
+	assert.Equal(t, url, ev.MapCustomURL)
+}
+
+func TestUpdateEventCustomMapProviderRequiresValidURL(t *testing.T) {
+	svc, authStore := setupEvent(t)
+	org := createOrganizer(t, authStore)
+	ctx := context.Background()
+
+	ev, err := svc.Create(ctx, org.ID, CreateEventRequest{
+		Title:     "Party",
+		EventDate: "2026-06-15T14:00",
+	})
+	require.NoError(t, err)
+
+	mp := "custom"
+	_, err = svc.Update(ctx, ev.ID, org.ID, UpdateEventRequest{
+		MapProvider: &mp,
+	})
+	assert.Error(t, err)
+	assert.Contains(t, err.Error(), "mapCustomUrl must be a valid http(s) URL")
+}
+
 func TestReopenEvent(t *testing.T) {
 	svc, authStore := setupEvent(t)
 	org := createOrganizer(t, authStore)

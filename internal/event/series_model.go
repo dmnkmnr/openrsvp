@@ -21,6 +21,7 @@ type EventSeries struct {
 	Language                string     `json:"language"`
 	ContactRequirement      string     `json:"contactRequirement"`
 	MapProvider             string     `json:"mapProvider"`
+	MapCustomURL            string     `json:"mapCustomUrl"`
 	ShowHeadcount           bool       `json:"showHeadcount"`
 	ShowGuestList           bool       `json:"showGuestList"`
 	RSVPDeadlineOffsetHours *int       `json:"rsvpDeadlineOffsetHours,omitempty"`
@@ -45,6 +46,7 @@ type CreateSeriesRequest struct {
 	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
 	MapProvider             *string `json:"mapProvider,omitempty"`
+	MapCustomURL            *string `json:"mapCustomUrl,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadlineOffsetHours *int    `json:"rsvpDeadlineOffsetHours,omitempty"`
@@ -65,6 +67,7 @@ type UpdateSeriesRequest struct {
 	Language                *string `json:"language,omitempty"`
 	ContactRequirement      *string `json:"contactRequirement,omitempty"`
 	MapProvider             *string `json:"mapProvider,omitempty"`
+	MapCustomURL            *string `json:"mapCustomUrl,omitempty"`
 	ShowHeadcount           *bool   `json:"showHeadcount,omitempty"`
 	ShowGuestList           *bool   `json:"showGuestList,omitempty"`
 	RSVPDeadlineOffsetHours *int    `json:"rsvpDeadlineOffsetHours,omitempty"`

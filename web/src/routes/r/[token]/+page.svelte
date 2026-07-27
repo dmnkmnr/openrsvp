@@ -305,9 +305,9 @@
 				<p class="text-neutral-500 text-sm">{formatDate(eventData.eventDate, eventData.timezone)}</p>
 				{#if eventData.location}
 					<p class="text-neutral-500 text-sm">
-						{#if mapUrl(eventData.location, eventData.mapProvider)}
+						{#if mapUrl(eventData.location, eventData.mapProvider, eventData.mapCustomUrl)}
 							<a
-								href={mapUrl(eventData.location, eventData.mapProvider) ?? undefined}
+								href={mapUrl(eventData.location, eventData.mapProvider, eventData.mapCustomUrl) ?? undefined}
 								target="_blank"
 								rel="noopener noreferrer"
 								class="hover:text-primary hover:underline underline-offset-2 transition-colors"

@@ -39,6 +39,7 @@
 	let editDurationMinutes = $state('');
 	let editContactRequirement = $state('email');
 	let editMapProvider = $state('google');
+	let editMapCustomUrl = $state('');
 	let editShowHeadcount = $state(false);
 	let editShowGuestList = $state(false);
 	let editRsvpDeadlineOffsetHours = $state('');
@@ -74,6 +75,7 @@
 	const mapProviderOptions = $derived([
 		{ value: 'google', label: $_('events.new.mapProviderOptions.google') },
 		{ value: 'osm', label: $_('events.new.mapProviderOptions.osm') },
+		{ value: 'custom', label: $_('events.new.mapProviderOptions.custom') },
 		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
 	]);
 
@@ -117,6 +119,7 @@
 		editDurationMinutes = series.durationMinutes != null ? String(series.durationMinutes) : '';
 		editContactRequirement = series.contactRequirement;
 		editMapProvider = series.mapProvider || 'google';
+		editMapCustomUrl = series.mapCustomUrl || '';
 		editShowHeadcount = series.showHeadcount;
 		editShowGuestList = series.showGuestList;
 		editRsvpDeadlineOffsetHours = series.rsvpDeadlineOffsetHours != null ? String(series.rsvpDeadlineOffsetHours) : '';
@@ -146,6 +149,9 @@
 			const h = parseInt(editRsvpDeadlineOffsetHours);
 			if (isNaN(h) || h < 1) editErrors.rsvpDeadlineOffsetHours = $_('events.seriesDetail.rsvpOffsetInvalid');
 		}
+		if (editMapProvider === 'custom' && !/^https?:\/\/.+/.test(editMapCustomUrl.trim())) {
+			editErrors.mapCustomUrl = $_('events.new.mapCustomUrlInvalid');
+		}
 		if (Object.keys(editErrors).length > 0) return;
 
 		saving = true;
@@ -158,6 +164,7 @@
 				eventTime: editEventTime,
 				contactRequirement: editContactRequirement,
 				mapProvider: editMapProvider,
+				mapCustomUrl: editMapProvider === 'custom' ? editMapCustomUrl.trim() : '',
 				showHeadcount: editShowHeadcount,
 				showGuestList: editShowGuestList
 			};
@@ -312,6 +319,17 @@
 						/>
 						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.mapProviderHelper')}</p>
 					</div>
+
+					{#if editMapProvider === 'custom'}
+						<Input
+							label={$_('events.new.mapCustomUrlLabel')}
+							name="editMapCustomUrl"
+							type="url"
+							bind:value={editMapCustomUrl}
+							placeholder="https://maps.example.com/..."
+							error={editErrors.mapCustomUrl || ''}
+						/>
+					{/if}
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.seriesDetail.guestVisibilityLegend')}</legend>

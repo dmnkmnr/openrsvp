@@ -36,6 +36,7 @@
 	let recurrenceEnd = $state('');
 	let contactRequirement = $state('email');
 	let mapProvider = $state('google');
+	let mapCustomUrl = $state('');
 	let showHeadcount = $state(false);
 	let showGuestList = $state(false);
 	let rsvpDeadlineOffsetHours = $state('');
@@ -70,6 +71,7 @@
 	const mapProviderOptions = $derived([
 		{ value: 'google', label: $_('events.new.mapProviderOptions.google') },
 		{ value: 'osm', label: $_('events.new.mapProviderOptions.osm') },
+		{ value: 'custom', label: $_('events.new.mapProviderOptions.custom') },
 		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
 	]);
 
@@ -114,6 +116,9 @@
 				errors.retentionDays = $_('events.seriesNew.retentionInvalid');
 			}
 		}
+		if (mapProvider === 'custom' && !/^https?:\/\/.+/.test(mapCustomUrl.trim())) {
+			errors.mapCustomUrl = $_('events.new.mapCustomUrlInvalid');
+		}
 		return Object.keys(errors).length === 0;
 	}
 
@@ -132,6 +137,7 @@
 				recurrenceRule,
 				contactRequirement,
 				mapProvider,
+				mapCustomUrl: mapProvider === 'custom' ? mapCustomUrl.trim() : '',
 				showHeadcount,
 				showGuestList,
 				retentionDays: parseInt(retentionDays)
@@ -352,6 +358,17 @@
 						/>
 						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.mapProviderHelper')}</p>
 					</div>
+
+					{#if mapProvider === 'custom'}
+						<Input
+							label={$_('events.new.mapCustomUrlLabel')}
+							name="mapCustomUrl"
+							type="url"
+							bind:value={mapCustomUrl}
+							placeholder="https://maps.example.com/..."
+							error={errors.mapCustomUrl || ''}
+						/>
+					{/if}
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.seriesNew.guestVisibilityLegend')}</legend>

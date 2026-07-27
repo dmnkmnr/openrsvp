@@ -943,8 +943,11 @@
 			"mapProviderOptions": {
 				"google": "Google Maps",
 				"osm": "OpenStreetMap",
+				"custom": "Eigener Link",
 				"none": "Aus"
 			},
+			"mapCustomUrlLabel": "Eigene Karten-URL",
+			"mapCustomUrlInvalid": "Gib einen gültigen Link ein, der mit http:// oder https:// beginnt",
 			"guestVisibilityLegend": "Gäste-Sichtbarkeit",
 			"guestVisibilityHelper": "Steuere, welche Teilnahmeinfos auf der öffentlichen Einladungsseite angezeigt werden.",
 			"showHeadcountLabel": "Teilnehmerzahl anzeigen",

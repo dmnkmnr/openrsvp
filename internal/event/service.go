@@ -4,6 +4,7 @@ import (
 	"context"
 	"crypto/rand"
 	"fmt"
+	"net/url"
 	"sort"
 	"strings"
 	"time"
@@ -16,9 +17,10 @@ const base62Chars = "0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVW
 
 // Field length limits.
 const (
-	maxTitleLen       = 200
-	maxDescriptionLen = 5000
-	maxLocationLen    = 500
+	maxTitleLen        = 200
+	maxDescriptionLen  = 5000
+	maxLocationLen     = 500
+	maxMapCustomURLLen = 2000
 )
 
 // Service contains the business logic for event management.
@@ -164,9 +166,20 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 	mapProvider := "google"
 	if req.MapProvider != nil && *req.MapProvider != "" {
 		if !isValidMapProvider(*req.MapProvider) {
-			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, osm, or custom")
 		}
 		mapProvider = *req.MapProvider
+	}
+
+	var mapCustomURL string
+	if req.MapCustomURL != nil {
+		if len(*req.MapCustomURL) > maxMapCustomURLLen {
+			return nil, fmt.Errorf("mapCustomUrl must be %d characters or less", maxMapCustomURLLen)
+		}
+		mapCustomURL = *req.MapCustomURL
+	}
+	if mapProvider == "custom" && !isValidMapCustomURL(mapCustomURL) {
+		return nil, fmt.Errorf("mapCustomUrl must be a valid http(s) URL when mapProvider is custom")
 	}
 
 	shareToken, err := generateBase62Token(8)
@@ -226,6 +239,7 @@ func (s *Service) Create(ctx context.Context, organizerID string, req CreateEven
 		Language:           language,
 		ContactRequirement: contactRequirement,
 		MapProvider:        mapProvider,
+		MapCustomURL:       mapCustomURL,
 		ShowHeadcount:      showHeadcount,
 		ShowGuestList:      showGuestList,
 		RSVPDeadline:       rsvpDeadline,
@@ -402,9 +416,18 @@ func (s *Service) Update(ctx context.Context, eventID, organizerID string, req U
 	}
 	if req.MapProvider != nil {
 		if !isValidMapProvider(*req.MapProvider) {
-			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, osm, or custom")
 		}
 		e.MapProvider = *req.MapProvider
+	}
+	if req.MapCustomURL != nil {
+		if len(*req.MapCustomURL) > maxMapCustomURLLen {
+			return nil, fmt.Errorf("mapCustomUrl must be %d characters or less", maxMapCustomURLLen)
+		}
+		e.MapCustomURL = *req.MapCustomURL
+	}
+	if e.MapProvider == "custom" && !isValidMapCustomURL(e.MapCustomURL) {
+		return nil, fmt.Errorf("mapCustomUrl must be a valid http(s) URL when mapProvider is custom")
 	}
 	if req.ShowHeadcount != nil {
 		e.ShowHeadcount = *req.ShowHeadcount
@@ -682,11 +705,22 @@ func isValidContactRequirement(s string) bool {
 // map link providers shown next to the event address.
 func isValidMapProvider(s string) bool {
 	switch s {
-	case "none", "google", "osm":
+	case "none", "google", "osm", "custom":
 		return true
 	default:
 		return false
 	}
+}
+
+// isValidMapCustomURL checks that a custom map link is an absolute http(s)
+// URL, so it can never resolve to a javascript: or other unsafe scheme when
+// rendered as an href.
+func isValidMapCustomURL(s string) bool {
+	u, err := url.Parse(s)
+	if err != nil {
+		return false
+	}
+	return (u.Scheme == "http" || u.Scheme == "https") && u.Host != ""
 }
 
 // generateBase62Token generates a random token of the given length using base62

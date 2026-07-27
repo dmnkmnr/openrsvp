@@ -32,6 +32,7 @@
 	let description = $state('');
 	let contactRequirement = $state('email_or_phone');
 	let mapProvider = $state('google');
+	let mapCustomUrl = $state('');
 	let language = $state('en');
 	let showHeadcount = $state(false);
 	let showGuestList = $state(false);
@@ -62,6 +63,7 @@
 	const mapProviderOptions = $derived([
 		{ value: 'google', label: $_('events.new.mapProviderOptions.google') },
 		{ value: 'osm', label: $_('events.new.mapProviderOptions.osm') },
+		{ value: 'custom', label: $_('events.new.mapProviderOptions.custom') },
 		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
 	]);
 
@@ -93,6 +95,7 @@
 			description = e.description;
 			contactRequirement = e.contactRequirement || 'email_or_phone';
 			mapProvider = e.mapProvider || 'google';
+			mapCustomUrl = e.mapCustomUrl || '';
 			language = e.language || 'en';
 			showHeadcount = e.showHeadcount ?? false;
 			showGuestList = e.showGuestList ?? false;
@@ -127,6 +130,9 @@
 				errors.maxCapacity = $_('events.new.maxCapacityInvalid');
 			}
 		}
+		if (mapProvider === 'custom' && !/^https?:\/\/.+/.test(mapCustomUrl.trim())) {
+			errors.mapCustomUrl = $_('events.new.mapCustomUrlInvalid');
+		}
 		return Object.keys(errors).length === 0;
 	}
 
@@ -144,6 +150,7 @@
 				language,
 				contactRequirement,
 				mapProvider,
+				mapCustomUrl: mapProvider === 'custom' ? mapCustomUrl.trim() : '',
 				showHeadcount,
 				showGuestList,
 				retentionDays: parseInt(retentionDays)
@@ -270,6 +277,17 @@
 						/>
 						<p class="mt-1.5 text-xs text-neutral-400">{$_('events.new.mapProviderHelper')}</p>
 					</div>
+
+					{#if mapProvider === 'custom'}
+						<Input
+							label={$_('events.new.mapCustomUrlLabel')}
+							name="mapCustomUrl"
+							type="url"
+							bind:value={mapCustomUrl}
+							placeholder="https://maps.example.com/..."
+							error={errors.mapCustomUrl || ''}
+						/>
+					{/if}
 
 					<fieldset class="pt-2">
 						<legend class="text-sm font-medium text-neutral-700 mb-3">{$_('events.new.guestVisibilityLegend')}</legend>

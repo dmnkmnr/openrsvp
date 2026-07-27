@@ -82,9 +82,20 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 	mapProvider := "google"
 	if req.MapProvider != nil && *req.MapProvider != "" {
 		if !isValidMapProvider(*req.MapProvider) {
-			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, osm, or custom")
 		}
 		mapProvider = *req.MapProvider
+	}
+
+	var mapCustomURL string
+	if req.MapCustomURL != nil {
+		if len(*req.MapCustomURL) > maxMapCustomURLLen {
+			return nil, fmt.Errorf("mapCustomUrl must be %d characters or less", maxMapCustomURLLen)
+		}
+		mapCustomURL = *req.MapCustomURL
+	}
+	if mapProvider == "custom" && !isValidMapCustomURL(mapCustomURL) {
+		return nil, fmt.Errorf("mapCustomUrl must be a valid http(s) URL when mapProvider is custom")
 	}
 
 	showHeadcount := false
@@ -126,6 +137,7 @@ func (s *SeriesService) CreateSeries(ctx context.Context, organizerID string, re
 		Language:                language,
 		ContactRequirement:      contactRequirement,
 		MapProvider:             mapProvider,
+		MapCustomURL:            mapCustomURL,
 		ShowHeadcount:           showHeadcount,
 		ShowGuestList:           showGuestList,
 		RSVPDeadlineOffsetHours: req.RSVPDeadlineOffsetHours,
@@ -335,9 +347,18 @@ func (s *SeriesService) UpdateSeries(ctx context.Context, seriesID, organizerID 
 	}
 	if req.MapProvider != nil {
 		if !isValidMapProvider(*req.MapProvider) {
-			return nil, fmt.Errorf("invalid mapProvider: must be none, google, or osm")
+			return nil, fmt.Errorf("invalid mapProvider: must be none, google, osm, or custom")
 		}
 		series.MapProvider = *req.MapProvider
+	}
+	if req.MapCustomURL != nil {
+		if len(*req.MapCustomURL) > maxMapCustomURLLen {
+			return nil, fmt.Errorf("mapCustomUrl must be %d characters or less", maxMapCustomURLLen)
+		}
+		series.MapCustomURL = *req.MapCustomURL
+	}
+	if series.MapProvider == "custom" && !isValidMapCustomURL(series.MapCustomURL) {
+		return nil, fmt.Errorf("mapCustomUrl must be a valid http(s) URL when mapProvider is custom")
 	}
 	if req.ShowHeadcount != nil {
 		series.ShowHeadcount = *req.ShowHeadcount
@@ -391,6 +412,7 @@ func (s *SeriesService) updateFutureOccurrences(ctx context.Context, series *Eve
 		ev.Language = series.Language
 		ev.ContactRequirement = series.ContactRequirement
 		ev.MapProvider = series.MapProvider
+		ev.MapCustomURL = series.MapCustomURL
 		ev.ShowHeadcount = series.ShowHeadcount
 		ev.ShowGuestList = series.ShowGuestList
 		ev.MaxCapacity = series.MaxCapacity
@@ -546,6 +568,7 @@ func (s *SeriesService) buildOccurrenceFromSeries(series *EventSeries, eventDate
 		Language:           series.Language,
 		ContactRequirement: series.ContactRequirement,
 		MapProvider:        series.MapProvider,
+		MapCustomURL:       series.MapCustomURL,
 		ShowHeadcount:      series.ShowHeadcount,
 		ShowGuestList:      series.ShowGuestList,
 		RSVPDeadline:       rsvpDeadline,
