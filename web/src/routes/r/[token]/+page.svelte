@@ -5,6 +5,7 @@
 	import type { PublicEvent, Attendee, Message, PublicAttendance, EventQuestion, QuestionAnswer, ApiError } from '$lib/types';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
+	import MapLinks from '$lib/components/ui/MapLinks.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 	import { _ } from '$lib/i18n';
 	import { intlLocale } from '$lib/utils/dates';
@@ -304,6 +305,9 @@
 				<p class="text-neutral-500 text-sm">{formatDate(eventData.eventDate, eventData.timezone)}</p>
 				{#if eventData.location}
 					<p class="text-neutral-500 text-sm">{eventData.location}</p>
+					<div class="mt-1 flex justify-center">
+						<MapLinks location={eventData.location} />
+					</div>
 				{/if}
 			</div>
 

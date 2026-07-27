@@ -18,6 +18,7 @@
 	import DateTimePicker from '$lib/components/ui/DateTimePicker.svelte';
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
+	import MapLinks from '$lib/components/ui/MapLinks.svelte';
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 
@@ -493,6 +494,9 @@
 							</svg>
 							{event.location}
 						</p>
+						<div class="mt-1 ml-5">
+							<MapLinks location={event.location} />
+						</div>
 					{/if}
 					{#if event.description}
 						<p class="mt-3 text-sm text-neutral-700 whitespace-pre-wrap">{event.description}</p>

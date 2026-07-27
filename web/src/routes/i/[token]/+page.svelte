@@ -9,6 +9,7 @@
 	import InviteCardPreview from '$lib/components/invite/InviteCardPreview.svelte';
 	import QuestionRenderer from '$lib/components/questions/QuestionRenderer.svelte';
 	import AddToCalendar from '$lib/components/ui/AddToCalendar.svelte';
+	import MapLinks from '$lib/components/ui/MapLinks.svelte';
 	import GuestFeedback from '$lib/components/GuestFeedback.svelte';
 	import { _ } from '$lib/i18n';
 
@@ -377,6 +378,12 @@
 				timezone={eventData.timezone}
 			/>
 		</div>
+
+		{#if eventData.location}
+			<div class="w-full max-w-lg mb-6 -mt-4 flex justify-center">
+				<MapLinks location={eventData.location} />
+			</div>
+		{/if}
 
 		<!-- Capacity Display -->
 		{#if showWaitlist}

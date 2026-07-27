@@ -1,6 +1,8 @@
 {
 	"common": {
 		"save": "Save",
+		"openInGoogleMaps": "Google Maps",
+		"openInOpenStreetMap": "OpenStreetMap",
 		"saving": "Saving...",
 		"cancel": "Cancel",
 		"delete": "Delete",
