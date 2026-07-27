@@ -810,19 +810,9 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				senderName = attendee.Name
 			}
 
-			eventDate := templates.InTimezone(ev.EventDate, ev.Timezone).Format("January 2, 2006 at 3:04 PM")
-			location := ev.Location
-			if location == "" {
-				location = "TBD"
-			}
-
 			dashboardURL := cfg.BaseURL + "/events/" + eventID + "/messages"
-			htmlBody, plainBody, err := templates.RenderEventReminder(
-				ev.Title,
-				eventDate,
-				location,
-				senderName+" sent you a message:\n\n"+body,
-				dashboardURL,
+			emailSubject, htmlBody, plainBody, err := templates.RenderGuestMessageNotification(
+				organizer.Language, ev.Title, senderName, subject, body, dashboardURL,
 			)
 			if err != nil {
 				logger.Error().Err(err).Str("event_id", eventID).Msg("attendee notify: failed to render template")
@@ -831,9 +821,10 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 
 			if err := notifService.Send(ctx, eventID, attendeeID, notification.ChannelEmail, &notification.Message{
 				To:      organizer.Email,
-				Subject: "New message from " + senderName + " — " + subject,
+				Subject: emailSubject,
 				Body:    htmlBody,
 				Plain:   plainBody,
+				Lang:    organizer.Language,
 			}); err != nil {
 				logger.Error().Err(err).Str("organizer_email", organizer.Email).Msg("attendee notify: failed to send email")
 			}

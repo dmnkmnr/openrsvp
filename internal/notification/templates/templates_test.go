@@ -105,6 +105,36 @@ func TestRenderCoHostInvitationGerman(t *testing.T) {
 	assert.Contains(t, plain, "Co-Host")
 }
 
+func TestRenderGuestMessageNotification(t *testing.T) {
+	subject, html, plain, err := RenderGuestMessageNotification(
+		"en", "Pool Party", "Alice", "Question about parking", "Is there parking nearby?",
+		"http://localhost/events/1/messages",
+	)
+	require.NoError(t, err)
+
+	assert.Equal(t, "New message from Alice — Question about parking", subject)
+	assert.Contains(t, html, "New Message From a Guest")
+	assert.Contains(t, html, "Alice")
+	assert.Contains(t, html, "Pool Party")
+	assert.Contains(t, html, "Is there parking nearby?")
+	assert.NotContains(t, html, "Reminder")
+	assert.Contains(t, plain, "Alice")
+	assert.Contains(t, plain, "Is there parking nearby?")
+}
+
+func TestRenderGuestMessageNotificationGerman(t *testing.T) {
+	subject, html, plain, err := RenderGuestMessageNotification(
+		"de", "Poolparty", "Alice", "Frage zum Parken", "Gibt es Parkplätze in der Nähe?",
+		"http://localhost/events/1/messages",
+	)
+	require.NoError(t, err)
+
+	assert.Equal(t, "Neue Nachricht von Alice — Frage zum Parken", subject)
+	assert.Contains(t, html, "Neue Nachricht von einem Gast")
+	assert.Contains(t, html, "Gibt es Parkplätze in der Nähe?")
+	assert.Contains(t, plain, "Gibt es Parkplätze in der Nähe?")
+}
+
 func TestRenderFeedbackConfirmation(t *testing.T) {
 	subject, html, plain, err := RenderFeedbackConfirmation("bug", true, "en")
 	require.NoError(t, err)

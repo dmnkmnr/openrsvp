@@ -8,7 +8,7 @@ import (
 	"strings"
 )
 
-//go:embed magic_link.html event_reminder.html retention_warning.html organizer_rsvp_notification.html feedback_confirmation.html rsvp_lookup.html cohost_invitation.html
+//go:embed magic_link.html event_reminder.html retention_warning.html organizer_rsvp_notification.html feedback_confirmation.html rsvp_lookup.html cohost_invitation.html guest_message_notification.html
 var templateFS embed.FS
 
 var (
@@ -19,6 +19,7 @@ var (
 	feedbackConfirmationTmpl *template.Template
 	rsvpLookupTmpl           *template.Template
 	cohostInvitationTmpl     *template.Template
+	guestMessageNotifyTmpl   *template.Template
 )
 
 func init() {
@@ -29,6 +30,7 @@ func init() {
 	feedbackConfirmationTmpl = template.Must(template.ParseFS(templateFS, "feedback_confirmation.html"))
 	rsvpLookupTmpl = template.Must(template.ParseFS(templateFS, "rsvp_lookup.html"))
 	cohostInvitationTmpl = template.Must(template.ParseFS(templateFS, "cohost_invitation.html"))
+	guestMessageNotifyTmpl = template.Must(template.ParseFS(templateFS, "guest_message_notification.html"))
 }
 
 // magicLinkData holds the template data for a magic link email.
@@ -383,3 +385,54 @@ func RenderCoHostInvitation(lang, eventTitle, eventDate, location, addedByName, 
 	return msgCopy.Subject, buf.String(), sb.String(), nil
 }
 
+// guestMessageNotificationData holds the template data for the "a guest sent
+// you a message" notification email.
+type guestMessageNotificationData struct {
+	DashboardURL    string
+	Heading         string
+	IntroHTML       template.HTML
+	LabelMessage    string
+	MessageBodyHTML template.HTML
+	ButtonLabel     string
+	HelperText      string
+	FooterText      string
+	Colors          EmailColors
+}
+
+// RenderGuestMessageNotification renders the "a guest sent you a message"
+// organizer notification and returns the localized subject, the HTML body,
+// and a plain text fallback. lang is the organizer's own account language.
+func RenderGuestMessageNotification(lang, eventTitle, guestName, messageSubject, messageBody, dashboardURL string) (subject, html, plain string, err error) {
+	msgCopy := guestMessageNotificationCopyFor(lang)
+	chrome := envelopeChromeFor(lang)
+
+	escapedBody := template.HTMLEscapeString(messageBody)
+	bodyHTML := strings.ReplaceAll(escapedBody, "\n", "<br>")
+
+	data := guestMessageNotificationData{
+		DashboardURL:    dashboardURL,
+		Heading:         msgCopy.Heading,
+		IntroHTML:       template.HTML(fmt.Sprintf(msgCopy.IntroFormat, template.HTMLEscapeString(guestName), template.HTMLEscapeString(eventTitle))), //nolint:gosec // both values are HTML-escaped above
+		LabelMessage:    msgCopy.LabelMessage,
+		MessageBodyHTML: template.HTML(bodyHTML), //nolint:gosec // messageBody was HTML-escaped above before the newline-to-<br> substitution
+		ButtonLabel:     msgCopy.ButtonLabel,
+		HelperText:      chrome.HelperText,
+		FooterText:      chrome.FooterText,
+		Colors:          DefaultEmailColors(),
+	}
+
+	var buf bytes.Buffer
+	if err := guestMessageNotifyTmpl.Execute(&buf, data); err != nil {
+		return "", "", "", fmt.Errorf("render guest message notification template: %w", err)
+	}
+
+	var sb strings.Builder
+	sb.WriteString(msgCopy.Heading + "\n\n")
+	sb.WriteString(fmt.Sprintf(msgCopy.PlainIntroFormat, guestName, eventTitle) + "\n\n")
+	sb.WriteString(fmt.Sprintf("%s: %s\n\n", msgCopy.PlainLabelMessage, messageBody))
+	sb.WriteString(fmt.Sprintf("%s\n%s\n", msgCopy.PlainFooterCTA, dashboardURL))
+
+	subject = fmt.Sprintf("%s %s — %s", msgCopy.SubjectPrefix, guestName, messageSubject)
+
+	return subject, buf.String(), sb.String(), nil
+}

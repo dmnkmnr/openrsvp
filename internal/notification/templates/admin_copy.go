@@ -311,3 +311,47 @@ func feedbackConfirmationCopyFor(lang string) feedbackConfirmationCopy {
 	}
 	return feedbackConfirmationCopyByLang[defaultLanguage]
 }
+
+// --- Guest message notification ---
+
+type guestMessageNotificationCopy struct {
+	SubjectPrefix string // e.g. "New message from"
+	Heading       string
+	// IntroFormat has two %s verbs: (HTML-escaped) guest name, then event title.
+	IntroFormat       string
+	LabelMessage      string
+	ButtonLabel       string
+	PlainIntroFormat  string // same two verbs, no HTML
+	PlainLabelMessage string
+	PlainFooterCTA    string
+}
+
+var guestMessageNotificationCopyByLang = map[string]guestMessageNotificationCopy{
+	"en": {
+		SubjectPrefix:     "New message from",
+		Heading:           "New Message From a Guest",
+		IntroFormat:       "<strong>%s</strong> sent you a message about <strong>%s</strong>.",
+		LabelMessage:      "Message",
+		ButtonLabel:       "Reply on Event Dashboard",
+		PlainIntroFormat:  "%s sent you a message about %s.",
+		PlainLabelMessage: "Message",
+		PlainFooterCTA:    "Reply on your event dashboard:",
+	},
+	"de": {
+		SubjectPrefix:     "Neue Nachricht von",
+		Heading:           "Neue Nachricht von einem Gast",
+		IntroFormat:       "<strong>%s</strong> hat dir eine Nachricht zu <strong>%s</strong> geschickt.",
+		LabelMessage:      "Nachricht",
+		ButtonLabel:       "Im Event-Dashboard antworten",
+		PlainIntroFormat:  "%s hat dir eine Nachricht zu %s geschickt.",
+		PlainLabelMessage: "Nachricht",
+		PlainFooterCTA:    "Im Event-Dashboard antworten:",
+	},
+}
+
+func guestMessageNotificationCopyFor(lang string) guestMessageNotificationCopy {
+	if c, ok := guestMessageNotificationCopyByLang[lang]; ok {
+		return c
+	}
+	return guestMessageNotificationCopyByLang[defaultLanguage]
+}
