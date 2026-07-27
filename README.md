@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.1 (2026-07-28)
+
+**Fixes:**
+- Editing an attendee's email or phone to a value already used by another attendee of the same event showed a generic "internal error occurred" instead of explaining what went wrong — now returns a clear "already used by another attendee" message
+- Added an SMTP `Sender:` header when the authenticated account differs from the configured From address (e.g. a custom-domain alias) — some providers, notably iCloud, otherwise treat the mail as unverified and rewrite the visible sender for the recipient
+
 ### v1.21.0 (2026-07-27)
 
 **Features:**
