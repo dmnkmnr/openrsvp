@@ -25,10 +25,27 @@
 	// Template selection
 	let selectedTemplate = $state('balloon-party');
 
-	// Customization fields
-	let heading = $state('You\'re Invited!');
-	let body = $state('Join us for a wonderful celebration.');
-	let footer = $state('We hope to see you there!');
+	// Customization fields. Pre-filled with a localized suggestion once the
+	// event's guest language is known (see onMount) -- start empty so a new
+	// card never defaults to English text for a German-language event.
+	let heading = $state('');
+	let body = $state('');
+	let footer = $state('');
+
+	// Suggested starting text for a brand-new invite card, matching the
+	// event's guest language rather than the organizer's own UI language.
+	const inviteDefaultsByLang: Record<string, { heading: string; body: string; footer: string }> = {
+		en: {
+			heading: 'You\'re Invited!',
+			body: 'Join us for a wonderful celebration.',
+			footer: 'We hope to see you there!'
+		},
+		de: {
+			heading: 'Du bist eingeladen!',
+			body: 'Feiere mit uns...',
+			footer: 'Wir freuen uns auf dich!'
+		}
+	};
 	let primaryColor = $state('#4F46E5');
 	let secondaryColor = $state('#EC4899');
 	let font = $state('Inter');
@@ -145,6 +162,11 @@
 				} catch {
 					// ignore parse errors
 				}
+			} else {
+				const defaults = inviteDefaultsByLang[event.language] || inviteDefaultsByLang.en;
+				heading = defaults.heading;
+				body = defaults.body;
+				footer = defaults.footer;
 			}
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
