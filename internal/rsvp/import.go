@@ -19,10 +19,10 @@ const maxImportRows = 500
 var columnAliases = map[string][]string{
 	"name":               {"name", "full name", "full_name", "guest name", "guest_name", "attendee"},
 	"email":              {"email", "email address", "email_address", "e-mail", "mail"},
-	"phone":              {"phone", "phone number", "phone_number", "telephone", "mobile", "cell"},
-	"dietary_notes":      {"dietary notes", "dietary_notes", "dietary", "diet", "food", "allergies", "restrictions"},
-	"plus_ones":          {"plus ones", "plus_ones", "plusones", "guests", "additional guests", "extra"},
-	"plus_ones_children": {"children", "children under 12", "children_under_12", "kids", "plus_ones_children"},
+	"phone":              {"phone", "phone number", "phone_number", "telephone", "mobile", "cell", "telefon", "telefonnummer"},
+	"dietary_notes":      {"dietary notes", "dietary_notes", "dietary", "diet", "food", "allergies", "restrictions", "ernährungshinweise", "ernährung"},
+	"plus_ones":          {"plus ones", "plus_ones", "plusones", "guests", "additional guests", "extra", "weitere gäste", "weitere personen"},
+	"plus_ones_children": {"children", "children under 12", "children_under_12", "kids", "plus_ones_children", "kinder unter 12", "kinder"},
 }
 
 // CSVImportRow represents a single row from a CSV import file.
