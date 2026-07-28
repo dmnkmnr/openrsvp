@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.18 (2026-07-28)
+
+**Fixes:**
+- RSVP confirmation SMS messages could still get cut off mid-sentence (e.g. "...über den Link") even after the ellipsis-encoding fix, because the full message routinely runs just past the old 300-character cutoff — raised the limit to 600 across all SMS notifications so typical messages complete in full
+
 ### v1.21.17 (2026-07-28)
 
 **Fixes:**
