@@ -360,6 +360,8 @@
 		"phoneInvalid": "Please enter your phone number in international format, e.g. +14155552671.",
 		"bothRequired": "Both email and phone are required.",
 		"emailOrPhoneRequired": "Please provide an email or phone number.",
+		"noEmailLink": "I don't have an email address",
+		"hasEmailLink": "I have an email address instead",
 		"submitError": "Failed to submit RSVP. Please try again.",
 		"lookupEmailRequired": "Please enter your email address.",
 		"lookupEmailOrPhoneRequired": "Please enter your email address or phone number.",
