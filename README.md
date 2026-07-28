@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.14 (2026-07-28)
+
+**Fixes:**
+- The RSVP confirmation SMS sent to guests who registered with a phone number could get cut off right before the management link, silently dropping it — the link is now always kept intact, truncating only the message text if needed
+
 ### v1.21.13 (2026-07-28)
 
 **Fixes:**
