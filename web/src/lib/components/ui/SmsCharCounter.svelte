@@ -1,0 +1,18 @@
+<script lang="ts">
+	import { _ } from '$lib/i18n';
+
+	// Reference length for one SMS segment. Real segment limits depend on
+	// encoding (153 chars/segment for GSM-7 concatenated SMS, 67 for
+	// Unicode), so this is a simple, deliberately round estimate -- not an
+	// exact billing figure.
+	const SMS_SEGMENT_LENGTH = 150;
+
+	let { text }: { text: string } = $props();
+
+	const charCount = $derived(text.length);
+	const smsCount = $derived(charCount === 0 ? 0 : Math.ceil(charCount / SMS_SEGMENT_LENGTH));
+</script>
+
+<p class="text-xs text-neutral-400 mt-1">
+	{$_('common.charSmsCounter', { values: { count: charCount, sms: smsCount } })}
+</p>

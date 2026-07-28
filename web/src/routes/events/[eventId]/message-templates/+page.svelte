@@ -8,6 +8,7 @@
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import SmsCharCounter from '$lib/components/ui/SmsCharCounter.svelte';
 	import { onMount } from 'svelte';
 	import { _ } from '$lib/i18n';
 
@@ -124,6 +125,7 @@
 								bind:value={tpl.body}
 								rows={8}
 							/>
+							<SmsCharCounter text={tpl.body} />
 
 							{#if tpl.availableVariables?.length}
 								<div>

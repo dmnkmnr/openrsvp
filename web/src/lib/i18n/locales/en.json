@@ -1,6 +1,7 @@
 {
 	"common": {
 		"save": "Save",
+		"charSmsCounter": "{count} characters · approx. {sms} SMS",
 		"openInMaps": "Open in maps",
 		"saving": "Saving...",
 		"cancel": "Cancel",
