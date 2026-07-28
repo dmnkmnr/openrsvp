@@ -22,9 +22,9 @@ type UpdateProfileRequest struct {
 }
 
 // SupportedLanguages lists the languages an organizer can choose for their
-// own notification emails and UI. Kept local to this package (a 2-element
-// list isn't worth importing internal/event's guest-facing equivalent for).
-var SupportedLanguages = []string{"en", "de"}
+// own notification emails and UI. Kept local to this package (a short list
+// isn't worth importing internal/event's guest-facing equivalent for).
+var SupportedLanguages = []string{"en", "en-US", "de"}
 
 // isValidLanguage reports whether s is a supported language code.
 func isValidLanguage(s string) bool {

@@ -1,12 +1,13 @@
 import { init, register, locale, isLoading, waitLocale } from 'svelte-i18n';
 
-export const SUPPORTED_LOCALES = ['en', 'de'] as const;
+export const SUPPORTED_LOCALES = ['en', 'en-US', 'de'] as const;
 export type SupportedLocale = (typeof SUPPORTED_LOCALES)[number];
 export const DEFAULT_LOCALE: SupportedLocale = 'en';
 
 const STORAGE_KEY = 'locale';
 
 register('en', () => import('./locales/en.json'));
+register('en-US', () => import('./locales/en-US.json'));
 register('de', () => import('./locales/de.json'));
 
 function isSupported(value: string | null | undefined): value is SupportedLocale {
@@ -20,6 +21,10 @@ function detectInitialLocale(): SupportedLocale {
 	if (isSupported(stored)) return stored;
 
 	for (const lang of navigator.languages ?? [navigator.language]) {
+		// Check the full tag first (e.g. "en-US") before falling back to the
+		// primary subtag (e.g. "en"), so US-English browsers land on the
+		// American locale rather than the British default.
+		if (isSupported(lang)) return lang;
 		const primary = lang?.split('-')[0]?.toLowerCase();
 		if (isSupported(primary)) return primary;
 	}

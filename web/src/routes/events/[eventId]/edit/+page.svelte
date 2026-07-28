@@ -67,7 +67,11 @@
 		{ value: 'none', label: $_('events.new.mapProviderOptions.none') }
 	]);
 
-	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageNames: Record<string, string> = {
+		en: '🇬🇧 English',
+		'en-US': '🇺🇸 English (simplified)',
+		de: '🇩🇪 Deutsch'
+	};
 	const languageOptions = $derived(
 		$supportedLanguages.map(code => ({ value: code, label: languageNames[code] || code }))
 	);

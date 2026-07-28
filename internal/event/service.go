@@ -678,7 +678,7 @@ func parseFlexibleTime(s string) (time.Time, error) {
 // SupportedLanguages lists the languages available for an event's guest
 // language setting. Adding a new language requires a matching entry here plus
 // default notification templates for it (see internal/notification/templates).
-var SupportedLanguages = []string{"en", "de"}
+var SupportedLanguages = []string{"en", "en-US", "de"}
 
 // isValidLanguage checks whether the given value is a supported language code.
 func isValidLanguage(s string) bool {
