@@ -48,12 +48,76 @@ type magicLinkData struct {
 
 // eventReminderData holds the template data for an event reminder email.
 type eventReminderData struct {
-	EventTitle string
-	EventDate  string
-	Location   string
-	Message    string
-	InviteURL  string
-	Colors     EmailColors
+	EventTitle   string
+	EventDate    string
+	Location     string
+	Message      string
+	InviteURL    string
+	Heading      string
+	Intro        string
+	LabelEvent   string
+	LabelDate    string
+	LabelLoc     string
+	MessageLabel string
+	ButtonLabel  string
+	HelperText   string
+	FooterText   string
+	Colors       EmailColors
+}
+
+// eventReminderCopy holds the localized (guest-language) copy for the event
+// reminder email an organizer sends to attendees (e.g. via "Send message" /
+// manual reminder). Keyed by the event's guest language, not the organizer's
+// account language.
+type eventReminderCopy struct {
+	Heading      string
+	Intro        string
+	LabelEvent   string
+	LabelDate    string
+	LabelLoc     string
+	MessageLabel string
+	ButtonLabel  string
+	HelperText   string
+	FooterText   string
+	// PlainMessageFormat has one %s verb for the organizer's message text.
+	PlainMessageFormat string
+	PlainFooterCTA     string
+}
+
+var eventReminderCopyByLang = map[string]eventReminderCopy{
+	"en": {
+		Heading:            "Event Reminder",
+		Intro:              "This is a friendly reminder about an upcoming event.",
+		LabelEvent:         "Event",
+		LabelDate:          "Date",
+		LabelLoc:           "Location",
+		MessageLabel:       "Message from the organizer",
+		ButtonLabel:        "View Invitation",
+		HelperText:         "If the button does not work, copy and paste this link into your browser:",
+		FooterText:         "© OpenRSVP — Simple event RSVPs",
+		PlainMessageFormat: "Message from the organizer:\n%s\n\n",
+		PlainFooterCTA:     "View your invitation:",
+	},
+	"de": {
+		Heading:            "Erinnerung",
+		Intro:              "Dies ist eine freundliche Erinnerung an eine bevorstehende Veranstaltung.",
+		LabelEvent:         "Veranstaltung",
+		LabelDate:          "Datum",
+		LabelLoc:           "Ort",
+		MessageLabel:       "Nachricht vom Organizer",
+		ButtonLabel:        "Einladung ansehen",
+		HelperText:         "Falls der Button nicht funktioniert, kopiere diesen Link in deinen Browser:",
+		FooterText:         "© OpenRSVP — Einfache Veranstaltungs-RSVPs",
+		PlainMessageFormat: "Nachricht vom Organizer:\n%s\n\n",
+		PlainFooterCTA:     "Deine Einladung ansehen:",
+	},
+}
+
+func eventReminderCopyFor(lang string) eventReminderCopy {
+	if c, ok := eventReminderCopyByLang[lang]; ok {
+		return c
+	}
+	return eventReminderCopyByLang[defaultLanguage]
 }
 
 // retentionWarningData holds the template data for a retention warning email.
@@ -130,15 +194,27 @@ func RenderMagicLink(lang, baseURL, token string, expiryMinutes int) (subject, h
 }
 
 // RenderEventReminder renders the event reminder email template and returns
-// the HTML body and a plain text fallback.
-func RenderEventReminder(eventTitle, eventDate, location, message, inviteURL string) (html, plain string, err error) {
+// the HTML body and a plain text fallback. lang is the event's guest
+// language, not the organizer's account language.
+func RenderEventReminder(lang, eventTitle, eventDate, location, message, inviteURL string) (html, plain string, err error) {
+	msgCopy := eventReminderCopyFor(lang)
+
 	data := eventReminderData{
-		EventTitle: eventTitle,
-		EventDate:  eventDate,
-		Location:   location,
-		Message:    message,
-		InviteURL:  inviteURL,
-		Colors:     DefaultEmailColors(),
+		EventTitle:   eventTitle,
+		EventDate:    eventDate,
+		Location:     location,
+		Message:      message,
+		InviteURL:    inviteURL,
+		Heading:      msgCopy.Heading,
+		Intro:        msgCopy.Intro,
+		LabelEvent:   msgCopy.LabelEvent,
+		LabelDate:    msgCopy.LabelDate,
+		LabelLoc:     msgCopy.LabelLoc,
+		MessageLabel: msgCopy.MessageLabel,
+		ButtonLabel:  msgCopy.ButtonLabel,
+		HelperText:   msgCopy.HelperText,
+		FooterText:   msgCopy.FooterText,
+		Colors:       DefaultEmailColors(),
 	}
 
 	var buf bytes.Buffer
@@ -147,14 +223,14 @@ func RenderEventReminder(eventTitle, eventDate, location, message, inviteURL str
 	}
 
 	var sb strings.Builder
-	sb.WriteString("Event Reminder\n\n")
-	sb.WriteString(fmt.Sprintf("Event: %s\n", eventTitle))
-	sb.WriteString(fmt.Sprintf("Date: %s\n", eventDate))
-	sb.WriteString(fmt.Sprintf("Location: %s\n\n", location))
+	sb.WriteString(msgCopy.Heading + "\n\n")
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.LabelEvent, eventTitle))
+	sb.WriteString(fmt.Sprintf("%s: %s\n", msgCopy.LabelDate, eventDate))
+	sb.WriteString(fmt.Sprintf("%s: %s\n\n", msgCopy.LabelLoc, location))
 	if message != "" {
-		sb.WriteString(fmt.Sprintf("Message from the organizer:\n%s\n\n", message))
+		sb.WriteString(fmt.Sprintf(msgCopy.PlainMessageFormat, message))
 	}
-	sb.WriteString(fmt.Sprintf("View your invitation:\n%s\n", inviteURL))
+	sb.WriteString(fmt.Sprintf("%s\n%s\n", msgCopy.PlainFooterCTA, inviteURL))
 
 	return buf.String(), sb.String(), nil
 }

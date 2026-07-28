@@ -177,7 +177,7 @@ func TestRenderFeedbackConfirmationGerman(t *testing.T) {
 }
 
 func TestRenderEventReminder(t *testing.T) {
-	html, plain, err := RenderEventReminder("Pool Party", "June 5, 2026", "Backyard", "Remember!", "http://localhost/i/xyz")
+	html, plain, err := RenderEventReminder("en", "Pool Party", "June 5, 2026", "Backyard", "Remember!", "http://localhost/i/xyz")
 	require.NoError(t, err)
 
 	assert.Contains(t, html, "Pool Party")
@@ -188,12 +188,26 @@ func TestRenderEventReminder(t *testing.T) {
 }
 
 func TestRenderEventReminderNoMessage(t *testing.T) {
-	html, plain, err := RenderEventReminder("Quick Event", "July 1, 2026", "Park", "", "http://localhost/i/abc")
+	html, plain, err := RenderEventReminder("en", "Quick Event", "July 1, 2026", "Park", "", "http://localhost/i/abc")
 	require.NoError(t, err)
 
 	assert.Contains(t, html, "Quick Event")
 	assert.NotContains(t, html, "Message from the organizer")
 	assert.NotContains(t, plain, "Message from the organizer")
+}
+
+func TestRenderEventReminderGerman(t *testing.T) {
+	html, plain, err := RenderEventReminder("de", "Poolparty", "5. Juni 2026", "Garten", "Denk dran!", "http://localhost/i/xyz")
+	require.NoError(t, err)
+
+	assert.Contains(t, html, "Erinnerung")
+	assert.Contains(t, html, "Poolparty")
+	assert.Contains(t, html, "Nachricht vom Organizer")
+	assert.Contains(t, html, "Denk dran!")
+	assert.Contains(t, html, "Einladung ansehen")
+	assert.NotContains(t, html, "Event Reminder")
+	assert.Contains(t, plain, "Erinnerung")
+	assert.Contains(t, plain, "Denk dran!")
 }
 
 func TestInterpolate(t *testing.T) {

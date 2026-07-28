@@ -751,7 +751,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				hasPhone := a.Phone != nil && *a.Phone != ""
 				wantEmail, wantSMS := rsvp.ResolveChannels(a.ContactMethod, hasEmail, hasPhone)
 				if wantEmail {
-					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Title, eventDate, location, body, inviteURL)
+					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Language, ev.Title, eventDate, location, body, inviteURL)
 					if err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
 					} else if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
@@ -759,6 +759,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 						Subject: subject,
 						Body:    htmlBody,
 						Plain:   plainBody,
+						Lang:    ev.Language,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_email", *a.Email).Msg("message notify: failed to send email")
 					} else {
