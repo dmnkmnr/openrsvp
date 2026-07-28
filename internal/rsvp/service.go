@@ -1184,7 +1184,7 @@ func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone s
 			if evLang == "de" {
 				plainText = fmt.Sprintf("Dein RSVP-Link für %s:", evTitle)
 			}
-			smsBody := templates.SMSFrom(plainText, modifyURL, 300)
+			smsBody := templates.SMSFrom(plainText, modifyURL, 600)
 			if err := sendFn(context.Background(), to, smsBody); err != nil {
 				s.logger.Error().Err(err).Str("to", to).Msg("rsvp lookup: failed to send sms")
 			}
