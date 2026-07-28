@@ -1,7 +1,11 @@
 <script lang="ts">
 	import { locale, _, SUPPORTED_LOCALES } from '$lib/i18n';
 
-	const labels: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const labels: Record<string, string> = {
+		en: '🇬🇧 English',
+		'en-US': '🇺🇸 English (simplified)',
+		de: '🇩🇪 Deutsch'
+	};
 </script>
 
 <select

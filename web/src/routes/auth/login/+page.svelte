@@ -13,7 +13,11 @@
 	let emailError = $state('');
 	let language = $state($locale ?? 'en');
 
-	const languageNames: Record<string, string> = { en: 'English', de: 'Deutsch' };
+	const languageNames: Record<string, string> = {
+		en: '🇬🇧 English',
+		'en-US': '🇺🇸 English (simplified)',
+		de: '🇩🇪 Deutsch'
+	};
 	const languageOptions = SUPPORTED_LOCALES.map((code) => ({ value: code, label: languageNames[code] ?? code }));
 
 	async function handleSubmit(e: SubmitEvent) {
