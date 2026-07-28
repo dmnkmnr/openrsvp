@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.3 (2026-07-28)
+
+**Fixes:**
+- The guest invite page's background stayed a fixed light pastel gradient in dark mode — now uses the same neutral background/card contrast as the admin dashboard, so it goes properly dark while the invite card itself keeps its own design
+
 ### v1.21.2 (2026-07-28)
 
 **Fixes:**
