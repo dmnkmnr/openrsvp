@@ -29,7 +29,8 @@ export function formatTime(date: string, timezone?: string): string {
 }
 
 export function formatDateTime(date: string, timezone?: string): string {
-	return `${formatDate(date, timezone)} at ${formatTime(date, timezone)}`;
+	const separator = get(locale) === 'de' ? 'um' : 'at';
+	return `${formatDate(date, timezone)} ${separator} ${formatTime(date, timezone)}`;
 }
 
 export function isInFuture(date: string): boolean {
