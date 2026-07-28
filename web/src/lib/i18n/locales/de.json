@@ -359,6 +359,8 @@
 		"phoneInvalid": "Bitte gib deine Telefonnummer im internationalen Format ein, z. B. +49151234567.",
 		"bothRequired": "E-Mail und Telefonnummer sind beide erforderlich.",
 		"emailOrPhoneRequired": "Bitte gib eine E-Mail-Adresse oder Telefonnummer an.",
+		"noEmailLink": "Ich habe keine E-Mail-Adresse",
+		"hasEmailLink": "Ich habe doch eine E-Mail-Adresse",
 		"submitError": "RSVP konnte nicht gesendet werden. Bitte versuche es erneut.",
 		"lookupEmailRequired": "Bitte gib deine E-Mail-Adresse ein.",
 		"lookupEmailOrPhoneRequired": "Bitte gib deine E-Mail-Adresse oder Telefonnummer ein.",

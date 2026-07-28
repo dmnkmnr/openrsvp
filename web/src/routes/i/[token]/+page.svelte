@@ -164,6 +164,12 @@
 		$smsEnabled && (contactReq === 'phone' || contactReq === 'email_and_phone')
 	);
 
+	// When either email or phone is acceptable, default to showing only the
+	// email field and let the guest switch to phone via a link, instead of
+	// showing both fields at once.
+	const emailOrPhoneToggle = $derived($smsEnabled && contactReq === 'email_or_phone');
+	let contactMode = $state<'email' | 'phone'>('email');
+
 	// RSVP deadline display logic
 	const deadlineText = $derived.by(() => {
 		if (!eventData?.rsvpDeadline) return '';
@@ -561,44 +567,66 @@
 						</div>
 
 						<!-- Email -->
-						<div>
-							<label for="rsvp-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								{$_('guestInvite.emailLabel')}
-								{#if emailRequired}
-									<span class="text-error">*</span>
-								{:else}
-									<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
+						{#if !emailOrPhoneToggle || contactMode === 'email'}
+							<div>
+								<label for="rsvp-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
+									{$_('guestInvite.emailLabel')}
+									{#if emailRequired}
+										<span class="text-error">*</span>
+									{:else}
+										<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
+									{/if}
+								</label>
+								<input
+									id="rsvp-email"
+									type="email"
+									required={emailRequired}
+									bind:value={email}
+									placeholder={$_('guestInvite.emailPlaceholder')}
+									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+								/>
+								{#if emailOrPhoneToggle}
+									<button
+										type="button"
+										class="mt-1.5 text-sm text-primary hover:underline"
+										onclick={() => (contactMode = 'phone')}
+									>
+										{$_('guestInvite.noEmailLink')}
+									</button>
 								{/if}
-							</label>
-							<input
-								id="rsvp-email"
-								type="email"
-								required={emailRequired}
-								bind:value={email}
-								placeholder={$_('guestInvite.emailPlaceholder')}
-								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-							/>
-						</div>
+							</div>
+						{/if}
 
 						<!-- Phone -->
-						<div>
-							<label for="rsvp-phone" class="block text-sm font-medium text-neutral-700 mb-1.5">
-								{$_('guestInvite.phoneLabel')}
-								{#if phoneRequired}
-									<span class="text-error">*</span>
-								{:else}
-									<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
+						{#if !emailOrPhoneToggle || contactMode === 'phone'}
+							<div>
+								<label for="rsvp-phone" class="block text-sm font-medium text-neutral-700 mb-1.5">
+									{$_('guestInvite.phoneLabel')}
+									{#if phoneRequired}
+										<span class="text-error">*</span>
+									{:else}
+										<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
+									{/if}
+								</label>
+								<input
+									id="rsvp-phone"
+									type="tel"
+									required={phoneRequired}
+									bind:value={phone}
+									placeholder={$_('guestInvite.phonePlaceholder')}
+									class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
+								/>
+								{#if emailOrPhoneToggle}
+									<button
+										type="button"
+										class="mt-1.5 text-sm text-primary hover:underline"
+										onclick={() => (contactMode = 'email')}
+									>
+										{$_('guestInvite.hasEmailLink')}
+									</button>
 								{/if}
-							</label>
-							<input
-								id="rsvp-phone"
-								type="tel"
-								required={phoneRequired}
-								bind:value={phone}
-								placeholder={$_('guestInvite.phonePlaceholder')}
-								class="w-full rounded-md border border-neutral-300 px-4 py-2.5 text-neutral-900 placeholder:text-neutral-400 focus:outline-none focus:ring-2 focus:ring-primary/40 focus:border-primary transition-colors"
-							/>
-						</div>
+							</div>
+						{/if}
 
 						<!-- Preferred contact method: only a meaningful choice when both
 							 email and phone are actually filled in. -->
