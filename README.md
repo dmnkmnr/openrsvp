@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.13 (2026-07-28)
+
+**Fixes:**
+- Events accepting either email or phone showed the visible contact field labeled "(optional)" on the guest invite page, even though at least one method must be provided — now shows the required asterisk instead
+- The RSVP self-manage page (`/r/[token]`) had a hardcoded light background regardless of theme, making the event title unreadable in dark mode — background is now dark-mode aware, matching the guest invite page
+
 ### v1.21.12 (2026-07-28)
 
 **Fixes:**
