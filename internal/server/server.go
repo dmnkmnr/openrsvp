@@ -745,18 +745,35 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					continue
 				}
 
+				// Personalize the guest's own management link, like the
+				// scheduled-reminder job does, so {rsvpLink} and the "View
+				// Invitation" button both point somewhere the guest can act.
+				guestRSVPLink := inviteURL
+				if a.RSVPToken != "" {
+					guestRSVPLink = cfg.BaseURL + "/r/" + a.RSVPToken
+				}
+				vars := map[string]string{
+					"guestName":  a.Name,
+					"eventTitle": ev.Title,
+					"eventDate":  eventDate,
+					"location":   location,
+					"rsvpLink":   guestRSVPLink,
+				}
+				personalizedSubject := templates.Interpolate(subject, vars)
+				personalizedBody := templates.Interpolate(body, vars)
+
 				// Respect each attendee's contact method preference, falling
 				// back to whichever channel actually has data.
 				hasEmail := a.Email != nil && *a.Email != ""
 				hasPhone := a.Phone != nil && *a.Phone != ""
 				wantEmail, wantSMS := rsvp.ResolveChannels(a.ContactMethod, hasEmail, hasPhone)
 				if wantEmail {
-					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Language, ev.Title, eventDate, location, body, inviteURL)
+					htmlBody, plainBody, err := templates.RenderEventReminder(ev.Language, ev.Title, eventDate, location, personalizedBody, guestRSVPLink)
 					if err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to render template")
 					} else if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelEmail, &notification.Message{
 						To:      *a.Email,
-						Subject: subject,
+						Subject: personalizedSubject,
 						Body:    htmlBody,
 						Plain:   plainBody,
 						Lang:    ev.Language,
@@ -769,7 +786,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				if wantSMS {
 					if err := notifService.Send(ctx, eventID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
-						Body: subject + ": " + body,
+						Body: personalizedSubject + ": " + personalizedBody,
 					}); err != nil {
 						logger.Error().Err(err).Str("attendee_id", a.ID).Msg("message notify: failed to send SMS")
 					} else {
