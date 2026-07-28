@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.16 (2026-07-28)
+
+**Features:**
+- Added American English ("en-US") as a third selectable language alongside British English and German — available at login, in account preferences, the language switcher, and an event's guest language. Selectors now show flag emoji: 🇬🇧 English, 🇺🇸 English (simplified), 🇩🇪 Deutsch
+
 ### v1.21.15 (2026-07-28)
 
 **Other:**
