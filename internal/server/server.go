@@ -434,7 +434,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				}
 			}
 			if wantSMS {
-				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars)+"\n\n"+modifyURL, 300)
+				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), modifyURL, 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
 					Body: smsBody,
@@ -535,7 +535,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				}
 			}
 			if wantSMS {
-				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars)+"\n\n"+inviteURL, 300)
+				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), inviteURL, 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
 					Body: smsBody,
@@ -641,7 +641,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 				}
 			}
 			if wantSMS {
-				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars)+"\n\n"+modifyURL, 300)
+				smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), modifyURL, 300)
 				if err := notifService.Send(ctx, eventID, attendee.ID, notification.ChannelSMS, &notification.Message{
 					To:   *attendee.Phone,
 					Body: smsBody,
@@ -980,7 +980,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					}
 				}
 				if wantSMS {
-					smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars)+"\n\n"+inviteURL, 300)
+					smsBody := templates.SMSFrom(templates.Interpolate(bodyTpl, vars), inviteURL, 300)
 					if err := notifService.Send(ctx, e.ID, a.ID, notification.ChannelSMS, &notification.Message{
 						To:   *a.Phone,
 						Body: smsBody,
