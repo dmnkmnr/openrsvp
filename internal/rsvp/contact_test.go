@@ -8,8 +8,9 @@ func TestResolveChannels(t *testing.T) {
 		hasEmail, hasPhone bool
 		wantEmail, wantSMS bool
 	}{
-		// "both": send to whichever is actually present.
-		{"both", true, true, true, true},
+		// "both": email only when both are present (never duplicate to SMS
+		// too); falls back to whichever is actually present otherwise.
+		{"both", true, true, true, false},
 		{"both", true, false, true, false},
 		{"both", false, true, false, true},
 		{"both", false, false, false, false},
