@@ -170,6 +170,12 @@
 	const emailOrPhoneToggle = $derived($smsEnabled && contactReq === 'email_or_phone');
 	let contactMode = $state<'email' | 'phone'>('email');
 
+	// The visible field under the email-or-phone toggle isn't optional --
+	// exactly one of email/phone must be filled in, so it shouldn't be
+	// labeled "(optional)" even though it's not a hard HTML `required`.
+	const emailLooksRequired = $derived(emailRequired || (emailOrPhoneToggle && contactMode === 'email'));
+	const phoneLooksRequired = $derived(phoneRequired || (emailOrPhoneToggle && contactMode === 'phone'));
+
 	// RSVP deadline display logic
 	const deadlineText = $derived.by(() => {
 		if (!eventData?.rsvpDeadline) return '';
@@ -571,7 +577,7 @@
 							<div>
 								<label for="rsvp-email" class="block text-sm font-medium text-neutral-700 mb-1.5">
 									{$_('guestInvite.emailLabel')}
-									{#if emailRequired}
+									{#if emailLooksRequired}
 										<span class="text-error">*</span>
 									{:else}
 										<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
@@ -602,7 +608,7 @@
 							<div>
 								<label for="rsvp-phone" class="block text-sm font-medium text-neutral-700 mb-1.5">
 									{$_('guestInvite.phoneLabel')}
-									{#if phoneRequired}
+									{#if phoneLooksRequired}
 										<span class="text-error">*</span>
 									{:else}
 										<span class="text-neutral-400 font-normal">{$_('guestInvite.optional')}</span>
