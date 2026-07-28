@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.15 (2026-07-28)
+
+**Other:**
+- Reworded the dietary notes label/placeholder on the guest registration page ("Ernährungshinweise" → "Sollten wir was beachten?" / "Dietary Notes" → "Anything we should know?")
+- Converted all user-facing English copy to British spelling (organizer → organiser, customize → customise, color → colour, favorite → favourite, cozy → cosy)
+
 ### v1.21.14 (2026-07-28)
 
 **Fixes:**
