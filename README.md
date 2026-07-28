@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.10 (2026-07-28)
+
+**Features:**
+- Added a live "N characters · approx. M SMS" hint (150 characters per segment) below every organizer-composable text field — the scheduled reminder message, the manual "send message to guests" body, and each customizable message template
+- The guest invite page now shows only the email field by default when an event accepts either email or phone, with a link to switch to the phone field instead (and back) — reduces friction for the common case instead of always showing both fields
+
 ### v1.21.9 (2026-07-28)
 
 **Fixes:**
