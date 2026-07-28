@@ -11,6 +11,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
+	import SmsCharCounter from '$lib/components/ui/SmsCharCounter.svelte';
 	import { onMount, tick } from 'svelte';
 	import { _ } from '$lib/i18n';
 
@@ -225,6 +226,7 @@
 						error={composeErrors.body || ''}
 						required
 					/>
+					<SmsCharCounter text={body} />
 					<div>
 						<p class="text-xs font-medium text-neutral-500 mb-2">{$_('events.messageTemplates.variablesHint')}</p>
 						<div class="flex flex-wrap gap-2">

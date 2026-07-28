@@ -1,6 +1,7 @@
 {
 	"common": {
 		"save": "Speichern",
+		"charSmsCounter": "{count} Zeichen · ca. {sms} SMS",
 		"openInMaps": "In Karte öffnen",
 		"saving": "Wird gespeichert...",
 		"cancel": "Abbrechen",
