@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.4 (2026-07-28)
+
+**Fixes:**
+- The manual "send reminder/message to guests" email was entirely hardcoded in English regardless of the event's guest language — now localized (heading, labels, button, footer text)
+
 ### v1.21.3 (2026-07-28)
 
 **Fixes:**
