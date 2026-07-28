@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.11 (2026-07-28)
+
+**Features:**
+- `{rsvpStatus}` can now be used as a variable in scheduled reminders and the manual "send message to guests" feature, alongside the existing `{guestName}`, `{eventTitle}`, `{eventDate}`, `{location}`, and `{rsvpLink}` — matches the variable already available in the RSVP confirmation template
+
 ### v1.21.10 (2026-07-28)
 
 **Features:**
