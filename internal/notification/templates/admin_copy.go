@@ -235,7 +235,7 @@ var retentionWarningCopyByLang = map[string]retentionWarningCopy{
 		Warning:           "After this date, all event data including attendee RSVPs, messages, and invite cards will be permanently deleted. If you would like to keep this data, please log in and extend the retention period.",
 		ButtonLabel:       "View Event",
 		FooterLine1:       "This is an automated notice from OpenRSVP.",
-		FooterLine2:       "You received this because you are the organizer of this event.",
+		FooterLine2:       "You received this because you are the organiser of this event.",
 		PlainHeading:      "Data Retention Notice",
 		PlainIntroFormat:  "Your event \"%s\" is scheduled for automatic deletion on %s.",
 		PlainWarning:      "After this date, all event data including attendee RSVPs, messages, and invite cards will be permanently deleted.",
