@@ -230,7 +230,7 @@
 					<div>
 						<p class="text-xs font-medium text-neutral-500 mb-2">{$_('events.messageTemplates.variablesHint')}</p>
 						<div class="flex flex-wrap gap-2">
-							{#each ['guestName', 'eventTitle', 'eventDate', 'location', 'rsvpLink'] as v (v)}
+							{#each ['guestName', 'eventTitle', 'eventDate', 'location', 'rsvpStatus', 'rsvpLink'] as v (v)}
 								<code class="text-xs bg-neutral-100 text-neutral-700 rounded px-2 py-1">{'{' + v + '}'}</code>
 							{/each}
 						</div>

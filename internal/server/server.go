@@ -757,6 +757,7 @@ func New(cfg *config.Config, db database.DB, logger zerolog.Logger) *Server {
 					"eventTitle": ev.Title,
 					"eventDate":  eventDate,
 					"location":   location,
+					"rsvpStatus": templates.DisplayStatusLocalized(ev.Language, a.RSVPStatus),
 					"rsvpLink":   guestRSVPLink,
 				}
 				personalizedSubject := templates.Interpolate(subject, vars)

@@ -358,6 +358,29 @@ func TestProcessReminderShowsEventDateInEventTimezoneNotUTC(t *testing.T) {
 	assert.NotContains(t, body, "2:00 PM", "email body must not show the raw stored UTC hour")
 }
 
+func TestProcessReminderInterpolatesRSVPStatus(t *testing.T) {
+	env := setupReminderJob(t)
+	ctx := context.Background()
+
+	addAttendee(t, env.db, env.eventID, "Dave", "dave@example.com", "", "maybe")
+	r := &Reminder{
+		ID:          uuid.Must(uuid.NewV7()).String(),
+		EventID:     env.eventID,
+		RemindAt:    time.Now().UTC().Add(-time.Minute),
+		TargetGroup: "all",
+		Message:     "You are currently marked as {rsvpStatus} for {eventTitle}.",
+		Status:      "scheduled",
+	}
+	require.NoError(t, env.store.Create(ctx, r))
+
+	require.NoError(t, env.job.Run(ctx))
+
+	require.Equal(t, 1, env.email.count())
+	body := env.email.bodies()[0]
+	assert.Contains(t, body, "Maybe", "email body must interpolate {rsvpStatus} with the attendee's own status")
+	assert.NotContains(t, body, "{rsvpStatus}")
+}
+
 func TestProcessReminderDeclinedAttendeeInAllGroupStillSent(t *testing.T) {
 	env := setupReminderJob(t)
 	ctx := context.Background()

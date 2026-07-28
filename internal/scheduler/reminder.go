@@ -155,6 +155,7 @@ type attendeeTarget struct {
 	phone         *string
 	rsvpToken     string
 	contactMethod string
+	rsvpStatus    string
 }
 
 // findTargetAttendees queries for attendees matching the reminder's target
@@ -164,10 +165,10 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	var args []any
 
 	if targetGroup == "all" {
-		query = `SELECT id, name, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ?`
+		query = `SELECT id, name, email, phone, rsvp_token, contact_method, rsvp_status FROM attendees WHERE event_id = ?`
 		args = []any{eventID}
 	} else {
-		query = `SELECT id, name, email, phone, rsvp_token, contact_method FROM attendees WHERE event_id = ? AND rsvp_status = ?`
+		query = `SELECT id, name, email, phone, rsvp_token, contact_method, rsvp_status FROM attendees WHERE event_id = ? AND rsvp_status = ?`
 		args = []any{eventID, targetGroup}
 	}
 
@@ -181,7 +182,7 @@ func (j *ReminderJob) findTargetAttendees(ctx context.Context, eventID, targetGr
 	for rows.Next() {
 		var a attendeeTarget
 		var email, phone *string
-		if err := rows.Scan(&a.id, &a.name, &email, &phone, &a.rsvpToken, &a.contactMethod); err != nil {
+		if err := rows.Scan(&a.id, &a.name, &email, &phone, &a.rsvpToken, &a.contactMethod, &a.rsvpStatus); err != nil {
 			return nil, fmt.Errorf("scan attendee: %w", err)
 		}
 		a.email = email
@@ -289,6 +290,7 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 		"eventTitle": ev.title,
 		"eventDate":  eventDate,
 		"location":   location,
+		"rsvpStatus": templates.DisplayStatusLocalized(lang, attendee.rsvpStatus),
 		"rsvpLink":   rsvpLink,
 	}
 
