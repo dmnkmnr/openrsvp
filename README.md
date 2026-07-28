@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.12 (2026-07-28)
+
+**Fixes:**
+- The character/SMS counter below reminder and message-composition fields counted the raw `{placeholder}` text (e.g. `{guestName}` = 11 characters) instead of the length of the value that actually replaces it — now substitutes representative sample values before counting, giving a realistic estimate of the sent message length
+
 ### v1.21.11 (2026-07-28)
 
 **Features:**
