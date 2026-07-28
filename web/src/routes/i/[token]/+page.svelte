@@ -714,7 +714,7 @@
 						{/if}
 
 						<!-- Custom Questions -->
-						{#if eventQuestions.length > 0}
+						{#if rsvpStatus !== 'declined' && eventQuestions.length > 0}
 							<QuestionRenderer questions={eventQuestions} bind:answers />
 						{/if}
 

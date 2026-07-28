@@ -504,7 +504,7 @@
 						{/if}
 
 						<!-- Custom Questions -->
-						{#if eventQuestions.length > 0}
+						{#if editStatus !== 'declined' && eventQuestions.length > 0}
 							<QuestionRenderer questions={eventQuestions} bind:answers={editAnswers} />
 						{/if}
 
