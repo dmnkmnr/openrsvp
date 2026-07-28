@@ -104,16 +104,16 @@ func sanitizeBackgroundURL(raw string) string {
 
 // builtInTemplates holds the default set of invite card templates.
 var builtInTemplates = []*Template{
-	{ID: "balloon-party", Name: "Balloon Party", Description: "Colorful balloons and festive decorations for a fun celebration."},
+	{ID: "balloon-party", Name: "Balloon Party", Description: "Colourful balloons and festive decorations for a fun celebration."},
 	{ID: "confetti", Name: "Confetti", Description: "Bright confetti bursts for a joyful and lively event."},
-	{ID: "unicorn-magic", Name: "Unicorn Magic", Description: "Whimsical unicorns and rainbow colors for a magical gathering."},
+	{ID: "unicorn-magic", Name: "Unicorn Magic", Description: "Whimsical unicorns and rainbow colours for a magical gathering."},
 	{ID: "superhero", Name: "Superhero", Description: "Bold superhero theme with dynamic comic-style graphics."},
 	{ID: "garden-picnic", Name: "Garden Picnic", Description: "Relaxed garden vibes with floral accents for outdoor events."},
 	{ID: "elegant-affair", Name: "Elegant Affair", Description: "Thin border, italic heading, and subtle shadow for a refined look."},
 	{ID: "clean-minimal", Name: "Clean Minimal", Description: "No frills, white background, and clean lines for a modern feel."},
-	{ID: "tropical-vibes", Name: "Tropical Vibes", Description: "Warm colors and wave decorations for a beachy, tropical event."},
+	{ID: "tropical-vibes", Name: "Tropical Vibes", Description: "Warm colours and wave decorations for a beachy, tropical event."},
 	{ID: "vintage-retro", Name: "Vintage Retro", Description: "Double border, uppercase heading, and sepia tones for a classic vibe."},
-	{ID: "chalkboard", Name: "Chalkboard", Description: "Dark background with chalk-style text for a cozy, handwritten feel."},
+	{ID: "chalkboard", Name: "Chalkboard", Description: "Dark background with chalk-style text for a cosy, handwritten feel."},
 }
 
 // Service contains the business logic for invite card management.

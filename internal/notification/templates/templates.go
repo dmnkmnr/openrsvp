@@ -91,11 +91,11 @@ var eventReminderCopyByLang = map[string]eventReminderCopy{
 		LabelEvent:         "Event",
 		LabelDate:          "Date",
 		LabelLoc:           "Location",
-		MessageLabel:       "Message from the organizer",
+		MessageLabel:       "Message from the organiser",
 		ButtonLabel:        "View Invitation",
 		HelperText:         "If the button does not work, copy and paste this link into your browser:",
 		FooterText:         "© OpenRSVP — Simple event RSVPs",
-		PlainMessageFormat: "Message from the organizer:\n%s\n\n",
+		PlainMessageFormat: "Message from the organiser:\n%s\n\n",
 		PlainFooterCTA:     "View your invitation:",
 	},
 	"de": {
