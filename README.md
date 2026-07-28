@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.17 (2026-07-28)
+
+**Fixes:**
+- Truncated SMS messages showed a stray "?" instead of an ellipsis (e.g. "...über den Link?") — the ellipsis character isn't part of the GSM-7 SMS character set and carriers silently replace it with "?"; now uses a plain ASCII "..." instead
+
 ### v1.21.16 (2026-07-28)
 
 **Features:**
