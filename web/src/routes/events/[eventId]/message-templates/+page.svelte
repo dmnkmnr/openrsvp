@@ -9,8 +9,10 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import SmsCharCounter from '$lib/components/ui/SmsCharCounter.svelte';
+	import { sampleMessageVariables } from '$lib/utils/messagePreview';
+	import type { Event } from '$lib/types';
 	import { onMount } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _, locale } from '$lib/i18n';
 
 	interface EffectiveTemplate {
 		messageType: string;
@@ -23,9 +25,21 @@
 	const eventId = $derived($page.params.eventId);
 
 	let loading = $state(true);
+	let event: Event | null = $state(null);
 	let templates: EffectiveTemplate[] = $state([]);
 	let savingType: string | null = $state(null);
 	let resettingType: string | null = $state(null);
+
+	const messagePreviewVariables = $derived.by(() =>
+		sampleMessageVariables({
+			locale: $locale ?? 'en',
+			origin: $page.url.origin,
+			eventTitle: event?.title,
+			eventDate: event?.eventDate,
+			timezone: event?.timezone,
+			location: event?.location
+		})
+	);
 
 	function labelFor(messageType: string): string {
 		return $_(`events.messageTemplates.types.${messageType}`);
@@ -38,8 +52,12 @@
 	async function load() {
 		loading = true;
 		try {
-			const result = await api.get<{ data: EffectiveTemplate[] }>(`/message-templates/event/${eventId}`);
-			templates = result.data;
+			const [templatesResult, eventResult] = await Promise.all([
+				api.get<{ data: EffectiveTemplate[] }>(`/message-templates/event/${eventId}`),
+				api.get<{ data: Event }>(`/events/${eventId}`)
+			]);
+			templates = templatesResult.data;
+			event = eventResult.data;
 		} catch (err: unknown) {
 			const apiErr = err as { message?: string };
 			toast.error(apiErr.message || $_('events.messageTemplates.loadError'));
@@ -125,7 +143,7 @@
 								bind:value={tpl.body}
 								rows={8}
 							/>
-							<SmsCharCounter text={tpl.body} />
+							<SmsCharCounter text={tpl.body} variables={messagePreviewVariables} />
 
 							{#if tpl.availableVariables?.length}
 								<div>

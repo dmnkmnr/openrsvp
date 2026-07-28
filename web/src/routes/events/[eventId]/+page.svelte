@@ -20,6 +20,7 @@
 	import Select from '$lib/components/ui/Select.svelte';
 	import Textarea from '$lib/components/ui/Textarea.svelte';
 	import SmsCharCounter from '$lib/components/ui/SmsCharCounter.svelte';
+	import { sampleMessageVariables } from '$lib/utils/messagePreview';
 	import { onMount } from 'svelte';
 	import { _, locale } from '$lib/i18n';
 
@@ -50,6 +51,16 @@
 	const eventId = $derived($page.params.eventId);
 	const currentUserId = $derived($currentUser?.id);
 	const reminderMinDate = $derived(toISOLocal(new Date()));
+	const messagePreviewVariables = $derived.by(() =>
+		sampleMessageVariables({
+			locale: $locale ?? 'en',
+			origin: $page.url.origin,
+			eventTitle: event?.title,
+			eventDate: event?.eventDate,
+			timezone: event?.timezone,
+			location: event?.location
+		})
+	);
 
 	const reminderTargetOptions = $derived([
 		{ value: 'all', label: $_('events.messages.recipient.all') },
@@ -688,7 +699,7 @@
 					placeholder={$_('events.detail.customMessagePlaceholder')}
 					rows={3}
 				/>
-				<SmsCharCounter text={reminderMessage} />
+				<SmsCharCounter text={reminderMessage} variables={messagePreviewVariables} />
 				<div>
 					<p class="text-xs font-medium text-neutral-500 mb-2">{$_('events.messageTemplates.variablesHint')}</p>
 					<div class="flex flex-wrap gap-2">

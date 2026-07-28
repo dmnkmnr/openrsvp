@@ -12,8 +12,9 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import SmsCharCounter from '$lib/components/ui/SmsCharCounter.svelte';
+	import { sampleMessageVariables } from '$lib/utils/messagePreview';
 	import { onMount, tick } from 'svelte';
-	import { _ } from '$lib/i18n';
+	import { _, locale } from '$lib/i18n';
 
 	const eventId = $derived($page.params.eventId);
 
@@ -22,6 +23,17 @@
 	let event: Event | null = $state(null);
 	let messages: Message[] = $state([]);
 	let attendeeMap: Record<string, string> = $state({});
+
+	const messagePreviewVariables = $derived.by(() =>
+		sampleMessageVariables({
+			locale: $locale ?? 'en',
+			origin: $page.url.origin,
+			eventTitle: event?.title,
+			eventDate: event?.eventDate,
+			timezone: event?.timezone,
+			location: event?.location
+		})
+	);
 
 	// Compose form
 	let recipientType = $state('all');
@@ -226,7 +238,7 @@
 						error={composeErrors.body || ''}
 						required
 					/>
-					<SmsCharCounter text={body} />
+					<SmsCharCounter text={body} variables={messagePreviewVariables} />
 					<div>
 						<p class="text-xs font-medium text-neutral-500 mb-2">{$_('events.messageTemplates.variablesHint')}</p>
 						<div class="flex flex-wrap gap-2">
