@@ -8,7 +8,7 @@
 	import Card from '$lib/components/ui/Card.svelte';
 	import Spinner from '$lib/components/ui/Spinner.svelte';
 	import Badge from '$lib/components/ui/Badge.svelte';
-	import { _ } from '$lib/i18n';
+	import { _, locale } from '$lib/i18n';
 
 	const MAX_FILE_SIZE = 1024 * 1024; // 1MB
 
@@ -153,7 +153,7 @@
 
 	async function downloadTemplate() {
 		try {
-			const response = await fetch('/api/v1/rsvp/import/template');
+			const response = await fetch(`/api/v1/rsvp/import/template?lang=${$locale ?? 'en'}`);
 			if (!response.ok) throw new Error('Failed to download template');
 			const blob = await response.blob();
 			const url = URL.createObjectURL(blob);

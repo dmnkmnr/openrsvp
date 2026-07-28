@@ -59,6 +59,29 @@ func TestParseCSVPreview_FlexibleColumnNames(t *testing.T) {
 	assert.Equal(t, 1, preview.Rows[0].PlusOnes)
 }
 
+func TestParseCSVPreview_GermanColumnNames(t *testing.T) {
+	svc, eventSvc, authStore := setupRSVP(t)
+	ctx := context.Background()
+
+	org, err := authStore.CreateOrganizer(ctx, "org@example.com")
+	require.NoError(t, err)
+	ev := createPublishedEvent(t, eventSvc, org.ID)
+
+	// Matches the German CSV import template's column headers (see
+	// csvTemplateContent in import_handler.go) so a filled-in German
+	// template round-trips correctly.
+	csv := "Name,E-Mail,Telefon,Ernährungshinweise,Weitere Gäste,Kinder unter 12\nAlice,alice@example.com,+14155551234,Vegetarisch,2,1\n"
+	preview, err := svc.ParseCSVPreview(ctx, ev.ID, org.ID, strings.NewReader(csv))
+	require.NoError(t, err)
+	assert.Equal(t, 1, preview.ValidRows)
+	assert.Equal(t, "Alice", preview.Rows[0].Name)
+	assert.Equal(t, "alice@example.com", preview.Rows[0].Email)
+	assert.Equal(t, "+14155551234", preview.Rows[0].Phone)
+	assert.Equal(t, "Vegetarisch", preview.Rows[0].DietaryNotes)
+	assert.Equal(t, 2, preview.Rows[0].PlusOnes)
+	assert.Equal(t, 1, preview.Rows[0].PlusOnesChildren)
+}
+
 func TestParseCSVPreview_MissingNameColumn(t *testing.T) {
 	svc, eventSvc, authStore := setupRSVP(t)
 	ctx := context.Background()

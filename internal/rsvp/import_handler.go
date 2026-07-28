@@ -9,17 +9,29 @@ import (
 	"github.com/yannkr/openrsvp/internal/errcode"
 )
 
-// csvTemplateContent is the CSV template provided to organizers for guest
-// list imports. It includes all supported column headers and a sample row.
-const csvTemplateContent = "Name,Email,Phone,Dietary Notes,Plus Ones,Children Under 12\nJane Doe,jane@example.com,+14155551234,Vegetarian,1,0\n"
+// csvTemplateContent holds the CSV template provided to organizers for guest
+// list imports, per language. Includes all supported column headers and a
+// sample row. Column headers match the aliases in columnAliases so a filled-in
+// template auto-detects correctly on re-upload regardless of language.
+var csvTemplateContent = map[string]string{
+	"en": "Name,Email,Phone,Dietary Notes,Plus Ones,Children Under 12\nJane Doe,jane@example.com,+14155551234,Vegetarian,1,0\n",
+	"de": "Name,E-Mail,Telefon,Ernährungshinweise,Weitere Gäste,Kinder unter 12\nJane Doe,jane@example.com,+14155551234,Vegetarisch,1,0\n",
+}
 
 // handleImportTemplate returns a downloadable CSV template file that
-// organizers can fill in with their guest list data.
+// organizers can fill in with their guest list data, localized via the
+// `lang` query param (defaults to English).
 func (h *Handler) handleImportTemplate(w http.ResponseWriter, r *http.Request) {
+	lang := r.URL.Query().Get("lang")
+	content, ok := csvTemplateContent[lang]
+	if !ok {
+		content = csvTemplateContent["en"]
+	}
+
 	w.Header().Set("Content-Type", "text/csv; charset=utf-8")
 	w.Header().Set("X-Content-Type-Options", "nosniff")
 	w.Header().Set("Content-Disposition", `attachment; filename="guest-import-template.csv"`)
-	_, _ = w.Write([]byte(csvTemplateContent))
+	_, _ = w.Write([]byte(content))
 }
 
 // handleImportPreview accepts a CSV file upload, parses and validates it,

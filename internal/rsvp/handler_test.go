@@ -566,6 +566,27 @@ func TestHandleCalendarDownload_NotFound(t *testing.T) {
 
 // --- CSV Export ---
 
+func TestHandleImportTemplate_English(t *testing.T) {
+	h, _, _, _ := setupRSVPHandler(t)
+
+	rr := testutil.DoRequest(t, h, "GET", "/import/template", nil)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	assert.Contains(t, body, "Name,Email,Phone,Dietary Notes,Plus Ones,Children Under 12")
+}
+
+func TestHandleImportTemplate_German(t *testing.T) {
+	h, _, _, _ := setupRSVPHandler(t)
+
+	rr := testutil.DoRequest(t, h, "GET", "/import/template?lang=de", nil)
+
+	assert.Equal(t, http.StatusOK, rr.Code)
+	body := rr.Body.String()
+	assert.Contains(t, body, "Name,E-Mail,Telefon,Ernährungshinweise,Weitere Gäste,Kinder unter 12")
+	assert.NotContains(t, body, "Dietary Notes")
+}
+
 func TestHandleExportCSV_Success(t *testing.T) {
 	h, svc, eventSvc, org := setupRSVPHandler(t)
 	shareToken, eventID := publishEvent(t, eventSvc, org.ID)
