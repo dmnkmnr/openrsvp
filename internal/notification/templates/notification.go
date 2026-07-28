@@ -292,15 +292,35 @@ func RenderNotification(lang, subjectTemplate, bodyTemplate string, vars map[str
 }
 
 // SMSFrom derives a short SMS body from an already-interpolated plain-text
-// notification body, truncating it to a safe length while keeping the
-// trailing link (if present) intact.
-func SMSFrom(plain string, maxLen int) string {
-	if len(plain) <= maxLen {
-		return plain
+// notification body and a trailing link, truncating the body (never the
+// link) to a safe length so the link always stays intact -- a guest should
+// never receive a confirmation SMS whose management link got cut off.
+func SMSFrom(body, link string, maxLen int) string {
+	full := body
+	if link != "" {
+		full = body + "\n\n" + link
 	}
-	truncated := plain[:maxLen]
-	if idx := strings.LastIndex(truncated, " "); idx > 0 {
-		truncated = truncated[:idx]
+	if len(full) <= maxLen {
+		return full
 	}
-	return truncated + "…"
+	if link == "" {
+		truncated := body[:maxLen]
+		if idx := strings.LastIndex(truncated, " "); idx > 0 {
+			truncated = truncated[:idx]
+		}
+		return truncated + "…"
+	}
+	suffix := "…\n\n" + link
+	available := maxLen - len(suffix)
+	if available < 0 {
+		available = 0
+	}
+	truncatedBody := body
+	if len(truncatedBody) > available {
+		truncatedBody = truncatedBody[:available]
+		if idx := strings.LastIndex(truncatedBody, " "); idx > 0 {
+			truncatedBody = truncatedBody[:idx]
+		}
+	}
+	return truncatedBody + suffix
 }

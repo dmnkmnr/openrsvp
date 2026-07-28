@@ -1,6 +1,7 @@
 package templates
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -272,14 +273,28 @@ func TestRenderNotificationEscapesHTML(t *testing.T) {
 
 func TestSMSFromTruncates(t *testing.T) {
 	long := "This is a very long reminder message that definitely exceeds the short SMS length limit we configured for this test case here"
-	out := SMSFrom(long, 40)
+	out := SMSFrom(long, "", 40)
 	assert.LessOrEqual(t, len(out), 44) // 40 + ellipsis bytes
 	assert.True(t, len(out) < len(long))
 }
 
 func TestSMSFromNoTruncationNeeded(t *testing.T) {
 	short := "Short message"
-	assert.Equal(t, short, SMSFrom(short, 40))
+	assert.Equal(t, short, SMSFrom(short, "", 40))
+}
+
+func TestSMSFromKeepsLinkIntactWhenBodyIsLong(t *testing.T) {
+	long := "This is a very long reminder message that definitely exceeds the short SMS length limit we configured for this test case here"
+	link := "https://example.com/r/AbCdEfGhIjKl"
+	out := SMSFrom(long, link, 60)
+	assert.LessOrEqual(t, len(out), 60)
+	assert.True(t, strings.HasSuffix(out, link), "expected output to end with the intact link, got: %q", out)
+}
+
+func TestSMSFromNoTruncationNeededWithLink(t *testing.T) {
+	short := "Short message"
+	link := "https://example.com/r/AbCdEfGhIjKl"
+	assert.Equal(t, short+"\n\n"+link, SMSFrom(short, link, 300))
 }
 
 func TestFormatEventDateEnglish(t *testing.T) {

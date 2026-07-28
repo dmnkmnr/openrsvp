@@ -348,10 +348,10 @@ func (j *ReminderJob) sendToAttendee(ctx context.Context, reminder *Reminder, at
 	}
 
 	if wantSMS {
-		plain := templates.Interpolate(bodyTpl, vars) + "\n\n" + rsvpLink
+		plain := templates.Interpolate(bodyTpl, vars)
 		msg := &notification.Message{
 			To:   *attendee.phone,
-			Body: templates.SMSFrom(plain, 300),
+			Body: templates.SMSFrom(plain, rsvpLink, 300),
 			Lang: lang,
 		}
 		if err := j.notifService.Send(ctx, reminder.EventID, attendee.id, notification.ChannelSMS, msg); err != nil {

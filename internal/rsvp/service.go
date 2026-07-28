@@ -1180,11 +1180,11 @@ func (s *Service) SendRSVPLookup(ctx context.Context, shareToken, email, phone s
 		to := *a.Phone
 		s.asyncNotify(func() {
 			modifyURL := baseURL + "/r/" + rsvpToken
-			plainText := fmt.Sprintf("Your RSVP link for %s: %s", evTitle, modifyURL)
+			plainText := fmt.Sprintf("Your RSVP link for %s:", evTitle)
 			if evLang == "de" {
-				plainText = fmt.Sprintf("Dein RSVP-Link für %s: %s", evTitle, modifyURL)
+				plainText = fmt.Sprintf("Dein RSVP-Link für %s:", evTitle)
 			}
-			smsBody := templates.SMSFrom(plainText, 300)
+			smsBody := templates.SMSFrom(plainText, modifyURL, 300)
 			if err := sendFn(context.Background(), to, smsBody); err != nil {
 				s.logger.Error().Err(err).Str("to", to).Msg("rsvp lookup: failed to send sms")
 			}
