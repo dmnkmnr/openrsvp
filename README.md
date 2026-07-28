@@ -457,6 +457,12 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.8 (2026-07-28)
+
+**Fixes:**
+- Most invite card templates use a translucent background tint meant to sit on a light backdrop — the recent dark-mode page-background change made the page behind the card bleed through as dark, leaving the card's text unreadable (reported on "Confetti"); pinned an opaque white base under the tint so the card stays light regardless of page theme
+- The downloadable CSV guest-import template (Import page → "Download Template") was entirely hardcoded in English — added a German version, with matching German column-name aliases so a filled-in German template still auto-detects columns on re-upload
+
 ### v1.21.6 (2026-07-28)
 
 **Features:**
