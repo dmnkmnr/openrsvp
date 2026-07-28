@@ -277,7 +277,7 @@
 	<title>{$_('guestManage.pageTitle')}{eventData ? ` — ${eventData.title}` : ''} — OpenRSVP</title>
 </svelte:head>
 
-<div class="min-h-screen px-4 py-8 sm:py-12" style="background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);">
+<div class="guest-manage-page min-h-screen px-4 py-8 sm:py-12">
 	<div class="max-w-lg mx-auto">
 		{#if loading}
 			<div class="flex items-center justify-center min-h-[60vh]">
@@ -752,6 +752,13 @@
 </div>
 
 <style>
+	.guest-manage-page {
+		background: linear-gradient(135deg, #FAFAF9 0%, #FFF1F3 50%, #FDE8EC 100%);
+	}
+	:global([data-theme='dark']) .guest-manage-page {
+		background: linear-gradient(135deg, var(--color-neutral-50) 0%, var(--color-neutral-100) 60%, var(--color-neutral-50) 100%);
+	}
+
 	.rsvp-option {
 		display: flex;
 		flex-direction: column;
