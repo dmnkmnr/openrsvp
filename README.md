@@ -457,6 +457,15 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.9 (2026-07-28)
+
+**Fixes:**
+- The date/time separator was hardcoded English " at " regardless of language (e.g. "12. Juni 2026 at 14:00 Uhr") — now shows "um" in German, across every page that displays a date and time
+- Custom RSVP questions no longer show once a guest selects "I can't make it" (declined), matching the existing behavior for dietary notes and additional guests
+
+**Other:**
+- Reworded the German "X Personen zugesagt" hint to "X Personen haben schon zugesagt"
+
 ### v1.21.8 (2026-07-28)
 
 **Fixes:**
