@@ -356,7 +356,14 @@
 	.invite-card {
 		position: relative;
 		overflow: hidden;
+		/* Most templates' --card-bg is a translucent tint (low-alpha gradient
+		   stops), meant to sit on a light backdrop. Pin an opaque white base
+		   underneath so the page behind the card (which can be dark, e.g. in
+		   dark mode) never bleeds through and darkens the card -- templates
+		   with their own fully opaque background (chalkboard, clean-minimal)
+		   override this via a later, more specific rule. */
 		background: var(--card-bg);
+		background-color: #ffffff;
 		border: 2px solid var(--border-color);
 		border-radius: 1.5rem;
 		padding: 2.5rem 2rem;
@@ -439,6 +446,7 @@
 		border-color: var(--primary);
 		border-width: 2px;
 		background: linear-gradient(135deg, #a855f722, #ec489922, #c084fc22);
+		background-color: #ffffff;
 		box-shadow: 0 0 30px #a855f733, 0 0 60px #ec489911;
 	}
 	.unicorn-magic .card-heading {
@@ -474,6 +482,7 @@
 		border-radius: 0.5rem;
 		box-shadow: 4px 4px 0 var(--secondary);
 		background: linear-gradient(135deg, #ef444411, #3b82f611);
+		background-color: #ffffff;
 	}
 	.superhero .card-heading {
 		font-size: 2.25rem;
@@ -493,6 +502,7 @@
 		border-width: 2px;
 		border-radius: 2rem;
 		background: linear-gradient(180deg, #22c55e0d, #a3e63511, #22c55e0d);
+		background-color: #ffffff;
 	}
 	.garden-picnic .card-heading {
 		font-size: 1.875rem;
