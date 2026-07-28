@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.5 (2026-07-28)
+
+**Fixes:**
+- Guests who provided both email and phone got notified on both channels (a duplicate SMS alongside the email) — now email only, unless they explicitly chose SMS as their preference or only have a phone number on file
+
 ### v1.21.4 (2026-07-28)
 
 **Fixes:**
