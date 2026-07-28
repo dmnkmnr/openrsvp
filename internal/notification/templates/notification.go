@@ -308,9 +308,9 @@ func SMSFrom(body, link string, maxLen int) string {
 		if idx := strings.LastIndex(truncated, " "); idx > 0 {
 			truncated = truncated[:idx]
 		}
-		return truncated + "…"
+		return truncated + "..."
 	}
-	suffix := "…\n\n" + link
+	suffix := "...\n\n" + link
 	available := maxLen - len(suffix)
 	if available < 0 {
 		available = 0
