@@ -457,6 +457,11 @@ If you deployed `docker-compose.postgres.yml` **before v1.5.1**, rotate your Pos
 
 ## 📝 Changelog
 
+### v1.21.6 (2026-07-28)
+
+**Features:**
+- `{guestName}`, `{eventTitle}`, `{eventDate}`, `{location}`, and `{rsvpLink}` can now be used in scheduled reminders and the manual "send message to guests" feature, personalized per guest — both forms show the available variables as a hint
+
 ### v1.21.5 (2026-07-28)
 
 **Fixes:**
